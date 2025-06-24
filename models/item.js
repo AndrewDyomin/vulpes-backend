@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const itemSchema = new mongoose.Schema({
-  art: {
+  article: {
     type: String,
     required: [true, "Article is required"],
   },

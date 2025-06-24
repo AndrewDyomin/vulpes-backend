@@ -1,4 +1,7 @@
 const cron = require("node-cron");
+const axios = require('axios');
+const xml2js = require('xml2js');
+const Product = require('../models/item');
 // const weeklyReport = require("../models/weeklyReport");
 // const User = require("../models/user");
 // const nodemailer = require("nodemailer");
@@ -64,59 +67,43 @@ const format = (number) => {
     }
 }
 
-// const getUser = async (id) => {
-//     const user = await User.findById(id).exec()
-//     return user;
-// }
+async function importProductsFromYML() {
+  const ymlUrl = process.env.PRODUCTS_URI;
 
-const report = async () => {
-    // try {
-    //     const wReport = await weeklyReport.findOne().exec();
+  if (!ymlUrl) {
+    throw new Error('PRODUCTS_URI не указана в .env');
+  }
 
-    //     let totalCost = 0;
-    //     const noCostOrders = [];
-    //     const users = await Promise.all(
-    //         wReport.ordersArray.map(order => getUser(JSON.parse(order.orderStatus).user))
-    //     );
-    //     let orderStatusMark = [];
+  try {
+    console.log("Import started")
 
-    //     users.forEach(user => {
-    //         if (!orderStatusMark.some(obj => obj.user.id === user._id)) {
-    //             orderStatusMark.push({ user: { name: user.name, id: String(user._id)}, orders: [] })
-    //         }});
+    const response = await axios.get(ymlUrl, { timeout: 10000 });
+    const xml = response.data;
 
-    //     wReport.ordersArray.forEach(order => {
-    //         if (order.innerPrice) {
-    //             totalCost += order.innerPrice;
-    //         }
-    //         if (!order.innerPrice) {
-    //             noCostOrders.push(order);
-    //         }
+    const parser = new xml2js.Parser({ explicitArray: false });
+    const result = await parser.parseStringPromise(xml);
 
-    //         const executorId = JSON.parse(order.orderStatus).user;
-    //         const filter = orderStatusMark.filter(user => user.user.id !== executorId)
-    //         const target = orderStatusMark.find(user => user.user.id === executorId)
-    //         target.orders = [ ...target.orders, { number: order.number, name: order.name } ]
+    const offers = result?.yml_catalog?.shop?.offers?.offer || [];
+    const products = Array.isArray(offers) ? offers : [offers];
 
-    //         orderStatusMark = [ ...filter, target ];
-    //     })
+    if (products.length === 0) {
+      console.log('В XML не найдено товаров');
+      return;
+    }
 
-    //     reportMail(wReport, totalCost, noCostOrders, orderStatusMark);
-    // } catch(err) {
-    //     console.log(err)
-    // }
+    console.log(products[1])
+
+    await Product.deleteMany({});
+    await Product.insertMany(products);
+
+    console.log(`[${new Date().toISOString()}] Импортировано ${products.length} товаров`);
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Ошибка импорта:`, error.message);
+  }
 }
 
-const clearReport = async () => {
-    // try {
-    //     const wReport = await weeklyReport.findOne().exec();
-    //     await weeklyReport.findByIdAndUpdate(wReport._id, { ordersArray: [] })
-    // } catch(err) {
-    //     console.log(err)
-    // }
-}
 
-cron.schedule("0 17 * * 5", () => {
+cron.schedule('0 1 * * *', () => {
     const now = new Date();
     const today = format(now.getDate())
     const month = format(now.getMonth() + 1)
@@ -125,9 +112,9 @@ cron.schedule("0 17 * * 5", () => {
     const seconds = format(now.getSeconds())
   console.log(`Scheduled function triggered at ${today}.${month} ${hours}:${minutes}:${seconds}.`);
   
-  report();
-  clearReport();
+  importProductsFromYML()
 }, {
   scheduled: true,
   timezone: "Europe/Kiev"
 });
+
