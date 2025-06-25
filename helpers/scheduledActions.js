@@ -67,15 +67,14 @@ const format = (number) => {
     }
 }
 
+const CHUNK_SIZE = 500;
+
 async function importProductsFromYML() {
   const ymlUrl = process.env.PRODUCTS_URI;
-
-  if (!ymlUrl) {
-    throw new Error('PRODUCTS_URI не указана в .env');
-  }
+  if (!ymlUrl) throw new Error('PRODUCTS_URI не указана в .env');
 
   try {
-    console.log("Import started")
+    console.log("Импорт начат...");
 
     const response = await axios.get(ymlUrl, { timeout: 10000 });
     const xml = response.data;
@@ -91,14 +90,60 @@ async function importProductsFromYML() {
       return;
     }
 
-    console.log(products[1])
+    // Собираем список всех артикулов
+    const allArticles = products.map(p => p.article);
 
-    await Product.deleteMany({});
-    await Product.insertMany(products);
+    // Получаем все товары, которые уже есть в базе
+    const existingDocs = await Product.find({ article: { $in: allArticles } }, 'article _id');
+    const existingArticlesMap = new Map(existingDocs.map(doc => [doc.article, doc._id]));
 
-    console.log(`[${new Date().toISOString()}] Импортировано ${products.length} товаров`);
+    // Делим на новые и существующие
+    const newProducts = [];
+    const productsToUpdate = [];
+
+    for (const product of products) {
+      const data = {
+        price: product.currencyId === 'UAH' ? { UAH: product.price } : {},
+        name: { UA: product.name },
+        brand: product.vendor,
+        barcode: product.barcode,
+        article: product.article,
+        category: product.categoryId,
+        description: { UA: product.description },
+        images: product.picture,
+      };
+
+      if (existingArticlesMap.has(product.article)) {
+        productsToUpdate.push({
+          updateOne: {
+            filter: { _id: existingArticlesMap.get(product.article) },
+            update: data,
+          }
+        });
+      } else {
+        newProducts.push(data);
+      }
+    }
+
+    console.log(`К созданию: ${newProducts.length}, к обновлению: ${productsToUpdate.length}`);
+
+    // ⚡ Создаём чанками
+    for (let i = 0; i < newProducts.length; i += CHUNK_SIZE) {
+      const chunk = newProducts.slice(i, i + CHUNK_SIZE);
+      await Product.insertMany(chunk, { ordered: false });
+      process.stdout.write(`\rСоздано ${Math.min(i + CHUNK_SIZE, newProducts.length)} из ${newProducts.length}`);
+    }
+
+    // ⚡ Обновляем чанками
+    for (let i = 0; i < productsToUpdate.length; i += CHUNK_SIZE) {
+      const chunk = productsToUpdate.slice(i, i + CHUNK_SIZE);
+      await Product.bulkWrite(chunk, { ordered: false });
+      process.stdout.write(`\rОбновлено ${Math.min(i + CHUNK_SIZE, productsToUpdate.length)} из ${productsToUpdate.length}`);
+    }
+
+    console.log(`\n[${new Date().toISOString()}] Импорт завершён: ${products.length} товаров обработано`);
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Ошибка импорта:`, error.message);
+    console.error(`\n[${new Date().toISOString()}] Ошибка импорта:`, error.message);
   }
 }
 
@@ -117,4 +162,3 @@ cron.schedule('0 1 * * *', () => {
   scheduled: true,
   timezone: "Europe/Kiev"
 });
-

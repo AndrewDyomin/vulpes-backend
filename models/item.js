@@ -79,6 +79,10 @@ const itemSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  barcode: {
+    type: String,
+    default: '',
+  },
   category: {
     type: String,
     default: '',
