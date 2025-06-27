@@ -8,6 +8,7 @@ require("./helpers/scheduledActions")
 const authRoutes = require("./routes/api/auth");
 const usersRoutes = require("./routes/api/users");
 const productsRoutes = require("./routes/api/products");
+const ordersRoutes = require('./routes/api/orders')
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -22,6 +23,8 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/users", isAuth, usersRoutes);
 app.use("/products", productsRoutes);
+app.use("/orders", isAuth, ordersRoutes);
+
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
