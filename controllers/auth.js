@@ -81,7 +81,7 @@ async function login(req, res, next) {
 
     res
       .status(200)
-      .send({ token, user: { email: user.email, name: user.name, description: user.description } });
+      .send({ token, user: { email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     next(error);
   }
