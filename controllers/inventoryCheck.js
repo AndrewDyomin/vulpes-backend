@@ -9,7 +9,7 @@ async function getAll(req, res, next) {
 
     const skip = (page - 1) * limit;
 
-    const [products, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       InventoryCheck.find().skip(skip).limit(limit).exec(),
       InventoryCheck.countDocuments()
     ]);
@@ -17,7 +17,7 @@ async function getAll(req, res, next) {
     const totalPages = Math.ceil(total / limit);
 
     return res.status(200).json({
-      products,
+      items,
       pagination: {
         total,
         totalPages,
@@ -34,8 +34,8 @@ async function getAll(req, res, next) {
 async function getById(req, res, next) {
 
   try {
-    const product = await InventoryCheck.findById(req.body._id).exec();
-    return res.status(200).json({ product });
+    const check = await InventoryCheck.findById(req.body.id).exec();
+    return res.status(200).json({ ...check });
   } catch (error) {
     next(error)
   }
