@@ -43,6 +43,17 @@ async function getByBarcode(req, res, next) {
   }
 }
 
+async function getByArticle(req, res, next) {
+  const article = req.body.article
+  try {
+    const product = await Product.findOne({ article }).exec();
+
+    return res.status(200).json({ product });
+  } catch (error) {
+    next(error)
+  }
+}
+
 // async function updateProductsFromCRM(req, res) {
 
 //   const ymlUrl = process.env.PRODUCTS_URI;
@@ -78,4 +89,4 @@ async function getByBarcode(req, res, next) {
 // };
 
 
-module.exports = { getAll, getByBarcode };
+module.exports = { getAll, getByBarcode, getByArticle };
