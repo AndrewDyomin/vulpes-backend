@@ -30,7 +30,8 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.14",
     "puppeteer": "^22.13.0",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "sax": "^1.4.1"
   },
   "devDependencies": {
     "eslint": "7.19.0",
