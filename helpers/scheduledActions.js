@@ -264,7 +264,7 @@ async function importProductsFromYML() {
 // }
 
 cron.schedule(
-  "0 1 * * *",
+  "0 11 * * *",
   () => {
     const now = new Date();
     const today = format(now.getDate());
