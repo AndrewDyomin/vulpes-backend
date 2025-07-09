@@ -59,7 +59,7 @@ async function remove(req, res, next) {
   const { role } = req.user.user;
 
   try {
-    if (role === "owner" || role === "administrator") {
+    if (role === "owner") {
       await InventoryCheck.findByIdAndDelete(id);
       res.status(200).json({ message: "Inventory check was deleted" });
     } else {
