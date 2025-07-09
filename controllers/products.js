@@ -11,7 +11,7 @@ async function getAll(req, res, next) {
 
     const [products, total] = await Promise.all([
       Product.find().skip(skip).limit(limit).exec(),
-      Product.countDocuments()
+      Product.countDocuments(),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -22,35 +22,68 @@ async function getAll(req, res, next) {
         total,
         totalPages,
         currentPage: page,
-        pageSize: limit
-      }
+        pageSize: limit,
+      },
     });
-
   } catch (error) {
     next(error);
   }
 }
 
 async function getByBarcode(req, res, next) {
-  const barcode = req.body.barcode
+  const barcode = req.body.barcode;
   try {
     const product = await Product.findOne({ barcode }).exec();
-    console.log(barcode)
-    console.log(product)
+    console.log(barcode);
+    console.log(product);
     return res.status(200).json({ product });
   } catch (error) {
-    next(error)
+    next(error);
   }
 }
 
 async function getByArticle(req, res, next) {
-  const article = req.body.article
+  const article = req.body.article;
   try {
     const product = await Product.findOne({ article }).exec();
 
     return res.status(200).json({ product });
   } catch (error) {
-    next(error)
+    next(error);
+  }
+}
+
+async function search(req, res, next) {
+  try {
+    let value = req.body.value?.trim() || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    if (value.includes("А")) {
+      value = value.replace(/А/g, "A");
+    }
+
+    const query = { article: { $regex: value, $options: 'i' } };
+
+    const [products, total] = await Promise.all([
+      Product.find(query).skip(skip).limit(limit).exec(),
+      Product.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      products,
+      pagination: {
+        total,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
@@ -88,5 +121,4 @@ async function getByArticle(req, res, next) {
 //   }
 // };
 
-
-module.exports = { getAll, getByBarcode, getByArticle };
+module.exports = { getAll, getByBarcode, getByArticle, search };
