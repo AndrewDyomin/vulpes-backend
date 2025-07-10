@@ -10,6 +10,7 @@ const usersRoutes = require("./routes/api/users");
 const productsRoutes = require("./routes/api/products");
 const ordersRoutes = require('./routes/api/orders');
 const inventoryCheckRoutes = require('./routes/api/inventoryCheck');
+const ReceiveRoutes = require('./routes/api/receive');
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/users", isAuth, usersRoutes);
 app.use("/products", productsRoutes);
 app.use("/orders", isAuth, ordersRoutes);
 app.use("/inventory-check", isAuth, inventoryCheckRoutes);
+app.use("/receive-products", isAuth, ReceiveRoutes);
 
 
 app.use((req, res) => {
