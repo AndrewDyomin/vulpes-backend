@@ -1,6 +1,15 @@
 // const axios = require('axios');
 // const xml2js = require('xml2js');
+const XLSX = require("xlsx");
 const InventoryCheck = require("../models/inventoryCheck");
+
+const format = (number) => {
+  if (number < 10) {
+    return "0" + number;
+  } else {
+    return number;
+  }
+};
 
 async function getAll(req, res, next) {
   try {
@@ -82,24 +91,23 @@ async function combine(req, res, next) {
   const { role } = req.user.user;
   const { array } = req.body;
   const resultArray = [];
-  let name = '';
+  let name = "";
 
   try {
     if (role === "owner") {
-
       for (const id of array) {
         const check = await InventoryCheck.findById(id).exec();
 
         for (const item of check.items) {
-          const target = resultArray.find(i => i.article === item.article);
+          const target = resultArray.find((i) => i.article === item.article);
           if (target) {
             target.count = String(Number(target.count) + Number(item.count));
           } else {
-            resultArray.push(item)
+            resultArray.push(item);
           }
         }
 
-        if (name === '') {
+        if (name === "") {
           name = check.name;
         }
       }
@@ -118,4 +126,51 @@ async function combine(req, res, next) {
   }
 }
 
-module.exports = { getAll, getById, add, remove, update, combine };
+async function download(req, res, next) {
+  const { id } = req.body;
+  const resultArray = [];
+  const now = new Date();
+  const today = format(now.getDate());
+  const month = format(now.getMonth() + 1);
+  const year = now.getFullYear();
+  const hours = format(now.getHours());
+  const minutes = format(now.getMinutes());
+
+  try {
+    const doc = await InventoryCheck.findById(id);
+    if (!doc) return res.status(404).send("Not found");
+
+    for (const item of doc.items) {
+      const target = resultArray.find((i) => i.article === item.article);
+      if (target) {
+        target.count = String(Number(target.count) + Number(item.count));
+      } else {
+        resultArray.push(item);
+      }
+    }
+
+    const data = resultArray.map((item) => ({
+      Article: item.article,
+      Count: item.count,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+    // Gen buffer
+    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+    // Send file
+    res.setHeader("Content-Disposition", `attachment; filename=inventory-${year}.${month}.${today}-${hours}:${minutes}.xlsx`);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getAll, getById, add, remove, update, combine, download };

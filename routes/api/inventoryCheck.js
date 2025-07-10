@@ -10,5 +10,6 @@ router.post("/add", InventoryCheckController.add);
 router.post("/delete", InventoryCheckController.remove);
 router.post("/update", InventoryCheckController.update);
 router.post("/combine", InventoryCheckController.combine);
+router.post("/download", InventoryCheckController.download);
 
 module.exports = router;
