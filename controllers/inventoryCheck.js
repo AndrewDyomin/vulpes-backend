@@ -162,7 +162,7 @@ async function download(req, res, next) {
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
     // Send file
-    res.setHeader("Content-Disposition", `attachment; filename=inventory-${year}.${month}.${today}-${hours}:${minutes}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=inventory-${year}.${month}.${today}_${hours}-${minutes}.xlsx`);
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
