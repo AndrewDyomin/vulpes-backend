@@ -42,9 +42,6 @@ async function getById(req, res, next) {
 async function add(req, res, next) {
   const { name, items } = req.body;
 
-  console.log(name);
-  console.log(items);
-
   try {
     await InventoryCheck.create({ name, items });
 
@@ -74,13 +71,51 @@ async function update(req, res, next) {
   const { id, items } = req.body;
 
   try {
-
-      await InventoryCheck.findByIdAndUpdate(id, { items }).exec();
-      res.status(200).json({ message: "Inventory check was updated" });
-    
+    await InventoryCheck.findByIdAndUpdate(id, { items }).exec();
+    res.status(200).json({ message: "Inventory check was updated" });
   } catch (error) {
     next(error);
   }
 }
 
-module.exports = { getAll, getById, add, remove, update };
+async function combine(req, res, next) {
+  const { role } = req.user.user;
+  const { array } = req.body;
+  const resultArray = [];
+  let name = '';
+
+  try {
+    if (role === "owner") {
+
+      for (const id of array) {
+        const check = await InventoryCheck.findById(id).exec();
+
+        for (const item of check.items) {
+          const target = resultArray.find(i => i.article === item.article);
+          if (target) {
+            target.count = String(Number(target.count) + Number(item.count));
+          } else {
+            resultArray.push(item)
+          }
+        }
+
+        if (name === '') {
+          name = check.name;
+        }
+      }
+      await InventoryCheck.create({ name, items: resultArray });
+
+      for (const id of array) {
+        await InventoryCheck.findByIdAndDelete(id).exec();
+      }
+
+      res.status(200).json({ message: "Inventory checks was combined" });
+    } else {
+      res.status(200).json({ message: "You can't do this" });
+    }
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getAll, getById, add, remove, update, combine };
