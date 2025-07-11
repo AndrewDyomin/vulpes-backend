@@ -145,7 +145,7 @@ async function download(req, res, next) {
       if (target) {
         target.count = String(Number(target.count) + Number(item.count));
       } else {
-        resultArray.push(item);
+        resultArray.push({ article: item.article, count: String(item.count) });
       }
     }
 
