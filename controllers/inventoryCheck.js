@@ -2,6 +2,7 @@
 // const xml2js = require('xml2js');
 const XLSX = require("xlsx");
 const InventoryCheck = require("../models/inventoryCheck");
+const Product = require("../models/item");
 
 const format = (number) => {
   if (number < 10) {
@@ -10,6 +11,26 @@ const format = (number) => {
     return number;
   }
 };
+
+const normalizeDocument = async (check) => {
+  const checkCopy = { ...check._doc };
+  console.log(checkCopy)
+  try{ 
+    for (const item of checkCopy.items) {
+      if (typeof item.count !== 'string') {
+        item.count = String(item.count);
+      }
+      if (item?.images?.length > 0) continue;
+      const product = await Product.findOne({ article: item.article }).exec()
+      if (!product?.images[0]) continue;
+      item.images = [ product.images[0] ];
+    }
+
+    await InventoryCheck.findByIdAndUpdate(check._id, checkCopy); 
+  } catch(err) { 
+    console.log(err) 
+  }
+}
 
 async function getAll(req, res, next) {
   try {
@@ -24,6 +45,10 @@ async function getAll(req, res, next) {
     ]);
 
     const totalPages = Math.ceil(total / limit);
+
+    for (const check of items) {
+      normalizeDocument(check)
+    }
 
     return res.status(200).json({
       items,
