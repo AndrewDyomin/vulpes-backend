@@ -7,6 +7,7 @@ const Product = require("../models/item");
 // const User = require("../models/user");
 // const nodemailer = require("nodemailer");
 require("dotenv").config();
+const sendTelegramMessage = require('../helpers/sendTelegramMessage')
 
 // async function reportMail(wReport, totalCost, noCostOrders, orderStatusMark) {
 //   try {
@@ -153,7 +154,6 @@ async function importProductsFromYML() {
 
         if (productsToUpdate.length >= CHUNK_SIZE) {
           await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), { ordered: false });
-          // process.stdout.write(`\rОбновлено ${productsToUpdate.length}`);
         }
       } else if (currentProduct && currentTag && textBuffer) {
         currentProduct[currentTag] = textBuffer;
@@ -164,24 +164,25 @@ async function importProductsFromYML() {
     parser.on("end", async () => {
       if (newProducts.length > 0) {
         await Product.insertMany(newProducts, { ordered: false });
-        // console.log(`\nДобавлены оставшиеся ${newProducts.length} товаров`);
       }
 
       if (productsToUpdate.length > 0) {
         await Product.bulkWrite(productsToUpdate, { ordered: false });
-        // console.log(`\nОбновлены оставшиеся ${productsToUpdate.length} товаров`);
       }
 
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
+      sendTelegramMessage('База данных товаров успешно обновлена.')
     });
 
     parser.on("error", (err) => {
       console.error("Ошибка парсинга:", err.message);
+      sendTelegramMessage(`Во время обновления товаров возникла ошибка парсинга: ${err.message}`)
     });
 
     response.data.pipe(parser);
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
+    sendTelegramMessage(`Ошибка импорта обновлённых товаров: ${err.message}`)
   }
 }
 

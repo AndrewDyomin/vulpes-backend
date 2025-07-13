@@ -2,7 +2,8 @@ const bcrypt = require("bcrypt");
 const userSchema = require("../schemas/user");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const gravatar = require("gravatar")
+const gravatar = require("gravatar");
+const sendTelegramMessage = require('../helpers/sendTelegramMessage')
 
 async function register(req, res, next) {
   const response = userSchema.validate(req.body, { abortEarly: false });
@@ -102,6 +103,8 @@ async function logout(req, res, next) {
 async function current(req, res, next) {
   try {
   const { email, role, name } = req.user.user;
+
+  sendTelegramMessage(`Пользователь ${name} онлайн =)`)
 
   res
   .status(200)
