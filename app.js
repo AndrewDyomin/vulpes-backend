@@ -11,6 +11,7 @@ const productsRoutes = require("./routes/api/products");
 const ordersRoutes = require('./routes/api/orders');
 const inventoryCheckRoutes = require('./routes/api/inventoryCheck');
 const ReceiveRoutes = require('./routes/api/receive');
+const TelegramRoutes = require('./routes/api/telegram');
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/products", productsRoutes);
 app.use("/orders", isAuth, ordersRoutes);
 app.use("/inventory-check", isAuth, inventoryCheckRoutes);
 app.use("/receive-products", isAuth, ReceiveRoutes);
+app.use("/webhook", TelegramRoutes);
 
 
 app.use((req, res) => {

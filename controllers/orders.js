@@ -26,7 +26,6 @@ async function getByFilter(req, res, next) {
 
       const response = await axios.get(url, { headers, params });
 
-      console.log(response.data.meta)
       res.status(200).send({ ...response.data });
     }
   } catch (error) {

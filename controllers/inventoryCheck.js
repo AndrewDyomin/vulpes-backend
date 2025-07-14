@@ -14,23 +14,25 @@ const format = (number) => {
 
 const normalizeDocument = async (check) => {
   const checkCopy = { ...check._doc };
-  console.log(checkCopy)
-  try{ 
+  try {
     for (const item of checkCopy.items) {
-      if (typeof item.count !== 'string') {
+      if (typeof item.count !== "string") {
         item.count = String(item.count);
       }
+      if (item.article?.includes("А")) {
+        item.article = item.article.replace(/А/g, "A");
+      }
       if (item?.images?.length > 0) continue;
-      const product = await Product.findOne({ article: item.article }).exec()
+      const product = await Product.findOne({ article: item.article }).exec();
       if (!product?.images[0]) continue;
-      item.images = [ product.images[0] ];
+      item.images = [product.images[0]];
     }
 
-    await InventoryCheck.findByIdAndUpdate(check._id, checkCopy); 
-  } catch(err) { 
-    console.log(err) 
+    await InventoryCheck.findByIdAndUpdate(check._id, checkCopy);
+  } catch (err) {
+    console.log(err);
   }
-}
+};
 
 async function getAll(req, res, next) {
   try {
@@ -47,7 +49,7 @@ async function getAll(req, res, next) {
     const totalPages = Math.ceil(total / limit);
 
     for (const check of items) {
-      normalizeDocument(check)
+      normalizeDocument(check);
     }
 
     return res.status(200).json({
@@ -187,7 +189,10 @@ async function download(req, res, next) {
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
     // Send file
-    res.setHeader("Content-Disposition", `attachment; filename=inventory-${year}.${month}.${today}_${hours}-${minutes}.xlsx`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=inventory-${year}.${month}.${today}_${hours}-${minutes}.xlsx`
+    );
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

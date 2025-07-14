@@ -71,6 +71,7 @@ const format = (number) => {
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
+const chatId = process.env.ADMIN_CHAT_ID;
 
 async function importProductsFromYML() {
   if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
@@ -171,18 +172,18 @@ async function importProductsFromYML() {
       }
 
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
-      sendTelegramMessage('База данных товаров успешно обновлена.')
+      sendTelegramMessage('База данных товаров успешно обновлена.', chatId)
     });
 
     parser.on("error", (err) => {
       console.error("Ошибка парсинга:", err.message);
-      sendTelegramMessage(`Во время обновления товаров возникла ошибка парсинга: ${err.message}`)
+      sendTelegramMessage(`Во время обновления товаров возникла ошибка парсинга: ${err.message}`, chatId)
     });
 
     response.data.pipe(parser);
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
-    sendTelegramMessage(`Ошибка импорта обновлённых товаров: ${err.message}`)
+    sendTelegramMessage(`Ошибка импорта обновлённых товаров: ${err.message}`, chatId)
   }
 }
 
