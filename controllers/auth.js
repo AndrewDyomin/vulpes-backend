@@ -3,7 +3,6 @@ const userSchema = require("../schemas/user");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
-const sendTelegramMessage = require('../helpers/sendTelegramMessage')
 
 async function register(req, res, next) {
   const response = userSchema.validate(req.body, { abortEarly: false });
