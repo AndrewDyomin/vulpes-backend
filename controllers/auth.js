@@ -104,8 +104,6 @@ async function current(req, res, next) {
   try {
   const { email, role, name } = req.user.user;
 
-  sendTelegramMessage(`Пользователь ${name} онлайн =)`)
-
   res
   .status(200)
   .send({ user: { email, role, name } });
