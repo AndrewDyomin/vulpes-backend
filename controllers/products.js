@@ -62,12 +62,21 @@ async function search(req, res, next) {
       value = value.replace(/А/g, "A");
     }
 
-    const query = { article: { $regex: value, $options: 'i' } };
+    let query = { article: { $regex: value, $options: 'i' } };
 
-    const [products, total] = await Promise.all([
+    let [products, total] = await Promise.all([
       Product.find(query).skip(skip).limit(limit).exec(),
       Product.countDocuments(query),
     ]);
+
+    if (products?.length < 1) {
+      query = { name: { UA: { $regex: value, $options: 'i' } } };
+
+      [products, total] = await Promise.all([
+        Product.find(query).skip(skip).limit(limit).exec(),
+        Product.countDocuments(query),
+      ]);
+    }
 
     const totalPages = Math.ceil(total / limit);
 
