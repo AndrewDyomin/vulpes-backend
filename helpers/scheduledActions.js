@@ -118,13 +118,14 @@ async function importProductsFromYML() {
         const data = {
           price:
             currentProduct.currencyId === "UAH"
-              ? { UAH: currentProduct.price }
+              ? { UAH: currentProduct.oldprice >= currentProduct.price ? currentProduct.oldprice : currentProduct.price }
               : {},
           name: { UA: currentProduct.name },
           brand: currentProduct.vendor,
           article: currentProduct.article,
           category: currentProduct.categoryId,
           description: { UA: currentProduct.description },
+          quantityInStock: currentProduct.quantity_in_stock,
           images: Array.isArray(currentProduct.picture)
             ? currentProduct.picture
             : currentProduct.picture

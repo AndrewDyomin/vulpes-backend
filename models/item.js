@@ -5,6 +5,10 @@ const itemSchema = new mongoose.Schema({
     type: String,
     required: [true, "Article is required"],
   },
+  quantityInStock: {
+    type: String,
+    default: '0',
+  },
   parentArt: {
     type: String,
     default: '',
