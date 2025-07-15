@@ -70,7 +70,7 @@ async function search(req, res, next) {
     ]);
 
     if (products?.length < 1) {
-      query = { name: { UA: { $regex: value, $options: 'i' } } };
+      query = { 'name.UA': { $regex: value, $options: 'i' } };
 
       [products, total] = await Promise.all([
         Product.find(query).skip(skip).limit(limit).exec(),
