@@ -167,6 +167,10 @@ const itemSchema = new mongoose.Schema({
       default: 0,
     },
   },
+  availabilityInMotea: {
+    type: String,
+    default: '',
+  },
 });
 
 module.exports = mongoose.model("Item", itemSchema);
