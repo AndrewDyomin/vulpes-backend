@@ -6,8 +6,13 @@ const mongoose = require("mongoose");
 const Product = require("../models/item");
 const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
-const sendTelegramMessage = require('../helpers/sendTelegramMessage')
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 
+const CHUNK_SIZE = 500;
+const PRODUCTS_URI = process.env.PRODUCTS_URI;
+const MAIN_DB_URI = process.env.DB_URI;
+const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
+const chatId = process.env.ADMIN_CHAT_ID;
 
 const format = (number) => {
   if (number < 10) {
@@ -17,11 +22,39 @@ const format = (number) => {
   }
 };
 
-const CHUNK_SIZE = 500;
-const PRODUCTS_URI = process.env.PRODUCTS_URI;
-const MAIN_DB_URI = process.env.DB_URI;
-const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
-const chatId = process.env.ADMIN_CHAT_ID;
+const fetchAvailability = async (array) => {
+  await mongoose.disconnect();
+  console.log("Disconnected from main DB");
+  await mongoose.connect(DB_MOTEA_FEED_URI);
+  console.log("Connected to Motea feed info DB");
+
+  const articles = array.map((p) => p.article);
+  const variantArticles = array.map((p) => `${p.article}-0`);
+
+  const donors = await MoteaItem.find({
+    article: { $in: [...articles, ...variantArticles] },
+  }).lean();
+
+  const donorMap = new Map();
+  for (const d of donors) {
+    donorMap.set(d.article, d.availability);
+  }
+
+  const arrayCopy = array.map((product) => {
+    const availability = donorMap.get(product.article) || donorMap.get(`${product.article}-0`) || '';
+    return {
+      ...product._doc,
+      availabilityInMotea: availability,
+    };
+  });
+
+  await mongoose.disconnect();
+  console.log("Disconnected from Motea feed info DB");
+  await mongoose.connect(MAIN_DB_URI);
+  console.log("Connected to main DB");
+
+  return arrayCopy;
+};
 
 async function importProductsFromYML() {
   if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
@@ -68,7 +101,12 @@ async function importProductsFromYML() {
         const data = {
           price:
             currentProduct.currencyId === "UAH"
-              ? { UAH: currentProduct.oldprice >= currentProduct.price ? currentProduct.oldprice : currentProduct.price }
+              ? {
+                  UAH:
+                    currentProduct.oldprice >= currentProduct.price
+                      ? currentProduct.oldprice
+                      : currentProduct.price,
+                }
               : {},
           name: { UA: currentProduct.name },
           brand: currentProduct.vendor,
@@ -101,11 +139,15 @@ async function importProductsFromYML() {
         currentProduct = null;
 
         if (newProducts.length >= CHUNK_SIZE) {
-          await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), { ordered: false });
+          await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), {
+            ordered: false,
+          });
         }
 
         if (productsToUpdate.length >= CHUNK_SIZE) {
-          await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), { ordered: false });
+          await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), {
+            ordered: false,
+          });
         }
       } else if (currentProduct && currentTag && textBuffer) {
         currentProduct[currentTag] = textBuffer;
@@ -123,18 +165,24 @@ async function importProductsFromYML() {
       }
 
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
-      sendTelegramMessage('База данных товаров успешно обновлена.', chatId)
+      sendTelegramMessage("База данных товаров успешно обновлена.", chatId);
     });
 
     parser.on("error", (err) => {
       console.error("Ошибка парсинга:", err.message);
-      sendTelegramMessage(`Во время обновления товаров возникла ошибка парсинга: ${err.message}`, chatId)
+      sendTelegramMessage(
+        `Во время обновления товаров возникла ошибка парсинга: ${err.message}`,
+        chatId
+      );
     });
 
     response.data.pipe(parser);
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
-    sendTelegramMessage(`Ошибка импорта обновлённых товаров: ${err.message}`, chatId)
+    sendTelegramMessage(
+      `Ошибка импорта обновлённых товаров: ${err.message}`,
+      chatId
+    );
   }
 }
 
@@ -180,7 +228,7 @@ async function saveMoteaFeedToDb() {
                   response.data.resume();
                 })
                 .catch((err) => {
-                  console.error("Ошибка batch insert:", 'err');
+                  console.error("Ошибка batch insert:", "err");
                   reject(err);
                 });
             }
@@ -191,17 +239,19 @@ async function saveMoteaFeedToDb() {
             try {
               await MoteaItem.insertMany(batch);
             } catch (err) {
-              console.error("Ошибка финального insertMany:", 'err');
+              console.error("Ошибка финального insertMany:", "err");
               reject(err);
             }
           }
 
           console.log(`Обработка завершена. Всего записей: ${totalCount}`);
-          sendTelegramMessage(`Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`)
+          sendTelegramMessage(
+            `Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`
+          , chatId);
           resolve();
         })
         .on("error", (err) => {
-          console.error("Ошибка чтения CSV:", 'err');
+          console.error("Ошибка чтения CSV:", "err");
           reject(err);
         });
     });
@@ -212,8 +262,36 @@ async function saveMoteaFeedToDb() {
     await mongoose.connect(MAIN_DB_URI);
     console.log("Reconnected to main DB");
   } catch (err) {
-    console.error("Ошибка обработки:", 'err');
+    console.error("Ошибка обработки:", "err");
   }
+}
+
+async function updateProductsAvailability() {
+  const BATCH_SIZE = 1000;
+  let skip = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    console.log(`${skip/1000}).`)
+    const batch = await Product.find({}).skip(skip).limit(BATCH_SIZE).exec();
+
+    const updatedBatch = await fetchAvailability(batch);
+
+    const operations = updatedBatch.map((product) => ({
+      updateOne: {
+        filter: { _id: product._id },
+        update: { $set: { availabilityInMotea: product.availabilityInMotea || null } },
+      },
+    }));
+
+    if (operations.length > 0) {
+      await Product.bulkWrite(operations);
+    }
+
+    skip += BATCH_SIZE;
+    hasMore = batch.length === BATCH_SIZE;
+  }
+  sendTelegramMessage("Информация о наличии товаров у Мотеа обновлена.", chatId);
 }
 
 cron.schedule(
@@ -232,6 +310,7 @@ cron.schedule(
     try {
       await importProductsFromYML();
       await saveMoteaFeedToDb();
+      await updateProductsAvailability();
     } catch (error) {
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage("Ошибка при выполнении cron-задачи:", error);
@@ -242,3 +321,5 @@ cron.schedule(
     timezone: "Europe/Kiev",
   }
 );
+
+updateProductsAvailability();
