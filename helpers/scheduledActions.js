@@ -1,65 +1,13 @@
 const cron = require("node-cron");
 const axios = require("axios");
 const sax = require("sax");
-// const xml2js = require('xml2js');
+const csv = require("csv-parser");
+const mongoose = require("mongoose");
 const Product = require("../models/item");
-// const weeklyReport = require("../models/weeklyReport");
-// const User = require("../models/user");
-// const nodemailer = require("nodemailer");
+const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
 const sendTelegramMessage = require('../helpers/sendTelegramMessage')
 
-// async function reportMail(wReport, totalCost, noCostOrders, orderStatusMark) {
-//   try {
-
-//     const letterTitle = `Отчет за неделю`;
-//     const letterHtml = `
-//         <div>
-//         <h3 style="margin: 0px;">Добрый день</h3>
-//         <p style="margin: 0px; margin-top: 20px;">На этой неделе мы сделали ${wReport.ordersArray.length} заказ(ов).</p>
-//         <p style="margin: 0px;">Сумма оборота составляет ${totalCost} грн.</p>
-//         ${noCostOrders.length !== 0 ? `
-//             <p style="margin: 0px; margin-top: 20px;">Заказы без цены:</p>
-//             ${noCostOrders.map(order => `<p style="margin: 0px;">${order.name} №${order.number} заказчик: ${order.dealer}</p>`).join('')}
-//         ` : ''}
-//         <p style="margin: 0px; margin-top: 20px;">Статистика "Заказ готов":</p>
-//         ${orderStatusMark.map(obj => `
-//             <p style="margin: 0px; margin-top: 20px; text-align: left;">${obj.user?.name}</p>
-//             <div style="margin: 0px;">
-//                 ${obj.orders.map(order => `<p style="margin: 0px;">№${order.number} : ${order.name}</p>`).join('')}
-//             </div>
-//         `).join('')}
-//         </div>
-//     `;
-
-//     const addresses = 'TARGET.ua@gmail.com';
-
-//     const config = {
-//       host: "smtp.meta.ua",
-//       port: 465,
-//       secure: true,
-//       auth: {
-//         user: "OUR.bot@meta.ua",
-//         pass: process.env.PASSWORD,
-//       },
-//     };
-
-//     const transporter = nodemailer.createTransport(config);
-//     const emailOptions = {
-//       from: "OUR.bot@meta.ua",
-//       to: addresses,
-//       subject: `${letterTitle}`,
-//       html: `${letterHtml}`,
-//     };
-
-//     transporter
-//       .sendMail(emailOptions)
-//       .then(() => {console.log(`Letter to ${addresses} sended`)})
-//       .catch((err) => console.log(err));
-//   } catch (err) {
-//     console.log(err);
-//   }
-// }
 
 const format = (number) => {
   if (number < 10) {
@@ -71,6 +19,8 @@ const format = (number) => {
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
+const MAIN_DB_URI = process.env.DB_URI;
+const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 
 async function importProductsFromYML() {
@@ -188,87 +138,87 @@ async function importProductsFromYML() {
   }
 }
 
-// async function importProductsFromYML() {
-//   const ymlUrl = process.env.PRODUCTS_URI;
-//   if (!ymlUrl) throw new Error('PRODUCTS_URI не указана в .env');
+async function saveMoteaFeedToDb() {
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+      console.log("Disconnected from main DB");
+    }
 
-//   try {
-//     console.log("Импорт начат...");
+    await mongoose.connect(DB_MOTEA_FEED_URI);
+    console.log("Connected to Motea feed info DB");
+    await MoteaItem.collection.drop();
 
-//     const response = await axios.get(ymlUrl, { timeout: 10000 });
-//     const xml = response.data;
+    const url = process.env.MOTEA_FEED;
+    const response = await axios.get(url, { responseType: "stream" });
 
-//     const parser = new xml2js.Parser({ explicitArray: false });
-//     const result = await parser.parseStringPromise(xml);
+    let batch = [];
+    let totalCount = 0;
 
-//     const offers = result?.yml_catalog?.shop?.offers?.offer || [];
-//     const products = Array.isArray(offers) ? offers : [offers];
+    await new Promise((resolve, reject) => {
+      response.data
+        .pipe(csv({ separator: "|" }))
+        .on("data", (row) => {
+          if (row.link) {
+            const item = {
+              link: row.link,
+              article: row.id,
+              brand: row.brand,
+              gtin: row.gtin,
+              availability: row.availability,
+            };
 
-//     if (products.length === 0) {
-//       console.log('В XML не найдено товаров');
-//       return;
-//     }
+            batch.push(item);
+            totalCount++;
 
-//     // Собираем список всех артикулов
-//     const allArticles = products.map(p => p.article);
+            if (batch.length === 1000) {
+              response.data.pause();
+              MoteaItem.insertMany(batch)
+                .then(() => {
+                  batch = [];
+                  batch.length = 0;
+                  response.data.resume();
+                })
+                .catch((err) => {
+                  console.error("Ошибка batch insert:", 'err');
+                  reject(err);
+                });
+            }
+          }
+        })
+        .on("end", async () => {
+          if (batch.length > 0) {
+            try {
+              await MoteaItem.insertMany(batch);
+            } catch (err) {
+              console.error("Ошибка финального insertMany:", 'err');
+              reject(err);
+            }
+          }
 
-//     // Получаем все товары, которые уже есть в базе
-//     const existingDocs = await Product.find({ article: { $in: allArticles } }, 'article _id');
-//     const existingArticlesMap = new Map(existingDocs.map(doc => [doc.article, doc._id]));
+          console.log(`Обработка завершена. Всего записей: ${totalCount}`);
+          sendTelegramMessage(`Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`)
+          resolve();
+        })
+        .on("error", (err) => {
+          console.error("Ошибка чтения CSV:", 'err');
+          reject(err);
+        });
+    });
 
-//     // Делим на новые и существующие
-//     const newProducts = [];
-//     const productsToUpdate = [];
+    await mongoose.disconnect();
+    console.log("Disconnected from Motea feed info DB");
 
-//     for (const product of products) {
-//       const data = {
-//         price: product.currencyId === 'UAH' ? { UAH: product.price } : {},
-//         name: { UA: product.name },
-//         brand: product.vendor,
-//         barcode: product.barcode,
-//         article: product.article,
-//         category: product.categoryId,
-//         description: { UA: product.description },
-//         images: product.picture,
-//       };
-
-//       if (existingArticlesMap.has(product.article)) {
-//         productsToUpdate.push({
-//           updateOne: {
-//             filter: { _id: existingArticlesMap.get(product.article) },
-//             update: data,
-//           }
-//         });
-//       } else {
-//         newProducts.push(data);
-//       }
-//     }
-
-//     console.log(`К созданию: ${newProducts.length}, к обновлению: ${productsToUpdate.length}`);
-
-//     // ⚡ Создаём чанками
-//     for (let i = 0; i < newProducts.length; i += CHUNK_SIZE) {
-//       const chunk = newProducts.slice(i, i + CHUNK_SIZE);
-//       await Product.insertMany(chunk, { ordered: false });
-//       process.stdout.write(`\rСоздано ${Math.min(i + CHUNK_SIZE, newProducts.length)} из ${newProducts.length}`);
-//     }
-
-//     // ⚡ Обновляем чанками
-//     for (let i = 0; i < productsToUpdate.length; i += CHUNK_SIZE) {
-//       const chunk = productsToUpdate.slice(i, i + CHUNK_SIZE);
-//       await Product.bulkWrite(chunk, { ordered: false });
-//       process.stdout.write(`\rОбновлено ${Math.min(i + CHUNK_SIZE, productsToUpdate.length)} из ${productsToUpdate.length}`);
-//     }
-
-//     console.log(`\n[${new Date().toISOString()}] Импорт завершён: ${products.length} товаров обработано`);
-//   } catch (error) {
-//     console.error(`\n[${new Date().toISOString()}] Ошибка импорта:`, error.message);
-//   }
-// }
+    await mongoose.connect(MAIN_DB_URI);
+    console.log("Reconnected to main DB");
+  } catch (err) {
+    console.error("Ошибка обработки:", 'err');
+  }
+}
 
 cron.schedule(
   "0 1 * * *",
-  () => {
+  async () => {
     const now = new Date();
     const today = format(now.getDate());
     const month = format(now.getMonth() + 1);
@@ -279,7 +229,13 @@ cron.schedule(
       `Scheduled function triggered at ${today}.${month} ${hours}:${minutes}:${seconds}.`
     );
 
-    importProductsFromYML()
+    try {
+      await importProductsFromYML();
+      await saveMoteaFeedToDb();
+    } catch (error) {
+      console.error("Ошибка при выполнении cron-задачи:", error);
+      sendTelegramMessage("Ошибка при выполнении cron-задачи:", error);
+    }
   },
   {
     scheduled: true,
