@@ -291,7 +291,7 @@ async function updateProductsAvailability() {
     skip += BATCH_SIZE;
     hasMore = batch.length === BATCH_SIZE;
   }
-  sendTelegramMessage("Информация о наличии товаров у Мотеа обновлена.", chatId);
+  sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
 }
 
 cron.schedule(
@@ -313,7 +313,7 @@ cron.schedule(
       await updateProductsAvailability();
     } catch (error) {
       console.error("Ошибка при выполнении cron-задачи:", error);
-      sendTelegramMessage("Ошибка при выполнении cron-задачи:", error);
+      sendTelegramMessage(`Ошибка при выполнении cron-задачи: ${error}`, chatId);
     }
   },
   {
@@ -321,5 +321,3 @@ cron.schedule(
     timezone: "Europe/Kiev",
   }
 );
-
-updateProductsAvailability();
