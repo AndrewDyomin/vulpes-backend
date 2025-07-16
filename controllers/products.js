@@ -1,6 +1,10 @@
 // const axios = require('axios');
 // const xml2js = require('xml2js');
+const ExcelJS = require('exceljs');
 const Product = require("../models/item");
+const fs = require('fs');
+const path = require('path');
+const sendTelegramFile = require('../helpers/sendTelegramFile');
 
 async function getAll(req, res, next) {
   try {
@@ -94,4 +98,56 @@ async function search(req, res, next) {
   }
 }
 
-module.exports = { getAll, getByBarcode, getByArticle, search };
+async function sendAvailabilityTable(req, res, next) {
+  const { user } = req.user
+
+  if (!user.chatId) {
+    return res.status(200).send({ message: 'you don’t have a chat with the bot in telegram' });
+  }
+  if (!user.role === 'owner') {
+    return res.status(200).send({ message: 'you don’t have access' });
+  }
+
+  try {
+    const productsArray = await Product.find({}).exec();
+    
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Наличие');
+
+    // 2. Заголовки
+    worksheet.columns = [
+      { header: 'Артикул', key: 'article', width: 25 },
+      { header: 'Фид', key: 'availabilityInMotea', width: 15 },
+      { header: 'Склад', key: 'quantityInStock', width: 15 },
+      { header: 'Наличие', key: 'availability', width: 15 },
+    ];
+
+    // 3. Данные
+    for (const product of productsArray) {
+      worksheet.addRow({
+        article: product.article,
+        availabilityInMotea: product.availabilityInMotea || '',
+        quantityInStock: product.quantityInStock || '',
+        availability: product.availability || '',
+      });
+    }
+
+    // 4. Сохраняем файл
+    const fileName = `availability-${Date.now()}.xlsx`;
+    const filePath = path.join(__dirname, '..', 'tmp', fileName);
+
+    await workbook.xlsx.writeFile(filePath);
+
+    // 5. Отправляем файл в Telegram
+    await sendTelegramFile(filePath, 'Таблица наличия', user.chatId);
+
+    // 6. Удаляем файл
+    fs.unlinkSync(filePath);
+
+    return res.status(200).send({ message: 'the table will be sent to your telegram' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getAll, getByBarcode, getByArticle, search, sendAvailabilityTable };
