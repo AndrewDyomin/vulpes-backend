@@ -3,14 +3,17 @@ const sendTelegramMessage = require('../helpers/sendTelegramMessage')
 require("dotenv").config();
 
 async function bot(req, res, next) {
-  const body = req.body;
+  // const body = req.body;
   const { message } = req.body;
   try {
+    if (!message || !message.chat || !message.text) {
+      return res.status(200).send('ignored');
+    }
+
     const chatId = message.chat.id
 
-    sendTelegramMessage(`Идентификатор вашего чата: ${message.id}. Вы написали '${message.text}'`, chatId)
+    sendTelegramMessage(`Идентификатор вашего чата: ${chatId}. Вы написали '${message.text}'`, chatId)
 
-    console.log(body)
     res.status(200).send('ok')
   } catch (error) {
     next(error);
