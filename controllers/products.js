@@ -136,7 +136,7 @@ async function sendAvailabilityTable(req, res, next) {
           article: product.article,
           availabilityInMotea: product.availabilityInMotea || '',
           quantityInStock: product.quantityInStock || '',
-          availability: product.availability || '',
+          availability: product.quantityInStock > 0 ? 'В наявності' : product.availabilityInMotea === 'in stock' ? 'Доставка 10 днів' : 'Немає в наявності',
         });
       }
     }

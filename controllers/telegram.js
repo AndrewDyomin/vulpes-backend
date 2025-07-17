@@ -8,7 +8,7 @@ async function bot(req, res, next) {
   try {
     const chatId = message.chat.id
 
-    sendTelegramMessage(`Вы написали '${message.text}'`, chatId)
+    sendTelegramMessage(`Идентификатор вашего чата: ${message.id}. Вы написали '${message.text}'`, chatId)
 
     console.log(body)
     res.status(200)
