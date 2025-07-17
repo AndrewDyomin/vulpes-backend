@@ -99,22 +99,21 @@ async function search(req, res, next) {
 }
 
 async function sendAvailabilityTable(req, res, next) {
-  const { user } = req.user
+  const BATCH_SIZE = 10000;
+
+  const { user } = req.user;
 
   if (!user.chatId) {
     return res.status(200).send({ message: 'you don’t have a chat with the bot in telegram' });
   }
-  if (!user.role === 'owner') {
+  if (user.role !== 'owner') {
     return res.status(200).send({ message: 'you don’t have access' });
   }
 
   try {
-    const productsArray = await Product.find({}).exec();
-    
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Наличие');
 
-    // 2. Заголовки
     worksheet.columns = [
       { header: 'Артикул', key: 'article', width: 25 },
       { header: 'Фид', key: 'availabilityInMotea', width: 15 },
@@ -122,26 +121,32 @@ async function sendAvailabilityTable(req, res, next) {
       { header: 'Наличие', key: 'availability', width: 15 },
     ];
 
-    // 3. Данные
-    for (const product of productsArray) {
-      worksheet.addRow({
-        article: product.article,
-        availabilityInMotea: product.availabilityInMotea || '',
-        quantityInStock: product.quantityInStock || '',
-        availability: product.availability || '',
-      });
+    const total = await Product.countDocuments();
+    const totalBatches = Math.ceil(total / BATCH_SIZE);
+
+    for (let i = 0; i < totalBatches; i++) {
+      const products = await Product.find({})
+        .skip(i * BATCH_SIZE)
+        .limit(BATCH_SIZE)
+        .lean()
+        .exec();
+
+      for (const product of products) {
+        worksheet.addRow({
+          article: product.article,
+          availabilityInMotea: product.availabilityInMotea || '',
+          quantityInStock: product.quantityInStock || '',
+          availability: product.availability || '',
+        });
+      }
     }
 
-    // 4. Сохраняем файл
     const fileName = `availability-${Date.now()}.xlsx`;
     const filePath = path.join(__dirname, '..', 'tmp', fileName);
 
     await workbook.xlsx.writeFile(filePath);
 
-    // 5. Отправляем файл в Telegram
     await sendTelegramFile(filePath, 'Таблица наличия', user.chatId);
-
-    // 6. Удаляем файл
     fs.unlinkSync(filePath);
 
     return res.status(200).send({ message: 'the table will be sent to your telegram' });
