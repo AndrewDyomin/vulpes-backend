@@ -305,7 +305,7 @@ async function updateProductsAvailability() {
 
 cron.schedule(
   "0 1 * * *",
-  async () => {
+   () => {
     const now = new Date();
     const today = format(now.getDate());
     const month = format(now.getMonth() + 1);
@@ -317,8 +317,26 @@ cron.schedule(
     );
 
     try {
-      await importProductsFromYML();
-      await saveMoteaFeedToDb();
+      importProductsFromYML();
+    } catch (error) {
+      console.error("Ошибка при выполнении cron-задачи:", error);
+      sendTelegramMessage(
+        `Ошибка при выполнении cron-задачи: ${error}`,
+        chatId
+      );
+    }
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(
+  "0 2 * * *",
+    () => {
+    try {
+      saveMoteaFeedToDb();
     } catch (error) {
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage(
