@@ -41,7 +41,10 @@ const fetchAvailability = async (array) => {
   }
 
   const arrayCopy = array.map((product) => {
-    const availability = donorMap.get(product.article) || donorMap.get(`${product.article}-0`) || '';
+    const availability =
+      donorMap.get(product.article) ||
+      donorMap.get(`${product.article}-0`) ||
+      "";
     return {
       ...product._doc,
       availabilityInMotea: availability,
@@ -246,8 +249,9 @@ async function saveMoteaFeedToDb() {
 
           console.log(`Обработка завершена. Всего записей: ${totalCount}`);
           sendTelegramMessage(
-            `Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`
-          , chatId);
+            `Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`,
+            chatId
+          );
           resolve();
         })
         .on("error", (err) => {
@@ -272,7 +276,7 @@ async function updateProductsAvailability() {
   let hasMore = true;
 
   while (hasMore) {
-    console.log(`${skip/1000}).`)
+    console.log(`${skip / 1000}).`);
     const batch = await Product.find({}).skip(skip).limit(BATCH_SIZE).exec();
 
     const updatedBatch = await fetchAvailability(batch);
@@ -280,7 +284,9 @@ async function updateProductsAvailability() {
     const operations = updatedBatch.map((product) => ({
       updateOne: {
         filter: { _id: product._id },
-        update: { $set: { availabilityInMotea: product.availabilityInMotea || null } },
+        update: {
+          $set: { availabilityInMotea: product.availabilityInMotea || null },
+        },
       },
     }));
 
@@ -291,7 +297,10 @@ async function updateProductsAvailability() {
     skip += BATCH_SIZE;
     hasMore = batch.length === BATCH_SIZE;
   }
-  sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
+  sendTelegramMessage(
+    "Информация о наличии товаров в МОТЕА обновлена.",
+    chatId
+  );
 }
 
 cron.schedule(
@@ -310,10 +319,31 @@ cron.schedule(
     try {
       await importProductsFromYML();
       await saveMoteaFeedToDb();
-      await updateProductsAvailability();
     } catch (error) {
       console.error("Ошибка при выполнении cron-задачи:", error);
-      sendTelegramMessage(`Ошибка при выполнении cron-задачи: ${error}`, chatId);
+      sendTelegramMessage(
+        `Ошибка при выполнении cron-задачи: ${error}`,
+        chatId
+      );
+    }
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(
+  "0 3 * * *",
+  () => {
+    try {
+      updateProductsAvailability();
+    } catch (error) {
+      console.error("Ошибка при выполнении cron-задачи:", error);
+      sendTelegramMessage(
+        `Ошибка при выполнении cron-задачи: ${error}`,
+        chatId
+      );
     }
   },
   {
