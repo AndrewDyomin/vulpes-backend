@@ -11,7 +11,7 @@ async function bot(req, res, next) {
     sendTelegramMessage(`Идентификатор вашего чата: ${message.id}. Вы написали '${message.text}'`, chatId)
 
     console.log(body)
-    res.status(200)
+    res.status(200).send('ok')
   } catch (error) {
     next(error);
   }
