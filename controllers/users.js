@@ -60,8 +60,13 @@ async function getAll(req, res, next) {
   try {
     const user = await User.findById(req.user.user.id).exec();
 
-    if (user.description === 'administrator') {
-      const usersArray = await User.find({}).exec();
+    if (user.role === 'owner') {
+      const array = await User.find({}).exec();
+      const usersArray = [];
+      for (const user of array) {
+        const obj = { _id: user._id, name: user.name, role: user.role, email: user.email, chatId: user.chatId };
+        usersArray.push(obj);
+      }
       return res.status(200).send({ usersArray });
     }
 
@@ -75,11 +80,11 @@ async function updateUser(req, res, next) {
   try {
     const user = await User.findById(req.user.user.id).exec();
 
-    if (user.description === 'administrator') {
+    if (user.role === 'owner') {
 
-      const { _id, name, email, description, organization, access } = req.body;
+      const { _id, name, email, role, chatId } = req.body;
 
-      await User.findByIdAndUpdate(_id, { name, email, description, organization, access }, { new: true }).exec();
+      await User.findByIdAndUpdate(_id, { name, email, role, chatId }, { new: true }).exec();
       
       return res.status(200).send({ message: 'User was updated.' });
     }

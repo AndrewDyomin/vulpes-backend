@@ -1,4 +1,5 @@
 const axios = require("axios");
+const cheerio = require("cheerio");
 require("dotenv").config();
 
 const url = "https://vulpes.salesdrive.me/api/order/list/";
@@ -26,7 +27,20 @@ async function getByFilter(req, res, next) {
 
       const response = await axios.get(url, { headers, params });
 
-      res.status(200).send({ ...response.data });
+      for (const order of response.data.data) {
+        const trackingNumber = order.ord_delivery_data[0].trackingNumber || '';
+        const npMark = `https://my.novaposhta.ua/orders/printMarking85x85/orders[]/${trackingNumber}/type/html/apiKey/${process.env.NP_API_KEY}`
+        const res = await axios.get(npMark);
+        const $ = cheerio.load(res.data);
+
+        const $img = $(".Barcode img");
+        const relativeSrc = $img.attr("src");
+        const absoluteSrc = `https://my.novaposhta.ua${relativeSrc}`;
+
+        order.ord_delivery_data[0].marking = absoluteSrc;
+
+      }
+    return res.status(200).send({ ...response.data });
     }
   } catch (error) {
     next(error);
