@@ -3,8 +3,8 @@ const axios = require("axios");
 const sax = require("sax");
 const csv = require("csv-parser");
 const mongoose = require("mongoose");
-const { fork } = require('child_process');
-const path = require('path');
+const { fork } = require("child_process");
+const path = require("path");
 const Product = require("../models/item");
 const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
@@ -15,6 +15,7 @@ const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
+let inProcess = false;
 
 const format = (number) => {
   if (number < 10) {
@@ -307,7 +308,7 @@ async function updateProductsAvailability() {
 
 cron.schedule(
   "0 1 * * *",
-   () => {
+  () => {
     const now = new Date();
     const today = format(now.getDate());
     const month = format(now.getMonth() + 1);
@@ -336,7 +337,7 @@ cron.schedule(
 
 cron.schedule(
   "0 2 * * *",
-    () => {
+  () => {
     try {
       saveMoteaFeedToDb();
     } catch (error) {
@@ -373,21 +374,26 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 16 * * *",
+  "36 16 * * *",
   () => {
-      const checkPrice = path.join(__dirname, 'checkPrice.js');
-      console.log('Запуск проверки цен...');
-    
+    if (!inProcess) {
+      inProcess = true;
+      const checkPrice = path.join(__dirname, "checkPrice.js");
+      console.log("Запуск проверки цен...");
+
       const child = fork(checkPrice);
 
-      child.on('exit', (code) => {
+      child.on("exit", (code) => {
         console.log(`Проверка цен завершёна с кодом ${code}`);
+        inProcess = false;
       });
 
-      child.on('error', (err) => {
-        console.error('Ошибка проверки цен:', err);
+      child.on("error", (err) => {
+        console.error("Ошибка проверки цен:", err);
+        inProcess = false;
       });
-    },
+    }
+  },
   {
     scheduled: true,
     timezone: "Europe/Kiev",
