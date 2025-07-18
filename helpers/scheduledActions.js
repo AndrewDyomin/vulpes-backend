@@ -3,6 +3,8 @@ const axios = require("axios");
 const sax = require("sax");
 const csv = require("csv-parser");
 const mongoose = require("mongoose");
+const { fork } = require('child_process');
+const path = require('path');
 const Product = require("../models/item");
 const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
@@ -364,6 +366,28 @@ cron.schedule(
       );
     }
   },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(
+  "30 16 * * *",
+  () => {
+      const checkPrice = path.join(__dirname, 'checkPrice.js');
+      console.log('Запуск проверки цен...');
+    
+      const child = fork(checkPrice);
+
+      child.on('exit', (code) => {
+        console.log(`Проверка цен завершёна с кодом ${code}`);
+      });
+
+      child.on('error', (err) => {
+        console.error('Ошибка проверки цен:', err);
+      });
+    },
   {
     scheduled: true,
     timezone: "Europe/Kiev",
