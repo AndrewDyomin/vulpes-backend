@@ -112,18 +112,14 @@ async function sendExcel(data, name) {
 }
 
 async function priceCheck() {
+  await mongoose.connect(MAIN_DB_URI);
+  console.log("Connected to main DB");
   const now = new Date();
   const today = format(now.getDate());
   const month = format(now.getMonth() + 1);
   const exchangeRate = 48.5;
-
-  await mongoose.connect(MAIN_DB_URI);
-  console.log("Connected to main DB");
   const dbItems = await Product.find({}, { article: 1, price: 1, _id: 0 });
-
   const linksArray = await fetchLinks(dbItems);
-  console.log("В работе", linksArray.length, "артикулов.", linksArray[16856]);
-
   let excelData = [];
   const errors = [];
   let nameIndex = 1;

@@ -99,7 +99,7 @@ async function deleteUser(req, res, next) {
   try {
     const user = await User.findById(req.user.user.id).exec();
 
-    if (user.description === 'administrator') {
+    if (user.role === 'owner') {
 
       const { _id } = req.body;
 
@@ -108,7 +108,7 @@ async function deleteUser(req, res, next) {
       return res.status(200).send({ message: 'User was deleted.' });
     }
 
-    res.status(200).send({ message: "Sorry. You do not have an access." });
+    res.status(403).send({ message: "Sorry. You do not have an access." });
   } catch (error) {
     next(error);
   }

@@ -384,11 +384,13 @@ cron.schedule(
       const child = fork(checkPrice);
 
       child.on("exit", (code) => {
+        sendTelegramMessage(`Проверка цен завершёна с кодом ${code}`, chatId)
         console.log(`Проверка цен завершёна с кодом ${code}`);
         inProcess = false;
       });
 
       child.on("error", (err) => {
+        sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId)
         console.error("Ошибка проверки цен:", err);
         inProcess = false;
       });
