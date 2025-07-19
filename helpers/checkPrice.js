@@ -107,7 +107,7 @@ async function sendExcel(data, name) {
   const filePath = path.join(__dirname, "..", "tmp", fileName);
 
   await workbook.xlsx.writeFile(filePath);
-  await sendTelegramFile(filePath, "Таблица наличия", chatId);
+  await sendTelegramFile(filePath, "", chatId);
   fs.unlinkSync(filePath);
 }
 
@@ -127,7 +127,7 @@ async function priceCheck() {
 
   for (const item of linksArray) {
     if (i >= 300) {
-      await sleep(15000);
+      await sleep(20000);
       i = 0;
     }
 
@@ -173,9 +173,9 @@ async function priceCheck() {
     } catch (err) {
       if (err?.response?.status === 429) {
         console.log("Block 429!!!");
-        await sleep(160000);
+        await sleep(180000);
       }
-      errors.push([`Ошибка при обработке артикула ${item}: ${err.message}`]);
+      errors.push(['-', 'Ошибка при обработке артикула', item.article, err.message]);
     }
     i++;
   }

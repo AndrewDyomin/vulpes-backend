@@ -15,7 +15,6 @@ const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
-let inProcess = false;
 
 const format = (number) => {
   if (number < 10) {
@@ -336,7 +335,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "0 2 * * *",
+  "10 1 * * *",
   () => {
     try {
       saveMoteaFeedToDb();
@@ -355,7 +354,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "0 3 * * *",
+  "20 1 * * *",
   () => {
     try {
       updateProductsAvailability();
@@ -374,27 +373,22 @@ cron.schedule(
 );
 
 cron.schedule(
-  "36 16 * * *",
+  "30 1 * * *",
   () => {
-    if (!inProcess) {
-      inProcess = true;
-      const checkPrice = path.join(__dirname, "checkPrice.js");
-      console.log("Запуск проверки цен...");
+    const checkPrice = path.join(__dirname, "checkPrice.js");
+    console.log("Запуск проверки цен...");
 
-      const child = fork(checkPrice);
+    const child = fork(checkPrice);
 
-      child.on("exit", (code) => {
-        sendTelegramMessage(`Проверка цен завершёна с кодом ${code}`, chatId)
-        console.log(`Проверка цен завершёна с кодом ${code}`);
-        inProcess = false;
-      });
+    child.on("exit", (code) => {
+      sendTelegramMessage(`Проверка цен завершёна с кодом ${code}`, chatId);
+      console.log(`Проверка цен завершёна с кодом ${code}`);
+    });
 
-      child.on("error", (err) => {
-        sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId)
-        console.error("Ошибка проверки цен:", err);
-        inProcess = false;
-      });
-    }
+    child.on("error", (err) => {
+      sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId);
+      console.error("Ошибка проверки цен:", err);
+    });
   },
   {
     scheduled: true,
