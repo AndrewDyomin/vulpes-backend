@@ -165,7 +165,7 @@ async function priceCheck() {
       excelData.push([item.article, dbPrice, mItem.sku, mPrice]);
 
       if (excelData.length >= 5000) {
-        sendExcel(excelData, `Changed price ${today}.${month}(${nameIndex})`);
+        await sendExcel(excelData, `Changed price ${today}.${month}(${nameIndex})`);
         nameIndex++;
         excelData.length = 0;
         excelData = [];
@@ -180,8 +180,8 @@ async function priceCheck() {
     i++;
   }
 
-  sendExcel(excelData, `Changed price ${today}.${month}(${nameIndex})`);
-  sendExcel(errors, `Errors ${today}.${month}`);
+  await sendExcel(excelData, `Changed price ${today}.${month}(${nameIndex})`);
+  await sendExcel(errors, `Errors ${today}.${month}`);
 
   await mongoose.disconnect();
   process.exit(0);
