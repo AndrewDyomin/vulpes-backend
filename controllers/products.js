@@ -57,14 +57,10 @@ async function getByArticle(req, res, next) {
 
 async function search(req, res, next) {
   try {
-    let value = req.body.value?.trim() || "";
+    const value = req.body.value?.trim() || "";
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-
-    if (value.includes("А")) {
-      value = value.replace(/А/g, "A");
-    }
 
     let query = { article: { $regex: value, $options: 'i' } };
 
