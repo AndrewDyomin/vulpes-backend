@@ -373,7 +373,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 1 * * *",
+  "30 20 * * *",
   () => {
     const checkPrice = path.join(__dirname, "checkPrice.js");
     console.log("Запуск проверки цен...");

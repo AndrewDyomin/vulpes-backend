@@ -8,8 +8,8 @@ const sendTelegramFile = require('../helpers/sendTelegramFile');
 
 async function getAll(req, res, next) {
   try {
-    const page = parseInt(req.query.page) || 1; // текущая страница
-    const limit = parseInt(req.query.limit) || 20; // сколько товаров на страницу
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
 
     const skip = (page - 1) * limit;
 
