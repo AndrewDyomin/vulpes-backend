@@ -37,19 +37,30 @@ const fetchAvailability = async (array) => {
     article: { $in: [...articles, ...variantArticles] },
   }).lean();
 
-  const donorMap = new Map();
+  const availabilityMap = new Map();
   for (const d of donors) {
-    donorMap.set(d.article, d.availability);
+    availabilityMap.set(d.article, d.availability);
+  }
+
+  const linkMap = new Map();
+  for (const d of donors) {
+    linkMap.set(d.article, d.link);
   }
 
   const arrayCopy = array.map((product) => {
     const availability =
-      donorMap.get(product.article) ||
-      donorMap.get(`${product.article}-0`) ||
+      availabilityMap.get(product.article) ||
+      availabilityMap.get(`${product.article}-0`) ||
+      "";
+
+    const link =
+      linkMap.get(product.article) ||
+      linkMap.get(`${product.article}-0`) ||
       "";
     return {
       ...product._doc,
       availabilityInMotea: availability,
+      linkInMotea: link,
     };
   });
 
@@ -287,7 +298,7 @@ async function updateProductsAvailability() {
       updateOne: {
         filter: { _id: product._id },
         update: {
-          $set: { availabilityInMotea: product.availabilityInMotea || null },
+          $set: { availabilityInMotea: product.availabilityInMotea || null, linkInMotea: product.linkInMotea || null },
         },
       },
     }));
@@ -299,10 +310,7 @@ async function updateProductsAvailability() {
     skip += BATCH_SIZE;
     hasMore = batch.length === BATCH_SIZE;
   }
-  sendTelegramMessage(
-    "Информация о наличии товаров в МОТЕА обновлена.",
-    chatId
-  );
+  sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
 }
 
 cron.schedule(

@@ -171,6 +171,14 @@ const itemSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  linkInMotea: {
+    type: String,
+    default: '',
+  },
+  zoltarifNumber: {
+    type: String,
+    default: '',
+  },
 });
 
 module.exports = mongoose.model("Item", itemSchema);
