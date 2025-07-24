@@ -166,6 +166,10 @@ const itemSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
+    weight: {
+      type: Number,
+      default: 0,
+    },
   },
   availabilityInMotea: {
     type: String,
