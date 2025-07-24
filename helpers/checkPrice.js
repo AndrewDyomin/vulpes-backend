@@ -127,7 +127,7 @@ async function priceCheck() {
 
   for (const item of linksArray) {
     if (i >= 300) {
-      await sleep(20000);
+      await sleep(30000);
       i = 0;
     }
 
