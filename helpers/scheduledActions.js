@@ -244,7 +244,8 @@ async function saveMoteaFeedToDb() {
                   response.data.resume();
                 })
                 .catch((err) => {
-                  console.error("Ошибка batch insert:", "err");
+                  console.error("Ошибка batch insert:", err);
+                  sendTelegramMessage(`Ошибка копирования фида в базу: ${err}`)
                   reject(err);
                 });
             }
@@ -255,7 +256,8 @@ async function saveMoteaFeedToDb() {
             try {
               await MoteaItem.insertMany(batch);
             } catch (err) {
-              console.error("Ошибка финального insertMany:", "err");
+              console.error("Ошибка финального insertMany:", err);
+              sendTelegramMessage(`Ошибка финального insertMany в базу: ${err}`)
               reject(err);
             }
           }
@@ -381,7 +383,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 20 * * *",
+  "30 18 * * *",
   () => {
     const checkPrice = path.join(__dirname, "checkPrice.js");
     console.log("Запуск проверки цен...");
