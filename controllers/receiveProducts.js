@@ -2,6 +2,7 @@
 // const xml2js = require('xml2js');
 const XLSX = require("xlsx");
 const Receive = require("../models/receive");
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 
 const format = (number) => {
   if (number < 10) {
@@ -49,12 +50,33 @@ async function getById(req, res, next) {
 }
 
 async function add(req, res, next) {
-  const { name, items } = req.body;
-
   try {
-    await Receive.create({ name, items });
+    const items = req.body?.items;
+    let name = req.body?.name;
+    const now = new Date();
+    const today = format(now.getDate());
+    const month = format(now.getMonth() + 1);
+    const year = now.getFullYear();
 
-    res.status(200).json({ message: "Receive created." });
+    if (!name) {
+      name = `${today}.${month}.${year}`
+    }
+
+    const array = [];
+
+    for (const item of items) {
+      if (item?.article && item.article !== '' && item.article !== '?') {
+        array.push({article: item.article, count: item.count})
+      } else {
+        const chatId = process.env.ADMIN_CHAT_ID;
+        array.push(item)
+        sendTelegramMessage(`Приход товара №${name} создан с ошибками`, chatId)
+      }
+    }
+
+    await Receive.create({ name, items: array });
+
+    res.status(200).json({ message: "Receive created.", name });
   } catch (error) {
     next(error);
   }

@@ -30,7 +30,7 @@ app.use("/users", isAuth, usersRoutes);
 app.use("/products", productsRoutes);
 app.use("/orders", isAuth, ordersRoutes);
 app.use("/inventory-check", isAuth, inventoryCheckRoutes);
-app.use("/receive-products", isAuth, ReceiveRoutes);
+app.use("/receive-products", ReceiveRoutes);
 app.use("/files", isAuth, FilesRoutes);
 app.use("/webhook", TelegramRoutes);
 
