@@ -78,9 +78,9 @@ async function importProductsFromYML() {
   try {
     console.log("Импорт начат...");
 
-    const existingDocs = await Product.find({}, "article _id");
+    const existingDocs = await Product.find({}, "article _id name");
     const existingArticlesMap = new Map(
-      existingDocs.map((doc) => [doc.article, doc._id])
+      existingDocs.map((doc) => [doc.article, doc])
     );
 
     const newProducts = [];
@@ -113,6 +113,7 @@ async function importProductsFromYML() {
       if (tagName === "offer") {
         const article = currentProduct.article;
         if (!article) return;
+        const target = existingArticlesMap.get(article);
 
         const data = {
           price:
@@ -124,7 +125,7 @@ async function importProductsFromYML() {
                       : currentProduct.price,
                 }
               : {},
-          name: { UA: currentProduct.name },
+          name: { UA: currentProduct.name, DE: target.name.DE, RU: target.name.RU },
           brand: currentProduct.vendor,
           article: currentProduct.article,
           category: currentProduct.categoryId,
@@ -142,9 +143,10 @@ async function importProductsFromYML() {
         }
 
         if (existingArticlesMap.has(article)) {
+          
           productsToUpdate.push({
             updateOne: {
-              filter: { _id: existingArticlesMap.get(article) },
+              filter: { _id: target._id },
               update: data,
             },
           });
@@ -453,3 +455,6 @@ cron.schedule(
     timezone: "Europe/Kiev",
   }
 );
+
+
+importProductsFromYML();
