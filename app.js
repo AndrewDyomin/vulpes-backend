@@ -4,6 +4,7 @@ const cors = require("cors");
 const path = require("node:path");
 require("./db");
 require("./helpers/scheduledActions")
+require("./helpers/parseInvoice")
 
 const authRoutes = require("./routes/api/auth");
 const usersRoutes = require("./routes/api/users");
@@ -12,6 +13,7 @@ const ordersRoutes = require('./routes/api/orders');
 const inventoryCheckRoutes = require('./routes/api/inventoryCheck');
 const ReceiveRoutes = require('./routes/api/receive');
 const TelegramRoutes = require('./routes/api/telegram');
+const FilesRoutes = require('./routes/api/files');
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -29,6 +31,7 @@ app.use("/products", productsRoutes);
 app.use("/orders", isAuth, ordersRoutes);
 app.use("/inventory-check", isAuth, inventoryCheckRoutes);
 app.use("/receive-products", isAuth, ReceiveRoutes);
+app.use("/files", isAuth, FilesRoutes);
 app.use("/webhook", TelegramRoutes);
 
 
