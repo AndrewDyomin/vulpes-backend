@@ -315,8 +315,37 @@ async function updateProductsAvailability() {
   sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
 }
 
-cron.schedule(
+cron.schedule(                  // import products at 01:00
   "0 1 * * *",
+  () => {
+    const now = new Date();
+    const today = format(now.getDate());
+    const month = format(now.getMonth() + 1);
+    const hours = format(now.getHours());
+    const minutes = format(now.getMinutes());
+    const seconds = format(now.getSeconds());
+    console.log(
+      `Scheduled function triggered at ${today}.${month} ${hours}:${minutes}:${seconds}.`
+    );
+
+    try {
+      importProductsFromYML();
+    } catch (error) {
+      console.error("Ошибка при выполнении cron-задачи:", error);
+      sendTelegramMessage(
+        `Ошибка при выполнении cron-задачи: ${error}`,
+        chatId
+      );
+    }
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(                  // import products at 17:30
+  "30 17 * * *",
   () => {
     const now = new Date();
     const today = format(now.getDate());
@@ -363,8 +392,27 @@ cron.schedule(
   }
 );
 
-cron.schedule(
+cron.schedule(                 //  update availability at 01:20
   "20 1 * * *",
+  () => {
+    try {
+      updateProductsAvailability();
+    } catch (error) {
+      console.error("Ошибка при выполнении cron-задачи:", error);
+      sendTelegramMessage(
+        `Ошибка при выполнении cron-задачи: ${error}`,
+        chatId
+      );
+    }
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(                 //  update availability at 17:50
+  "50 17 * * *",
   () => {
     try {
       updateProductsAvailability();
