@@ -22,7 +22,9 @@ function extractProductsFromText(textLines) {
       result.push({});
       count++;
       const article = line;
+      const prevLine = textLines[i - 1]?.trim();
       result[count].article = article;
+      result[count].position = prevLine;
     }
 
     if (line.includes("Pcs.")) {
@@ -37,6 +39,14 @@ function extractProductsFromText(textLines) {
           : nextLine.replace(",", ".");
       }
     }
+  }
+
+  for (const item of result) {
+      item.count = item.count
+        .replace(/Pcs/g, '')
+        .replace(/\./g, '')
+        .replace(/ /g, '')
+        .trim();
   }
 
   let total = 0
