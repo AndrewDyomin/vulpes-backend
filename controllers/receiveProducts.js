@@ -84,15 +84,15 @@ async function add(req, res, next) {
 
 async function remove(req, res, next) {
   const { id } = req.body;
-  const { role } = req.user.user;
+  // const { role } = req.user.user;
 
   try {
-    if (role === "owner") {
+    // if (role === "owner") {
       await Receive.findByIdAndDelete(id);
       res.status(200).json({ message: "Receive was deleted" });
-    } else {
-      res.status(200).json({ message: "You can't delete this object" });
-    }
+    // } else {
+    //   res.status(200).json({ message: "You can't delete this object" });
+    // }
   } catch (error) {
     next(error);
   }
@@ -110,13 +110,13 @@ async function update(req, res, next) {
 }
 
 async function combine(req, res, next) {
-  const { role } = req.user.user;
+  // const { role } = req.user.user;
   const { array } = req.body;
   const resultArray = [];
   let name = "";
 
   try {
-    if (role === "owner") {
+    // if (role === "owner") {
       for (const id of array) {
         const check = await Receive.findById(id).exec();
 
@@ -140,9 +140,9 @@ async function combine(req, res, next) {
       }
 
       res.status(200).json({ message: "Inventory checks was combined" });
-    } else {
-      res.status(200).json({ message: "You can't do this" });
-    }
+    // } else {
+    //   res.status(200).json({ message: "You can't do this" });
+    // }
   } catch (error) {
     next(error);
   }
