@@ -455,3 +455,6 @@ cron.schedule(
     timezone: "Europe/Kiev",
   }
 );
+
+
+importProductsFromYML();
