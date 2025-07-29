@@ -210,22 +210,12 @@ async function importProductsFromYML() {
   try {
     console.log("Импорт начат...");
 
-    // Загружаем существующие товары батчами
     const existingArticlesMap = new Map();
-    const BATCH_SIZE = 10000;
-    let skip = 0;
-    let hasMore = true;
 
-    while (hasMore) {
-      const batch = await Product.find({}, "article _id name").skip(skip).limit(BATCH_SIZE);
-      if (batch.length === 0) {
-        hasMore = false;
-      } else {
-        for (const doc of batch) {
-          existingArticlesMap.set(doc.article, doc);
-        }
-        skip += BATCH_SIZE;
-      }
+    // Используем cursor для экономии памяти
+    const cursor = Product.find({}, "article _id name").lean().cursor();
+    for await (const doc of cursor) {
+      existingArticlesMap.set(doc.article, doc);
     }
 
     const newProducts = [];
