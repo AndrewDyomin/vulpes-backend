@@ -72,16 +72,161 @@ const fetchAvailability = async (array) => {
   return arrayCopy;
 };
 
+// async function importProductsFromYML() {
+//   if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
+
+//   try {
+//     console.log("Импорт начат...");
+
+//     const existingDocs = await Product.find({}, "article _id name");
+//     const existingArticlesMap = new Map(
+//       existingDocs.map((doc) => [doc.article, doc])
+//     );
+
+//     const newProducts = [];
+//     const productsToUpdate = [];
+
+//     let currentTag = null;
+//     let currentProduct = null;
+//     let textBuffer = "";
+
+//     const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
+
+//     const parser = sax.createStream(true, { trim: true });
+
+//     parser.on("opentag", (node) => {
+//       if (node.name === "offer") {
+//         currentProduct = {};
+//       }
+//       currentTag = node.name;
+//     });
+
+//     parser.on("text", (text) => {
+//       if (currentProduct && currentTag) {
+//         textBuffer += text;
+//       }
+//     });
+
+//     parser.on("closetag", async (tagName) => {
+//       if (!currentProduct) return;
+
+//       if (tagName === "offer") {
+//         const article = currentProduct.article;
+//         if (!article) return;
+//         const target = existingArticlesMap.get(article);
+
+//         const data = {
+//           price:
+//             currentProduct.currencyId === "UAH"
+//               ? {
+//                   UAH:
+//                     currentProduct.oldprice >= currentProduct.price
+//                       ? currentProduct.oldprice
+//                       : currentProduct.price,
+//                 }
+//               : {},
+//           name: { UA: currentProduct.name, DE: target.name.DE, RU: target.name.RU },
+//           brand: currentProduct.vendor,
+//           article: currentProduct.article,
+//           category: currentProduct.categoryId,
+//           description: { UA: currentProduct.description },
+//           quantityInStock: currentProduct.quantity_in_stock,
+//           images: Array.isArray(currentProduct.picture)
+//             ? currentProduct.picture
+//             : currentProduct.picture
+//             ? [currentProduct.picture]
+//             : [],
+//         };
+
+//         if (currentProduct.barcode) {
+//           data.barcode = currentProduct.barcode;
+//         }
+
+//         if (existingArticlesMap.has(article)) {
+          
+//           productsToUpdate.push({
+//             updateOne: {
+//               filter: { _id: target._id },
+//               update: data,
+//             },
+//           });
+//         } else {
+//           newProducts.push(data);
+//         }
+
+//         currentProduct = null;
+
+//         if (newProducts.length >= CHUNK_SIZE) {
+//           await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), {
+//             ordered: false,
+//           });
+//         }
+
+//         if (productsToUpdate.length >= CHUNK_SIZE) {
+//           await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), {
+//             ordered: false,
+//           });
+//         }
+//       } else if (currentProduct && currentTag && textBuffer) {
+//         currentProduct[currentTag] = textBuffer;
+//         textBuffer = "";
+//       }
+//     });
+
+//     parser.on("end", async () => {
+//       if (newProducts.length > 0) {
+//         await Product.insertMany(newProducts, { ordered: false });
+//       }
+
+//       if (productsToUpdate.length > 0) {
+//         await Product.bulkWrite(productsToUpdate, { ordered: false });
+//       }
+
+//       console.log(`[${new Date().toISOString()}] Импорт завершён`);
+//       sendTelegramMessage("База данных товаров успешно обновлена.", chatId);
+//     });
+
+//     parser.on("error", (err) => {
+//       console.error("Ошибка парсинга:", err.message);
+//       sendTelegramMessage(
+//         `Во время обновления товаров возникла ошибка парсинга: ${err.message}`,
+//         chatId
+//       );
+//     });
+
+//     response.data.pipe(parser);
+//   } catch (err) {
+//     console.error(`Ошибка импорта: ${err.message}`);
+//     sendTelegramMessage(
+//       `Ошибка импорта обновлённых товаров: ${err.message}`,
+//       chatId
+//     );
+//   }
+// }
+
 async function importProductsFromYML() {
   if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
 
   try {
     console.log("Импорт начат...");
 
-    const existingDocs = await Product.find({}, "article _id name");
-    const existingArticlesMap = new Map(
-      existingDocs.map((doc) => [doc.article, doc])
-    );
+    // Загружаем существующие товары батчами
+    const existingArticlesMap = new Map();
+    const BATCH_SIZE = 10000;
+    let skip = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const batch = await Product.find({}, "article _id name").skip(skip).limit(BATCH_SIZE);
+      if (batch.length === 0) {
+        hasMore = false;
+      } else {
+        for (const doc of batch) {
+          existingArticlesMap.set(doc.article, doc);
+        }
+        skip += BATCH_SIZE;
+      }
+    }
 
     const newProducts = [];
     const productsToUpdate = [];
@@ -91,7 +236,6 @@ async function importProductsFromYML() {
     let textBuffer = "";
 
     const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
-
     const parser = sax.createStream(true, { trim: true });
 
     parser.on("opentag", (node) => {
@@ -125,7 +269,11 @@ async function importProductsFromYML() {
                       : currentProduct.price,
                 }
               : {},
-          name: { UA: currentProduct.name, DE: target.name.DE, RU: target.name.RU },
+          name: {
+            UA: currentProduct.name,
+            DE: target?.name?.DE,
+            RU: target?.name?.RU,
+          },
           brand: currentProduct.vendor,
           article: currentProduct.article,
           category: currentProduct.categoryId,
@@ -142,8 +290,7 @@ async function importProductsFromYML() {
           data.barcode = currentProduct.barcode;
         }
 
-        if (existingArticlesMap.has(article)) {
-          
+        if (target) {
           productsToUpdate.push({
             updateOne: {
               filter: { _id: target._id },
@@ -203,6 +350,7 @@ async function importProductsFromYML() {
     );
   }
 }
+
 
 async function saveMoteaFeedToDb() {
   try {
@@ -457,4 +605,4 @@ cron.schedule(
 );
 
 
-importProductsFromYML();
+importProductsFromYML()
