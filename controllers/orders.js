@@ -41,6 +41,22 @@ async function getByFilter(req, res, next) {
 
       }
     return res.status(200).send({ ...response.data });
+    } else if (filter === "in-work") {
+      const params = {
+        page: 1,
+        filter: {"statusId": ['1','2']}
+      };
+
+      const response = await axios.get(url, { headers, params });
+      const statusOptions = response.data.meta.fields.statusId.options;
+      const ordersArray = response.data.data;
+
+      for (const order of ordersArray) {
+        const option = statusOptions.find(status => status.value === order.statusId)
+        order.statusLabel = option.text;
+      }
+
+      return res.status(200).send({ ...response.data });
     }
   } catch (error) {
     next(error);
