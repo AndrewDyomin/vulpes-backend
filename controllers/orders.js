@@ -1,5 +1,9 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const cron = require("node-cron");
+const OrdersArchive = require("../models/ordersArchive");
+const Product = require("../models/item");
+const ordersArchive = require("../models/ordersArchive");
 require("dotenv").config();
 
 const url = "https://vulpes.salesdrive.me/api/order/list/";
@@ -9,8 +13,71 @@ const headers = {
 };
 
 async function getAll(req, res, next) {
+  let allOrders = [];
   try {
-    res.status(200).json({ orders: "All orders" });
+    let archive = await OrdersArchive.findOne({}).exec()
+    if (!archive) {
+      await OrdersArchive.create({})
+      archive = await OrdersArchive.find({}).exec()
+    }
+
+    const params = {
+      page: 1,
+      filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13']}
+    };
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await axios.get(url, { headers, params });
+      const pagination = response.data.pagination;
+      if (pagination.pageCount <= pagination.currentPage) {hasMore = false};
+      params.page ++;
+      const statusOptions = response.data.meta.fields.statusId.options;
+      const ordersArray = response.data.data;
+
+      for (const order of ordersArray) {
+        const option = statusOptions.find(status => status.value === order.statusId)
+        order.statusLabel = option.text;
+        for (const product of order.products) {
+          const target = await Product.findOne({article: product.sku}).exec()
+          if (target?.isSet && target.isSet[0] !== null) {
+            product.isSet = target.isSet;
+          }
+        }
+      }
+
+      allOrders.push(...ordersArray);
+    }
+
+    await OrdersArchive.findByIdAndUpdate(archive._id, { orders: allOrders }).exec()
+    allOrders = null;
+    archive = null;
+    console.log('Заказы скопированы')
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getByArticle(req, res, next) {
+  const targetArticle = req.body.article;
+  const resultOrders = [];
+  try {
+    const archive = await ordersArchive.findOne({}).exec();
+    for (const order of archive.orders) {
+      let bool = false;
+      const doc = {number: order.id, parents: [], set: [], status: order?.statusLabel || null}
+      for (const product of order.products) {
+        doc.parents.push(product.sku)
+        if (product.sku === targetArticle) {bool = true}
+        if (product?.isSet && product.isSet[0] !== null) {
+          doc.set.push(...product.isSet);
+          if (product.isSet.includes(targetArticle)) {bool = true}
+        }
+      }
+      if (bool) {resultOrders.push(doc)}
+    }
+    console.log(resultOrders)
+    return res.status(200).send({ result: resultOrders });
   } catch (error) {
     next(error);
   }
@@ -41,10 +108,27 @@ async function getByFilter(req, res, next) {
 
       }
     return res.status(200).send({ ...response.data });
-    } else if (filter === "in-work") {
+    } else if (filter === "in-work" || filter === 0) {
       const params = {
         page: 1,
-        filter: {"statusId": ['1','2']}
+        filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13']}
+      };
+
+      const response = await axios.get(url, { headers, params });
+      const statusOptions = response.data.meta.fields.statusId.options;
+      const ordersArray = response.data.data;
+
+      for (const order of ordersArray) {
+        const option = statusOptions.find(status => status.value === order.statusId)
+        order.statusLabel = option.text;
+      }
+
+      return res.status(200).send({ ...response.data });
+    } else {
+      console.log(filter)
+      const params = {
+        page: 1,
+        filter: {"statusId": filter}
       };
 
       const response = await axios.get(url, { headers, params });
@@ -63,4 +147,16 @@ async function getByFilter(req, res, next) {
   }
 }
 
-module.exports = { getAll, getByFilter };
+cron.schedule(
+  "*/30 * * * *",
+  () => {
+    console.log("Копирую заказы...");
+    getAll();
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+module.exports = { getAll, getByFilter, getByArticle };

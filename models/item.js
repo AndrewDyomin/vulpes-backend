@@ -183,6 +183,10 @@ const itemSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  isSet: {
+    type: Array,
+    default: [null],
+  },
 });
 
 module.exports = mongoose.model("Item", itemSchema);
