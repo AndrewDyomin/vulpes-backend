@@ -65,14 +65,15 @@ async function getByArticle(req, res, next) {
     const archive = await ordersArchive.findOne({}).exec();
     for (const order of archive.orders) {
       let bool = false;
-      const doc = {number: order.id, parents: [], set: [], status: order?.statusLabel || null}
+      const doc = {number: order.id, articles: [], status: order?.statusLabel || null}
       for (const product of order.products) {
-        doc.parents.push(product.sku)
+        const parent = {article: product.sku, set: []}
         if (product.sku === targetArticle) {bool = true}
         if (product?.isSet && product.isSet[0] !== null) {
-          doc.set.push(...product.isSet);
+          parent.set.push(...product.isSet);
           if (product.isSet.includes(targetArticle)) {bool = true}
         }
+        doc.articles.push(parent)
       }
       if (bool) {resultOrders.push(doc)}
     }
