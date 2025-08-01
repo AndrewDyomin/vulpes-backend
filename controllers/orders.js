@@ -60,10 +60,12 @@ async function getAll(req, res, next) {
 
 async function getByArticle(req, res, next) {
   const targetArticle = req.body.article;
+  const stopList = [4, 10, 5, 6, 7, 12, 8];
   const resultOrders = [];
   try {
     const archive = await ordersArchive.findOne({}).exec();
     for (const order of archive.orders) {
+      if (stopList.includes(Number(order.statusId))) {continue}
       let bool = false;
       const doc = {number: order.id, articles: [], status: order?.statusLabel || null}
       for (const product of order.products) {
@@ -77,7 +79,6 @@ async function getByArticle(req, res, next) {
       }
       if (bool) {resultOrders.push(doc)}
     }
-    console.log(resultOrders)
     return res.status(200).send({ result: resultOrders });
   } catch (error) {
     next(error);
