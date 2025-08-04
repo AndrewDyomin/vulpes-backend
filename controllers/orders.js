@@ -15,11 +15,7 @@ const headers = {
 async function getAll(req, res, next) {
   let allOrders = [];
   try {
-    let archive = await OrdersArchive.findOne({}).exec()
-    if (!archive) {
-      await OrdersArchive.create({})
-      archive = await OrdersArchive.find({}).exec()
-    }
+    await OrdersArchive.collection.drop();
 
     const params = {
       page: 1,
@@ -49,9 +45,8 @@ async function getAll(req, res, next) {
       allOrders.push(...ordersArray);
     }
 
-    await OrdersArchive.findByIdAndUpdate(archive._id, { orders: allOrders }).exec()
+    await OrdersArchive.insertMany(allOrders);
     allOrders = null;
-    archive = null;
     console.log('Заказы скопированы')
   } catch (error) {
     next(error);
@@ -63,8 +58,9 @@ async function getByArticle(req, res, next) {
   const stopList = [4, 10, 5, 6, 7, 12, 8];
   const resultOrders = [];
   try {
-    const archive = await ordersArchive.findOne({}).exec();
-    for (const order of archive.orders) {
+    const archive = await ordersArchive.find({}).exec();
+    console.log(archive[0])
+    for (const order of archive) {
       if (stopList.includes(Number(order.statusId))) {continue}
       let bool = false;
       const doc = {number: order.id, articles: [], status: order?.statusLabel || null}
@@ -127,7 +123,6 @@ async function getByFilter(req, res, next) {
 
       return res.status(200).send({ ...response.data });
     } else {
-      console.log(filter)
       const params = {
         page: 1,
         filter: {"statusId": filter}
