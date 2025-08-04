@@ -12,6 +12,23 @@ const headers = {
   "Content-Type": "application/json",
 };
 
+// [
+//     { value: 1, text: 'новый'},
+//     { value: 2, text: 'в обработке' },
+//     { value: 3, text: 'На отправку' },
+//     { value: 4, text: 'Отправлен' },
+//     { value: 5, text: 'Продажа' },
+//     { value: 6, text: 'Отказ' },
+//     { value: 7, text: 'Возврат' },
+//     { value: 8, text: 'Удален' },
+//     { value: 9, text: 'Ожидает' },
+//     { value: 10, text: 'оплачен ?' },
+//     { value: 12, text: 'отменен' },
+//     { value: 13, text: 'заказать' },
+//     { value: 14, text: 'заказать (нет на складе МОТЕА)' },
+//     { value: 15, text: 'Появилось в наличии' },
+//   ]
+
 async function getAll(req, res, next) {
   let allOrders = [];
   try {
@@ -19,11 +36,12 @@ async function getAll(req, res, next) {
 
     const params = {
       page: 1,
-      filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13']}
+      filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13', '14', '15']},
     };
     let hasMore = true;
 
     while (hasMore) {
+      console.log(`Fetching page ${params.page}...`);
       const response = await axios.get(url, { headers, params });
       const pagination = response.data.pagination;
       if (pagination.pageCount <= pagination.currentPage) {hasMore = false};
@@ -49,6 +67,7 @@ async function getAll(req, res, next) {
     allOrders = null;
     console.log('Заказы скопированы')
   } catch (error) {
+    console.error("Error fetching orders:", error);
     next(error);
   }
 }
