@@ -9,6 +9,7 @@ const Product = require("../models/item");
 const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const { getAdSpendDirect } = require('./checkAds');
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -460,6 +461,21 @@ cron.schedule(
       sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId);
       console.error("Ошибка проверки цен:", err);
     });
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(                 //  check ad spend
+  "0 9 * * 1",
+  async () => {
+    console.log('Запуск задачи по сбору расходов из Google Sheets');
+  
+    const adsInfo = await getAdSpendDirect();
+  
+    console.log('Информация о рекламе за прошлый период:', adsInfo);
   },
   {
     scheduled: true,
