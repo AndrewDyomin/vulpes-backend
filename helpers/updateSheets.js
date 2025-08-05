@@ -5,7 +5,7 @@ async function updateSheets(sheets, spreadsheetId, range, value) {
             spreadsheetId,
             range,
             valueInputOption: "USER_ENTERED",
-            requestBody: { values: [value] },
+            requestBody: { values: value },
         });
         return response;
     } catch(err) {

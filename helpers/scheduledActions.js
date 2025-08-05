@@ -10,6 +10,7 @@ const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getAdSpendDirect } = require('./checkAds');
+const { checkOrdersToOrder } = require("./checkOrders");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -476,6 +477,21 @@ cron.schedule(                 //  check ad spend
     const adsInfo = await getAdSpendDirect();
   
     console.log('Информация о рекламе за прошлый период:', adsInfo);
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(                 //  check orders
+  "0 10 * * 3",
+  async () => {
+    console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
+  
+    await checkOrdersToOrder();
+  
+    console.log('Проверка заказов завершена.');
   },
   {
     scheduled: true,
