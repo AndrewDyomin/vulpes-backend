@@ -24,7 +24,7 @@ function extractProductsFromText(textLines) {
       const article = line;
       const prevLine = textLines[i - 1]?.trim();
       result[count].article = article;
-      result[count].position = prevLine;
+      result[count].position = prevLine.includes('consist') || prevLine.includes('Pcs') ? null : prevLine;
     }
 
     if (line.includes("Pcs.")) {
@@ -34,7 +34,7 @@ function extractProductsFromText(textLines) {
         result[count].count = qty;
         const nextLine = textLines[i + 1]?.trim();
         const nextNextLine = textLines[i + 2]?.trim();
-        result[count].price = articlePattern.test(nextNextLine)
+        result[count].price = articlePattern.test(nextNextLine) || !result[count].position
           ? ""
           : nextLine.replace(",", ".");
       }
@@ -51,7 +51,10 @@ function extractProductsFromText(textLines) {
 
   let total = 0
   for (const product of result) {
-    total += Number(product.price) * Number(product.count)
+    total += Number(product.price) * Number(product.count);
+    if (!product.position) {
+      product.position = '';
+    } 
   }
 
   const invoice = { name, items: [ ...result ], total: total.toFixed(2)}

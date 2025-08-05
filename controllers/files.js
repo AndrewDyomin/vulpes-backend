@@ -22,7 +22,6 @@ async function uploadInvoice(req, res, next) {
 }
 
 async function downloadBrokerTable(req, res, next) {
-  console.log(req.body);
 
   try {
     const doc = req.body.data.values;
