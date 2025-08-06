@@ -9,8 +9,9 @@ const Product = require("../models/item");
 const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
-const { getAdSpendDirect } = require('./checkAds');
+const { getAdSpendDirect } = require("./checkAds");
 const { checkOrdersToOrder } = require("./checkOrders");
+const CampaignResult = require("../models/campaignResult");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -56,9 +57,7 @@ const fetchAvailability = async (array) => {
       "";
 
     const link =
-      linkMap.get(product.article) ||
-      linkMap.get(`${product.article}-0`) ||
-      "";
+      linkMap.get(product.article) || linkMap.get(`${product.article}-0`) || "";
     return {
       ...product._doc,
       availabilityInMotea: availability,
@@ -260,7 +259,7 @@ async function saveMoteaFeedToDb() {
                 })
                 .catch((err) => {
                   console.error("Ошибка batch insert:", err);
-                  sendTelegramMessage(`Ошибка копирования фида в базу: ${err}`)
+                  sendTelegramMessage(`Ошибка копирования фида в базу: ${err}`);
                   reject(err);
                 });
             }
@@ -272,7 +271,9 @@ async function saveMoteaFeedToDb() {
               await MoteaItem.insertMany(batch);
             } catch (err) {
               console.error("Ошибка финального insertMany:", err);
-              sendTelegramMessage(`Ошибка финального insertMany в базу: ${err}`)
+              sendTelegramMessage(
+                `Ошибка финального insertMany в базу: ${err}`
+              );
               reject(err);
             }
           }
@@ -315,7 +316,10 @@ async function updateProductsAvailability() {
       updateOne: {
         filter: { _id: product._id },
         update: {
-          $set: { availabilityInMotea: product.availabilityInMotea || null, linkInMotea: product.linkInMotea || null },
+          $set: {
+            availabilityInMotea: product.availabilityInMotea || null,
+            linkInMotea: product.linkInMotea || null,
+          },
         },
       },
     }));
@@ -327,10 +331,40 @@ async function updateProductsAvailability() {
     skip += BATCH_SIZE;
     hasMore = batch.length === BATCH_SIZE;
   }
-  sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
+  sendTelegramMessage(
+    "Информация о наличии товаров в МОТЕА обновлена.",
+    chatId
+  );
 }
 
-cron.schedule(                  // import products at 01:00
+function getLastWeeksRanges() {
+  const result = [];
+  const today = new Date();
+
+  const day = today.getDay();
+
+  const endOfLastWeek = new Date(today);
+  const diffToSunday = day === 0 ? 7 : day - 1; 
+  endOfLastWeek.setDate(endOfLastWeek.getDate() - diffToSunday);
+  endOfLastWeek.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 6; i++) {
+    const end = new Date(endOfLastWeek);
+    end.setDate(end.getDate() - i * 7);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+
+    result.unshift({
+      startDate: start.toISOString().slice(0, 10),
+      endDate: end.toISOString().slice(0, 10),
+    });
+  }
+
+  return result;
+}
+
+cron.schedule(
+  // import products at 01:00
   "0 1 * * *",
   () => {
     const now = new Date();
@@ -359,7 +393,8 @@ cron.schedule(                  // import products at 01:00
   }
 );
 
-cron.schedule(                  // import products at 17:30
+cron.schedule(
+  // import products at 17:30
   "30 17 * * *",
   () => {
     const now = new Date();
@@ -407,7 +442,8 @@ cron.schedule(
   }
 );
 
-cron.schedule(                 //  update availability at 01:20
+cron.schedule(
+  //  update availability at 01:20
   "20 1 * * *",
   () => {
     try {
@@ -426,7 +462,8 @@ cron.schedule(                 //  update availability at 01:20
   }
 );
 
-cron.schedule(                 //  update availability at 17:50
+cron.schedule(
+  //  update availability at 17:50
   "50 17 * * *",
   () => {
     try {
@@ -469,14 +506,41 @@ cron.schedule(
   }
 );
 
-cron.schedule(                 //  check ad spend
-  "0 9 * * 1",
+cron.schedule(                                 //  check ad spend
+  "0 8 * * 1",
   async () => {
-    console.log('Запуск задачи по сбору расходов из Google Sheets');
-  
-    const adsInfo = await getAdSpendDirect();
-  
-    console.log('Информация о рекламе за прошлый период:', adsInfo);
+    console.log("Запуск задачи по сбору расходов из Google Analitics");
+
+    const weeks = getLastWeeksRanges();
+    let count = 0;
+
+    for (const week of weeks) {
+      console.log(`Собираем данные за ${week.startDate} - ${week.endDate}`);
+      const result = await getAdSpendDirect(week.startDate, week.endDate);
+
+      if (!result || result.length === 0) continue;
+
+      const weekKey = `${week.startDate}_${week.endDate}`;
+
+      const weekReport = await CampaignResult.findOne({ week: weekKey }).exec();
+
+      if (!weekReport) {
+        await CampaignResult.create({
+          week: weekKey,
+          campaigns: result,
+        });
+      } else {
+        await CampaignResult.findByIdAndUpdate(
+          weekReport._id,
+          { campaigns: result },
+          { new: true }
+        ).exec();
+      }
+
+      count++;
+    }
+
+    console.log("Обработано:", count, "недель");
   },
   {
     scheduled: true,
@@ -484,14 +548,15 @@ cron.schedule(                 //  check ad spend
   }
 );
 
-cron.schedule(                 //  check orders
+cron.schedule(
+  //  check orders
   "0 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
-  
+
     await checkOrdersToOrder();
-  
-    console.log('Проверка заказов завершена.');
+
+    console.log("Проверка заказов завершена.");
   },
   {
     scheduled: true,
