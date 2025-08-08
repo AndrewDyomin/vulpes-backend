@@ -62,7 +62,7 @@ function getMostActiveDay(orders) {
   return { activityDate: mostActiveDate, activityCount: maxCount };
 }
 
-function getTopProducts(orders, topN = 3, minCount = 9000) {
+function getTopProducts(orders, topN = 3, minCount = 5000) {
   const productCount = {};
 
   orders.forEach((order) => {
@@ -134,11 +134,12 @@ ${
 `.trim();
 
 
-    for (const owner of owners) {
-      if (owner?.chatId && owner?.chatId !== "") {
-        await sendTelegramMessage(reportMessage, owner.chatId);
-      }
-    }
+    // for (const owner of owners) {
+    //   if (owner?.chatId && owner?.chatId !== "") {
+    //     await sendTelegramMessage(reportMessage, owner.chatId);
+    //   }
+    // }
+    console.log(reportMessage);
   } catch (error) {
     console.log(error);
   }
