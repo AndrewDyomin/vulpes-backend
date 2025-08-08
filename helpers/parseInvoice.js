@@ -7,12 +7,8 @@ function extractProductsFromText(textLines) {
 
   for (let i = 0; i < textLines.length; i++) {
     const line = textLines[i].trim();
-    // console.log("Line: ", line);
     const articlePattern = /^(A\d{6}|\d{6})$/;
     const namePattern = /^\d{4}-\d+$/;
-    // const datePattern = /^\d{2}\.\d{2}\.\d{4}$/;
-    // const qtyPattern = /^(\d+)Pcs\.$/;
-    // const pricePattern = /^\d+,\d{2}$/;
 
     if (name === '' && namePattern.test(line)) {
       name = line;

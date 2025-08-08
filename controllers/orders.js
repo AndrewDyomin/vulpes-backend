@@ -27,6 +27,7 @@ const headers = {
 //     { value: 13, text: 'заказать' },
 //     { value: 14, text: 'заказать (нет на складе МОТЕА)' },
 //     { value: 15, text: 'Появилось в наличии' },
+//     { value: 16, text: 'Замовити в МРА' },
 //   ]
 
 async function getAll(req, res, next) {
@@ -36,7 +37,7 @@ async function getAll(req, res, next) {
 
     const params = {
       page: 1,
-      filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13', '14', '15']},
+      filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13', '14', '15', '16']},
     };
     let hasMore = true;
 
@@ -78,7 +79,6 @@ async function getByArticle(req, res, next) {
   const resultOrders = [];
   try {
     const archive = await ordersArchive.find({}).exec();
-    console.log(archive[0])
     for (const order of archive) {
       if (stopList.includes(Number(order.statusId))) {continue}
       let bool = false;

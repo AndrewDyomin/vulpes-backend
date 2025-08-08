@@ -10,6 +10,7 @@ const MoteaItem = require("../models/moteaItem");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getAdSpendDirect } = require("./checkAds");
+const { reportToOwner } = require("./createWeeklyReport");
 const { checkOrdersToOrder } = require("./checkOrders");
 const CampaignResult = require("../models/campaignResult");
 
@@ -363,8 +364,7 @@ function getLastWeeksRanges() {
   return result;
 }
 
-cron.schedule(
-  // import products at 01:00
+cron.schedule(                              // import products at 01:00
   "0 1 * * *",
   () => {
     const now = new Date();
@@ -393,8 +393,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  // import products at 17:30
+cron.schedule(                              // import products at 17:30
   "30 17 * * *",
   () => {
     const now = new Date();
@@ -442,8 +441,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update availability at 01:20
+cron.schedule(                              //  update availability at 01:20
   "20 1 * * *",
   () => {
     try {
@@ -462,8 +460,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update availability at 17:50
+cron.schedule(                              //  update availability at 17:50
   "50 17 * * *",
   () => {
     try {
@@ -506,7 +503,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(                                 //  check ad spend
+cron.schedule(                               //  check ad spend
   "0 8 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -548,8 +545,7 @@ cron.schedule(                                 //  check ad spend
   }
 );
 
-cron.schedule(
-  //  check orders
+cron.schedule(                               //  check orders
   "0 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -563,3 +559,5 @@ cron.schedule(
     timezone: "Europe/Kiev",
   }
 );
+
+reportToOwner();
