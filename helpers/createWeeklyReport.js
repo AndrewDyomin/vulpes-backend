@@ -119,7 +119,7 @@ async function reportToOwner() {
 • Самый активный день: ${activityDate} (${activityCount})
 
 ${
-  topProducts.length > 1 &&
+  topProducts.length > 1 ?
   `📦 Топ‑${topProducts.length} товара недели:  
 1. ${topProducts[0].title} (${topProducts[0].count}грн.)  
 2. ${topProducts[1].title} (${topProducts[1].count}грн.)  
@@ -128,7 +128,7 @@ ${
     ? `3. ${topProducts[2].title} (${topProducts[2].count}грн.) `
     : ""
 }`
-}
+: ''}
 
 Хороших выходных! Если что — я на связи 👋
 `.trim();

@@ -571,5 +571,3 @@ cron.schedule(                               //  weekly report to owner
     timezone: "Europe/Kiev",
   }
 );
-
-reportToOwner();
