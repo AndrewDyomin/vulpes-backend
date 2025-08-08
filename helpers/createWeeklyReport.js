@@ -7,7 +7,7 @@ function getCurrentWeekRange() {
   const day = today.getDay(); // 0 (вс) – 6 (сб)
 
   // Считаем понедельник началом недели
-  const diffToMonday = day === 0 ? -6 : 0 - day;
+  const diffToMonday = day === 0 ? -6 : 0 - day - 1;
 
   const start = new Date(today);
   start.setDate(today.getDate() + diffToMonday);
@@ -134,12 +134,11 @@ ${
 `.trim();
 
 
-    // for (const owner of owners) {
-    //   if (owner?.chatId && owner?.chatId !== "") {
-    //     await sendTelegramMessage(reportMessage, owner.chatId);
-    //   }
-    // }
-    console.log(reportMessage);
+    for (const owner of owners) {
+      if (owner?.chatId && owner?.chatId !== "") {
+        await sendTelegramMessage(reportMessage, owner.chatId);
+      }
+    }
   } catch (error) {
     console.log(error);
   }
