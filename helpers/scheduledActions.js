@@ -560,4 +560,14 @@ cron.schedule(                               //  check orders
   }
 );
 
-reportToOwner();
+cron.schedule(                               //  weekly report to owner
+  "59 17 * * 5",
+  async () => {
+
+    reportToOwner();
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);

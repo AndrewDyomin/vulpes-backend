@@ -1,4 +1,6 @@
 const OrdersArchive = require("../models/ordersArchive");
+const User = require("../models/user");
+const sendTelegramMessage = require("./sendTelegramMessage");
 
 function getCurrentWeekRange() {
   const today = new Date();
@@ -21,28 +23,122 @@ function getCurrentWeekRange() {
   };
 }
 
+function formatWeekRange(startDateStr, endDateStr) {
+  const start = new Date(startDateStr);
+  const end = new Date(endDateStr);
+
+  const pad = (num) => num.toString().padStart(2, "0");
+
+  const startDay = pad(start.getDate());
+  const endDay = pad(end.getDate());
+  const month = pad(end.getMonth() + 1); // месяцы с 0
+  const year = end.getFullYear();
+
+  return `${startDay}–${endDay}.${month}.${year}`;
+}
+
+function getMostActiveDay(orders) {
+  const counter = {};
+
+  orders.forEach((order) => {
+    if (!order.orderTime) return;
+
+    const date = new Date(order.orderTime).toISOString().slice(0, 10);
+
+    counter[date] = (counter[date] || 0) + 1;
+  });
+
+  // Находим день с максимальным количеством заказов
+  let mostActiveDate = null;
+  let maxCount = 0;
+
+  for (const [date, count] of Object.entries(counter)) {
+    if (count > maxCount) {
+      maxCount = count;
+      mostActiveDate = date;
+    }
+  }
+
+  return { activityDate: mostActiveDate, activityCount: maxCount };
+}
+
+function getTopProducts(orders, topN = 3, minCount = 9000) {
+  const productCount = {};
+
+  orders.forEach((order) => {
+    const products = order.products || [];
+    products.forEach((product) => {
+      const title = `(${product.sku}) ${product.text}` || "Без названия";
+      productCount[title] = (productCount[title] || 0) + product.price;
+    });
+  });
+
+  const filtered = Object.entries(productCount)
+    .filter(([, count]) => count >= minCount) // фильтр по минимуму
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN);
+
+  if (filtered.length === 0) return [];
+
+  return filtered.map(([title, count]) => ({ title, count }));
+}
+
 async function reportToOwner() {
   try {
+    const owners = await User.find({ role: "owner" }).exec();
     const allOrders = await OrdersArchive.find({}).exec();
     const { startDate, endDate } = getCurrentWeekRange();
-    let target
 
-    const allStatusLabels = allOrders
-      .map(order => order.statusLabel)
-      .filter(label => label !== undefined);
-    const allStatuses = [...new Set(allStatusLabels)];
-    console.log(allStatuses);
-
-    const newOrders = allOrders.filter(order => {
-        if (!order.orderTime) return false;
-        const orderDate = new Date(order.orderTime);
-        const start = new Date(startDate)
-        const end = new Date(endDate)
-        if (!target) {target = orderDate}
-        return orderDate >= start && orderDate <= end;
+    const newOrders = allOrders.filter(({ orderTime }) => {
+      if (!orderTime) return false;
+      const date = new Date(orderTime);
+      return date >= new Date(startDate) && date <= new Date(endDate);
     });
 
-    
+    const { activityDate, activityCount } = getMostActiveDay(newOrders);
+    const topProducts = getTopProducts(newOrders);
+    let newOrdersPrice = 0;
+    let marja = 0;
+
+    newOrders.forEach((order) => {
+      order.products.forEach((product) => {
+        const mar = Number(product.price) - Number(product.costPrice);
+        marja += mar;
+        newOrdersPrice += Number(product.price);
+      });
+    });
+
+    const reportMessage = `
+🛒 Еженедельный отчёт (${formatWeekRange(startDate, endDate)})
+
+Привет! Вот как прошла эта неделя:
+
+• Новых заказов: ${newOrders.length}
+• На общую сумму: ${newOrdersPrice}грн.
+• Примерная маржа: ${marja}грн.
+• Самый активный день: ${activityDate} (${activityCount})
+
+${
+  topProducts.length > 1 &&
+  `📦 Топ‑${topProducts.length} товара недели:  
+1. ${topProducts[0].title} (${topProducts[0].count}грн.)  
+2. ${topProducts[1].title} (${topProducts[1].count}грн.)  
+${
+  topProducts.length > 2
+    ? `3. ${topProducts[2].title} (${topProducts[2].count}грн.) `
+    : ""
+}`
+}
+
+Хороших выходных! Если что — я на связи 👋
+`.trim();
+
+
+    for (const owner of owners) {
+      if (owner?.chatId && owner?.chatId !== "") {
+        await sendTelegramMessage(reportMessage, owner.chatId);
+      }
+    }
   } catch (error) {
     console.log(error);
   }
