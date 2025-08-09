@@ -37,7 +37,9 @@ async function getAll(req, res, next) {
 
     const params = {
       page: 1,
-      filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13', '14', '15', '16']},
+      filter: {
+        statusId: ["1", "2", "3", "4", "9", "10", "11", "13", "14", "15", "16"],
+      },
     };
     let hasMore = true;
 
@@ -45,18 +47,26 @@ async function getAll(req, res, next) {
       console.log(`Fetching page ${params.page}...`);
       const response = await axios.get(url, { headers, params });
       const pagination = response.data.pagination;
-      if (pagination.pageCount <= pagination.currentPage) {hasMore = false};
-      params.page ++;
+      if (pagination.pageCount <= pagination.currentPage) {
+        hasMore = false;
+      }
+      params.page++;
       const statusOptions = response.data.meta.fields.statusId.options;
       const ordersArray = response.data.data;
 
       for (const order of ordersArray) {
-        const option = statusOptions.find(status => status.value === order.statusId)
+        const option = statusOptions.find(
+          (status) => status.value === order.statusId
+        );
         order.statusLabel = option.text;
-        for (const product of order.products) {
-          const target = await Product.findOne({article: product.sku}).exec()
-          if (target?.isSet && target.isSet[0] !== null) {
-            product.isSet = target.isSet;
+        if (order?.products) {
+          for (const product of order.products) {
+            const target = await Product.findOne({
+              article: product.sku,
+            }).exec();
+            if (target?.isSet && target.isSet[0] !== null) {
+              product.isSet = target.isSet;
+            }
           }
         }
       }
@@ -66,7 +76,7 @@ async function getAll(req, res, next) {
 
     await OrdersArchive.insertMany(allOrders);
     allOrders = null;
-    console.log('Заказы скопированы')
+    console.log("Заказы скопированы");
   } catch (error) {
     console.error("Error fetching orders:", error);
     next(error);
@@ -80,19 +90,31 @@ async function getByArticle(req, res, next) {
   try {
     const archive = await ordersArchive.find({}).exec();
     for (const order of archive) {
-      if (stopList.includes(Number(order.statusId))) {continue}
+      if (stopList.includes(Number(order.statusId))) {
+        continue;
+      }
       let bool = false;
-      const doc = {number: order.id, articles: [], status: order?.statusLabel || null}
+      const doc = {
+        number: order.id,
+        articles: [],
+        status: order?.statusLabel || null,
+      };
       for (const product of order.products) {
-        const parent = {article: product.sku, set: []}
-        if (product.sku === targetArticle) {bool = true}
+        const parent = { article: product.sku, set: [] };
+        if (product.sku === targetArticle) {
+          bool = true;
+        }
         if (product?.isSet && product.isSet[0] !== null) {
           parent.set.push(...product.isSet);
-          if (product.isSet.includes(targetArticle)) {bool = true}
+          if (product.isSet.includes(targetArticle)) {
+            bool = true;
+          }
         }
-        doc.articles.push(parent)
+        doc.articles.push(parent);
       }
-      if (bool) {resultOrders.push(doc)}
+      if (bool) {
+        resultOrders.push(doc);
+      }
     }
     return res.status(200).send({ result: resultOrders });
   } catch (error) {
@@ -106,14 +128,14 @@ async function getByFilter(req, res, next) {
     if (filter === "for-shipping") {
       const params = {
         page: 1,
-        filter: {"statusId": '3'}
+        filter: { statusId: "3" },
       };
 
       const response = await axios.get(url, { headers, params });
 
       for (const order of response.data.data) {
-        const trackingNumber = order.ord_delivery_data[0].trackingNumber || '';
-        const npMark = `https://my.novaposhta.ua/orders/printMarking85x85/orders[]/${trackingNumber}/type/html/apiKey/${process.env.NP_API_KEY}`
+        const trackingNumber = order.ord_delivery_data[0].trackingNumber || "";
+        const npMark = `https://my.novaposhta.ua/orders/printMarking85x85/orders[]/${trackingNumber}/type/html/apiKey/${process.env.NP_API_KEY}`;
         const res = await axios.get(npMark);
         const $ = cheerio.load(res.data);
 
@@ -122,13 +144,12 @@ async function getByFilter(req, res, next) {
         const absoluteSrc = `https://my.novaposhta.ua${relativeSrc}`;
 
         order.ord_delivery_data[0].marking = absoluteSrc;
-
       }
-    return res.status(200).send({ ...response.data });
+      return res.status(200).send({ ...response.data });
     } else if (filter === "in-work" || filter === 0) {
       const params = {
         page: 1,
-        filter: {"statusId": ['1','2', '3', '4', '9', '10', '11', '13']}
+        filter: { statusId: ["1", "2", "3", "4", "9", "10", "11", "13"] },
       };
 
       const response = await axios.get(url, { headers, params });
@@ -136,7 +157,9 @@ async function getByFilter(req, res, next) {
       const ordersArray = response.data.data;
 
       for (const order of ordersArray) {
-        const option = statusOptions.find(status => status.value === order.statusId)
+        const option = statusOptions.find(
+          (status) => status.value === order.statusId
+        );
         order.statusLabel = option.text;
       }
 
@@ -144,7 +167,7 @@ async function getByFilter(req, res, next) {
     } else {
       const params = {
         page: 1,
-        filter: {"statusId": filter}
+        filter: { statusId: filter },
       };
 
       const response = await axios.get(url, { headers, params });
@@ -152,7 +175,9 @@ async function getByFilter(req, res, next) {
       const ordersArray = response.data.data;
 
       for (const order of ordersArray) {
-        const option = statusOptions.find(status => status.value === order.statusId)
+        const option = statusOptions.find(
+          (status) => status.value === order.statusId
+        );
         order.statusLabel = option.text;
       }
 
