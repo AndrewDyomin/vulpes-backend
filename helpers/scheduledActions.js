@@ -6,7 +6,9 @@ const mongoose = require("mongoose");
 const { fork } = require("child_process");
 const path = require("path");
 const Product = require("../models/item");
+const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
+const OrdersArchive = require("../models/ordersArchive");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getAdSpendDirect } = require("./checkAds");
@@ -364,6 +366,60 @@ function getLastWeeksRanges() {
   return result;
 }
 
+async function checkAvailabilityOrders() {
+  const targetArray = await OrdersArchive.find({ statusLabel: "заказать (нет на складе МОТЕА)" }).exec();
+  const availableNow = [];
+
+  for (const order of targetArray) {
+    let isAvailable = false;
+
+    if (order.products) {
+      for (const product of order.products) {
+        const dbItem = await Product.findOne({article: product.sku}).exec();
+        if (product?.isSet && product?.isSet[0] !== null) {
+          for (const item of product.isSet) {
+            const setItem = await Product.findOne({article: item}).exec();
+            if (setItem?.availabilityInMotea === "in stock") {
+              isAvailable = true;
+            } else {
+              isAvailable = false;
+            }
+          }
+        } else {
+          if (dbItem?.availabilityInMotea === "in stock") {
+            isAvailable = true;
+          } else {
+            isAvailable = false;
+          }
+        }
+      }
+    }
+
+    if (isAvailable) {
+      availableNow.push(order)
+    }
+  }
+
+  const message = `
+Привет! 
+У нас ${targetArray.length} заказов со статусом "заказать (нет на складе МОТЕА)". 
+${availableNow?.length > 0 ? `По моим данным для ${availableNow.length} заказов товары появились в наличии.`: ''}
+Вот информация о них:
+${availableNow.map((order, index) => `${index + 1}). #${order.id} - (${order.products[0].sku})${order.products[0].text}`).join('\n')}
+
+Эти заказы еще актуальны?
+Пожалуйста перепроверь.
+`;
+
+  if (availableNow?.length && availableNow.length > 0) {
+    const managers = await User.find({ role: 'manager' }).exec();
+    sendTelegramMessage(message, chatId);
+    if (managers[0].chatId) {
+      sendTelegramMessage(message, managers[0].chatId);
+    }
+  }
+}
+
 cron.schedule(                              // import products at 01:00
   "0 1 * * *",
   () => {
@@ -551,6 +607,21 @@ cron.schedule(                               //  check orders
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
 
     await checkOrdersToOrder();
+
+    console.log("Проверка заказов завершена.");
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(                               //  check not availability orders
+  "0 10 * * 1-5",
+  async () => {
+    console.log('Запуск задачи по проверке заказов в статусе "Заказать (нет на складе MOTEA)"...');
+
+    await checkAvailabilityOrders();
 
     console.log("Проверка заказов завершена.");
   },

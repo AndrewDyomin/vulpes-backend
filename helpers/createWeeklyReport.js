@@ -99,11 +99,18 @@ async function reportToOwner() {
     const topProducts = getTopProducts(newOrders);
     let newOrdersPrice = 0;
     let marja = 0;
+    const noneSelfPrice = [];
+
 
     newOrders.forEach((order) => {
       order.products.forEach((product) => {
-        const mar = Number(product.price) - Number(product.costPrice);
-        marja += mar;
+        const selfPrice = Number(product.costPrice) * 1.52;
+        const mar = Number(product.price.toFixed(2)) - Number(selfPrice.toFixed(2));
+        if (product.costPrice && product.costPrice !== '' && product.costPrice > 0) {
+          marja += mar;
+        } else {
+          noneSelfPrice.push(`${product.sku === '' ? `#${order.id}` : product.sku} - ${product.text}`)
+        }
         newOrdersPrice += Number(product.price);
       });
     });
@@ -117,6 +124,9 @@ async function reportToOwner() {
 • На общую сумму: ${newOrdersPrice}грн.
 • Примерная маржа: ${marja}грн.
 • Самый активный день: ${activityDate} (${activityCount})
+
+${noneSelfPrice.length > 0 ? `Товары без себестоимости:
+${noneSelfPrice.map((article, index) => `${index + 1}). ${article}`).join('\n')}` : ''}
 
 ${
   topProducts.length > 1 ?
