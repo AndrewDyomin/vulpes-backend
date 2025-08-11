@@ -4,7 +4,6 @@ const cors = require("cors");
 const path = require("node:path");
 require("./db");
 require("./helpers/scheduledActions")
-require("./helpers/parseInvoice")
 
 const authRoutes = require("./routes/api/auth");
 const usersRoutes = require("./routes/api/users");
