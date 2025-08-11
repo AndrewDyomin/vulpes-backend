@@ -504,7 +504,7 @@ cron.schedule(
 );
 
 cron.schedule(                               //  check ad spend
-  "0 8 * * 1",
+  "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
 
