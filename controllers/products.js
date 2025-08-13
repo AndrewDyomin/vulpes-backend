@@ -1,10 +1,16 @@
 // const axios = require('axios');
 // const xml2js = require('xml2js');
-const ExcelJS = require('exceljs');
+const ExcelJS = require("exceljs");
 const Product = require("../models/item");
-const fs = require('fs');
-const path = require('path');
-const sendTelegramFile = require('../helpers/sendTelegramFile');
+const fs = require("fs");
+const path = require("path");
+const axios = require("axios");
+const sax = require("sax");
+const sendTelegramFile = require("../helpers/sendTelegramFile");
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const CHUNK_SIZE = 500;
+const PRODUCTS_URI = process.env.PRODUCTS_URI;
+const chatId = process.env.ADMIN_CHAT_ID;
 
 async function getAll(req, res, next) {
   try {
@@ -62,7 +68,7 @@ async function search(req, res, next) {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    let query = { article: { $regex: value, $options: 'i' } };
+    let query = { article: { $regex: value, $options: "i" } };
 
     let [products, total] = await Promise.all([
       Product.find(query).skip(skip).limit(limit).exec(),
@@ -70,7 +76,7 @@ async function search(req, res, next) {
     ]);
 
     if (products?.length < 1) {
-      query = { 'name.UA': { $regex: value, $options: 'i' } };
+      query = { "name.UA": { $regex: value, $options: "i" } };
 
       [products, total] = await Promise.all([
         Product.find(query).skip(skip).limit(limit).exec(),
@@ -100,21 +106,23 @@ async function sendAvailabilityTable(req, res, next) {
   const { user } = req.user;
 
   if (!user.chatId) {
-    return res.status(200).send({ message: 'you don’t have a chat with the bot in telegram' });
+    return res
+      .status(200)
+      .send({ message: "you don’t have a chat with the bot in telegram" });
   }
-  if (user.role !== 'owner') {
-    return res.status(200).send({ message: 'you don’t have access' });
+  if (user.role !== "owner") {
+    return res.status(200).send({ message: "you don’t have access" });
   }
 
   try {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Наличие');
+    const worksheet = workbook.addWorksheet("Наличие");
 
     worksheet.columns = [
-      { header: 'Артикул', key: 'article', width: 25 },
-      { header: 'Фид', key: 'availabilityInMotea', width: 15 },
-      { header: 'Склад', key: 'quantityInStock', width: 15 },
-      { header: 'Наличие', key: 'availability', width: 15 },
+      { header: "Артикул", key: "article", width: 25 },
+      { header: "Фид", key: "availabilityInMotea", width: 15 },
+      { header: "Склад", key: "quantityInStock", width: 15 },
+      { header: "Наличие", key: "availability", width: 15 },
     ];
 
     const total = await Product.countDocuments();
@@ -130,25 +138,52 @@ async function sendAvailabilityTable(req, res, next) {
       for (const product of products) {
         worksheet.addRow({
           article: product.article,
-          availabilityInMotea: product.availabilityInMotea || '',
-          quantityInStock: product.quantityInStock || '',
-          availability: product.quantityInStock > 0 ? 'В наявності' : product.availabilityInMotea === 'in stock' ? 'Доставка 10 днів' : 'Немає в наявності',
+          availabilityInMotea: product.availabilityInMotea || "",
+          quantityInStock: product.quantityInStock || "",
+          availability:
+            product.quantityInStock > 0
+              ? "В наявності"
+              : product.availabilityInMotea === "in stock"
+              ? "Доставка 10 днів"
+              : "Немає в наявності",
         });
       }
     }
 
     const fileName = `availability-${Date.now()}.xlsx`;
-    const filePath = path.join(__dirname, '..', 'tmp', fileName);
+    const filePath = path.join(__dirname, "..", "tmp", fileName);
 
     await workbook.xlsx.writeFile(filePath);
 
-    await sendTelegramFile(filePath, 'Таблица наличия', user.chatId);
+    await sendTelegramFile(filePath, "Таблица наличия", user.chatId);
     fs.unlinkSync(filePath);
 
-    return res.status(200).send({ message: 'the table will be sent to your telegram' });
+    return res
+      .status(200)
+      .send({ message: "the table will be sent to your telegram" });
   } catch (error) {
     next(error);
   }
 }
 
-module.exports = { getAll, getByBarcode, getByArticle, search, sendAvailabilityTable };
+async function updatePromBase(req, res, next) {
+  try {
+    console.log("Update PromBase started...");
+
+  } catch (err) {
+    console.error(`Ошибка импорта: ${err.message}`);
+    sendTelegramMessage(
+      `Ошибка импорта обновлённых товаров: ${err.message}`,
+      chatId
+    );
+  }
+}
+
+module.exports = {
+  getAll,
+  getByBarcode,
+  getByArticle,
+  search,
+  sendAvailabilityTable,
+  updatePromBase,
+};

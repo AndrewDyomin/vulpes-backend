@@ -14,6 +14,7 @@ const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getAdSpendDirect } = require("./checkAds");
 const { reportToOwner } = require("./createWeeklyReport");
 const { checkOrdersToOrder } = require("./checkOrders");
+const { updatePromBase } = require("../controllers/products")
 const CampaignResult = require("../models/campaignResult");
 
 const CHUNK_SIZE = 500;
@@ -146,7 +147,7 @@ async function importProductsFromYML() {
           article: currentProduct.article,
           category: currentProduct.categoryId,
           description: { UA: currentProduct.description },
-          quantityInStock: currentProduct.quantity_in_stock,
+          quantityInStock: Number(currentProduct.quantity_in_stock),
           images: Array.isArray(currentProduct.picture)
             ? currentProduct.picture
             : currentProduct.picture
@@ -642,3 +643,5 @@ cron.schedule(                               //  weekly report to owner
     timezone: "Europe/Kiev",
   }
 );
+
+updatePromBase();
