@@ -211,14 +211,14 @@ async function updatePromBase(req, res, next) {
 
     await delay(60000);
 
-    const { data } = await sheets.spreadsheets.values.get({
+    let { data } = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: "Лист1!A1:BB",
     });
 
-    const resultArray = data.values || [];
+    let resultArray = data.values || [];
 
-    const toWrite = resultArray.map((row, index) => {
+    let toWrite = resultArray.map((row, index) => {
       if (index === 0) {
         return row;
       } else {
@@ -230,6 +230,9 @@ async function updatePromBase(req, res, next) {
         return newRow;
       }
     })
+    
+    data = null;
+    resultArray = null;
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
@@ -243,6 +246,7 @@ async function updatePromBase(req, res, next) {
       toWrite
     );
 
+    toWrite = null
     console.log("Prom base MIRROR updated");
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
