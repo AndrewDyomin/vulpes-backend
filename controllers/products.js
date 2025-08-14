@@ -167,7 +167,7 @@ async function sendAvailabilityTable(req, res, next) {
 async function updatePromBase(req, res, next) {
   try {
     console.log("Update PromBase started...");
-    const productsInStock = await Product.find({ quantityInStock: { $gt: 0 } }).exec();
+    let productsInStock = await Product.find({ quantityInStock: { $gt: 0 } }).exec();
 
     const client = new google.auth.JWT(
       process.env.GOOGLE_CLIENT_EMAIL,
@@ -202,19 +202,18 @@ async function updatePromBase(req, res, next) {
     if (productsInStock.length < 1) {
       sendTelegramMessage(`Ошибка обновления базы Прома - товары "в наличии" не найдены`, chatId);
     }
+    productsInStock = null;
     console.log('Prom base table updated')
 
-    // Ждём минуту
     function delay(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     await delay(60000);
 
-    // Читаем результат
     const { data } = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "Лист1!A1:BB", // тут нужный тебе диапазон
+      range: "Лист1!A1:BB",
     });
 
     const resultArray = data.values || [];
@@ -232,7 +231,6 @@ async function updatePromBase(req, res, next) {
       }
     })
 
-    // Пример записи в другую таблицу
     await sheets.spreadsheets.values.clear({
       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
       range: "Лист1!A1:BB",
