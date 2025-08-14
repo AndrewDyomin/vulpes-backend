@@ -45,7 +45,7 @@ async function getAll(req, res, next) {
 
     while (hasMore) {
       console.log(`Fetching page ${params.page}...`);
-      const response = await axios.get(url, { headers, params });
+      let response = await axios.get(url, { headers, params });
       const pagination = response.data.pagination;
       if (pagination.pageCount <= pagination.currentPage) {
         hasMore = false;
@@ -71,6 +71,7 @@ async function getAll(req, res, next) {
         }
       }
 
+      response = null;
       allOrders.push(...ordersArray);
     }
 
