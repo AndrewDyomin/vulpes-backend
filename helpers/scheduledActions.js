@@ -450,6 +450,18 @@ cron.schedule(                              // import products at 01:00
   }
 );
 
+cron.schedule(                               //  update prom base at 01:10
+  "10 1 * * *",
+  () => {
+
+    updatePromBase();
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
 cron.schedule(                              // import products at 17:30
   "30 17 * * *",
   () => {
@@ -472,6 +484,18 @@ cron.schedule(                              // import products at 17:30
         chatId
       );
     }
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(                               //  update prom base at 17:40
+  "40 17 * * *",
+  () => {
+
+    updatePromBase();
   },
   {
     scheduled: true,
@@ -643,5 +667,3 @@ cron.schedule(                               //  weekly report to owner
     timezone: "Europe/Kiev",
   }
 );
-
-updatePromBase();

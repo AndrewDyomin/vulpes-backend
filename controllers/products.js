@@ -4,12 +4,10 @@ const ExcelJS = require("exceljs");
 const Product = require("../models/item");
 const fs = require("fs");
 const path = require("path");
-const axios = require("axios");
-const sax = require("sax");
+const { google } = require("googleapis");
 const sendTelegramFile = require("../helpers/sendTelegramFile");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
-const CHUNK_SIZE = 500;
-const PRODUCTS_URI = process.env.PRODUCTS_URI;
+const updateSheets = require("../helpers/updateSheets");
 const chatId = process.env.ADMIN_CHAT_ID;
 
 async function getAll(req, res, next) {
@@ -169,7 +167,85 @@ async function sendAvailabilityTable(req, res, next) {
 async function updatePromBase(req, res, next) {
   try {
     console.log("Update PromBase started...");
+    const productsInStock = await Product.find({ quantityInStock: { $gt: 0 } }).exec();
 
+    const client = new google.auth.JWT(
+      process.env.GOOGLE_CLIENT_EMAIL,
+      null,
+      process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      ["https://www.googleapis.com/auth/spreadsheets"]
+    );
+
+    await client.authorize();
+
+    const sheets = google.sheets({ version: "v4", auth: client });
+    const spreadsheetId = "1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU";
+    const ranges = ["Лист1!A2:A", "Лист1!I2:K", "Лист1!M2:N"];
+    let rows
+
+    for (let i = 0; i < 3; i++) {
+      if (i === 0) {
+        rows = productsInStock.map(product => [String(product.article)])
+      } else if (i === 1) {
+        rows = productsInStock.map(product => [product.price.UAH, 'UAH', 'шт.'])
+      }else if (i === 2) {
+        rows = productsInStock.map(product => ['!', product.quantityInStock])
+      }
+      await sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range: ranges[i],
+      });
+
+      await updateSheets(sheets, spreadsheetId, ranges[i], rows);
+    }
+
+    if (productsInStock.length < 1) {
+      sendTelegramMessage(`Ошибка обновления базы Прома - товары "в наличии" не найдены`, chatId);
+    }
+    console.log('Prom base table updated')
+
+    // Ждём минуту
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    await delay(60000);
+
+    // Читаем результат
+    const { data } = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: "Лист1!A1:BB", // тут нужный тебе диапазон
+    });
+
+    const resultArray = data.values || [];
+
+    const toWrite = resultArray.map((row, index) => {
+      if (index === 0) {
+        return row;
+      } else {
+        const newRow = [...row]
+        newRow[37] = newRow[37] === '0' ? '' : parseFloat(row[37].replace(",", "."));
+        newRow[38] = newRow[38] === '0' ? '' : parseFloat(row[38].replace(",", "."));
+        newRow[39] = newRow[39] === '0' ? '' : parseFloat(row[39].replace(",", "."));
+        newRow[40] = newRow[40] === '0' ? '' : parseFloat(row[40].replace(",", "."));
+        return newRow;
+      }
+    })
+
+    // Пример записи в другую таблицу
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
+      range: "Лист1!A1:BB",
+    });
+
+    await updateSheets(
+      sheets,
+      "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
+      "Лист1!A1:BB", 
+      toWrite
+    );
+
+    console.log("Prom base MIRROR updated");
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
     sendTelegramMessage(
