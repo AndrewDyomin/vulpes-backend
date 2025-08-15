@@ -167,7 +167,6 @@ async function sendAvailabilityTable(req, res, next) {
 async function updatePromBase(req, res, next) {
   try {
     console.log("Update PromBase started...");
-    let productsInStock = await Product.find({ quantityInStock: { $gt: 0 } }).exec();
 
     const client = new google.auth.JWT(
       process.env.GOOGLE_CLIENT_EMAIL,
@@ -175,40 +174,43 @@ async function updatePromBase(req, res, next) {
       process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
       ["https://www.googleapis.com/auth/spreadsheets"]
     );
-
     await client.authorize();
 
     const sheets = google.sheets({ version: "v4", auth: client });
     const spreadsheetId = "1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU";
+
+    const cursor = Product.find({ quantityInStock: { $gt: 0 } }).lean().cursor();
+
+    let rowsA = [];
+    let rowsI = [];
+    let rowsM = [];
+
+    for await (const product of cursor) {
+      rowsA.push([String(product.article)]);
+      rowsI.push([product.price.UAH, 'UAH', 'шт.']);
+      rowsM.push(['!', product.quantityInStock]);
+    }
+
     const ranges = ["Лист1!A2:A", "Лист1!I2:K", "Лист1!M2:N"];
-    let rows
+    const rowsArr = [rowsA, rowsI, rowsM];
 
     for (let i = 0; i < 3; i++) {
-      if (i === 0) {
-        rows = productsInStock.map(product => [String(product.article)])
-      } else if (i === 1) {
-        rows = productsInStock.map(product => [product.price.UAH, 'UAH', 'шт.'])
-      }else if (i === 2) {
-        rows = productsInStock.map(product => ['!', product.quantityInStock])
-      }
       await sheets.spreadsheets.values.clear({
         spreadsheetId,
         range: ranges[i],
       });
-
-      await updateSheets(sheets, spreadsheetId, ranges[i], rows);
+      await updateSheets(sheets, spreadsheetId, ranges[i], rowsArr[i]);
+      rowsArr[i] = null;
     }
 
-    if (productsInStock.length < 1) {
-      sendTelegramMessage(`Ошибка обновления базы Прома - товары "в наличии" не найдены`, chatId);
-    }
-    productsInStock = null;
-    console.log('Prom base table updated')
+    rowsA = null;
+    rowsI = null;
+    rowsM = null;
+    console.log('Prom base table updated');
 
     function delay(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
-
     await delay(60000);
 
     let { data } = await sheets.spreadsheets.values.get({
@@ -216,23 +218,19 @@ async function updatePromBase(req, res, next) {
       range: "Лист1!A1:BB",
     });
 
-    let resultArray = data.values || [];
+    const parseCell = cell => (!cell || cell === '0') ? '' : parseFloat(cell.replace(",", "."));
 
-    let toWrite = resultArray.map((row, index) => {
-      if (index === 0) {
-        return row;
-      } else {
-        const newRow = [...row]
-        newRow[37] = newRow[37] === '0' ? '' : parseFloat(row[37].replace(",", "."));
-        newRow[38] = newRow[38] === '0' ? '' : parseFloat(row[38].replace(",", "."));
-        newRow[39] = newRow[39] === '0' ? '' : parseFloat(row[39].replace(",", "."));
-        newRow[40] = newRow[40] === '0' ? '' : parseFloat(row[40].replace(",", "."));
-        return newRow;
-      }
-    })
-    
+    let toWrite = (data.values || []).map((row, index) => {
+      if (index === 0) return row;
+      const newRow = [...row];
+      newRow[37] = parseCell(row[37]);
+      newRow[38] = parseCell(row[38]);
+      newRow[39] = parseCell(row[39]);
+      newRow[40] = parseCell(row[40]);
+      return newRow;
+    });
+
     data = null;
-    resultArray = null;
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
@@ -246,16 +244,110 @@ async function updatePromBase(req, res, next) {
       toWrite
     );
 
-    toWrite = null
+    toWrite = null;
     console.log("Prom base MIRROR updated");
+
+    if (global.gc) global.gc();
+    
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
-    sendTelegramMessage(
-      `Ошибка импорта обновлённых товаров: ${err.message}`,
-      chatId
-    );
+    sendTelegramMessage(`Ошибка импорта обновлённых товаров: ${err.message}`, chatId);
   }
 }
+
+
+// async function updatePromBase(req, res, next) {
+//   try {
+//     console.log("Update PromBase started...");
+//     let productsInStock = await Product.find({ quantityInStock: { $gt: 0 } }).exec();
+
+//     const client = new google.auth.JWT(
+//       process.env.GOOGLE_CLIENT_EMAIL,
+//       null,
+//       process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+//       ["https://www.googleapis.com/auth/spreadsheets"]
+//     );
+
+//     await client.authorize();
+
+//     const sheets = google.sheets({ version: "v4", auth: client });
+//     const spreadsheetId = "1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU";
+//     const ranges = ["Лист1!A2:A", "Лист1!I2:K", "Лист1!M2:N"];
+//     let rows
+
+//     for (let i = 0; i < 3; i++) {
+//       if (i === 0) {
+//         rows = productsInStock.map(product => [String(product.article)])
+//       } else if (i === 1) {
+//         rows = productsInStock.map(product => [product.price.UAH, 'UAH', 'шт.'])
+//       }else if (i === 2) {
+//         rows = productsInStock.map(product => ['!', product.quantityInStock])
+//       }
+//       await sheets.spreadsheets.values.clear({
+//         spreadsheetId,
+//         range: ranges[i],
+//       });
+
+//       await updateSheets(sheets, spreadsheetId, ranges[i], rows);
+//     }
+
+//     if (productsInStock.length < 1) {
+//       sendTelegramMessage(`Ошибка обновления базы Прома - товары "в наличии" не найдены`, chatId);
+//     }
+//     productsInStock = null;
+//     console.log('Prom base table updated')
+
+//     function delay(ms) {
+//       return new Promise(resolve => setTimeout(resolve, ms));
+//     }
+
+//     await delay(60000);
+
+//     let { data } = await sheets.spreadsheets.values.get({
+//       spreadsheetId,
+//       range: "Лист1!A1:BB",
+//     });
+
+//     let resultArray = data.values || [];
+
+//     let toWrite = resultArray.map((row, index) => {
+//       if (index === 0) {
+//         return row;
+//       } else {
+//         const newRow = [...row]
+//         newRow[37] = newRow[37] === '0' ? '' : parseFloat(row[37].replace(",", "."));
+//         newRow[38] = newRow[38] === '0' ? '' : parseFloat(row[38].replace(",", "."));
+//         newRow[39] = newRow[39] === '0' ? '' : parseFloat(row[39].replace(",", "."));
+//         newRow[40] = newRow[40] === '0' ? '' : parseFloat(row[40].replace(",", "."));
+//         return newRow;
+//       }
+//     })
+    
+//     data = null;
+//     resultArray = null;
+
+//     await sheets.spreadsheets.values.clear({
+//       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
+//       range: "Лист1!A1:BB",
+//     });
+
+//     await updateSheets(
+//       sheets,
+//       "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
+//       "Лист1!A1:BB", 
+//       toWrite
+//     );
+
+//     toWrite = null
+//     console.log("Prom base MIRROR updated");
+//   } catch (err) {
+//     console.error(`Ошибка импорта: ${err.message}`);
+//     sendTelegramMessage(
+//       `Ошибка импорта обновлённых товаров: ${err.message}`,
+//       chatId
+//     );
+//   }
+// }
 
 module.exports = {
   getAll,
