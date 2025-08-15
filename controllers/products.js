@@ -179,16 +179,17 @@ async function updatePromBase(req, res, next) {
     const sheets = google.sheets({ version: "v4", auth: client });
     const spreadsheetId = "1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU";
 
-    const cursor = Product.find({ quantityInStock: { $gt: 0 } }).lean().cursor();
-
+    const cursor = Product.find({ quantityInStock: { $gt: 0 } })
+      .lean()
+      .cursor();
     let rowsA = [];
     let rowsI = [];
     let rowsM = [];
 
     for await (const product of cursor) {
       rowsA.push([String(product.article)]);
-      rowsI.push([product.price.UAH, 'UAH', 'шт.']);
-      rowsM.push(['!', product.quantityInStock]);
+      rowsI.push([product.price.UAH, "UAH", "шт."]);
+      rowsM.push(["!", product.quantityInStock]);
     }
 
     const ranges = ["Лист1!A2:A", "Лист1!I2:K", "Лист1!M2:N"];
@@ -206,55 +207,62 @@ async function updatePromBase(req, res, next) {
     rowsA = null;
     rowsI = null;
     rowsM = null;
-    console.log('Prom base table updated');
+    console.log("Prom base table updated...");
 
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-    await delay(60000);
+    await new Promise((resolve) => setTimeout(resolve, 60000));
 
-    let { data } = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: "Лист1!A1:BB",
-    });
+    const parseCell = (cell) =>
+      !cell || cell === "0" ? "" : parseFloat(cell.replace(",", "."));
 
-    const parseCell = cell => (!cell || cell === '0') ? '' : parseFloat(cell.replace(",", "."));
-
-    let toWrite = (data.values || []).map((row, index) => {
-      if (index === 0) return row;
-      const newRow = [...row];
-      newRow[37] = parseCell(row[37]);
-      newRow[38] = parseCell(row[38]);
-      newRow[39] = parseCell(row[39]);
-      newRow[40] = parseCell(row[40]);
-      return newRow;
-    });
-
-    data = null;
+    const sourceId = spreadsheetId;
+    const targetId = "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw";
+    let startRow = 1;
+    const chunkSize = 1000;
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
       range: "Лист1!A1:BB",
     });
 
-    await updateSheets(
-      sheets,
-      "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
-      "Лист1!A1:BB", 
-      toWrite
-    );
+    while (true) {
+      const endRow = startRow + chunkSize - 1;
+      const range = `Лист1!A${startRow}:BB${endRow}`;
 
-    toWrite = null;
+      const { data } = await sheets.spreadsheets.values.get({
+        spreadsheetId: sourceId,
+        range,
+      });
+
+      const rows = data.values || [];
+      if (rows.length === 0) break;
+
+      if (rows.every((row) => !row[0] || row[0].trim() === "")) {
+        break; 
+      }
+
+      const toWrite = rows.map((row, index) => {
+        if (startRow === 1 && index === 0) return row;
+        row[37] = parseCell(row[37]);
+        row[38] = parseCell(row[38]);
+        row[39] = parseCell(row[39]);
+        row[40] = parseCell(row[40]);
+        return row;
+      });
+
+      await updateSheets(sheets, targetId, range, toWrite);
+
+      startRow = endRow + 1;
+    }
+
     console.log("Prom base MIRROR updated");
-
-    if (global.gc) global.gc();
-    
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
-    sendTelegramMessage(`Ошибка импорта обновлённых товаров: ${err.message}`, chatId);
+    sendTelegramMessage(
+      `Ошибка импорта обновлённых товаров: ${err.message}`,
+      chatId
+    );
   }
 }
-
 
 // async function updatePromBase(req, res, next) {
 //   try {
@@ -322,7 +330,7 @@ async function updatePromBase(req, res, next) {
 //         return newRow;
 //       }
 //     })
-    
+
 //     data = null;
 //     resultArray = null;
 
@@ -334,7 +342,7 @@ async function updatePromBase(req, res, next) {
 //     await updateSheets(
 //       sheets,
 //       "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
-//       "Лист1!A1:BB", 
+//       "Лист1!A1:BB",
 //       toWrite
 //     );
 
