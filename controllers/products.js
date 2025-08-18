@@ -113,7 +113,12 @@ async function sendAvailabilityTable(req, res, next) {
   }
 
   try {
-    const workbook = new ExcelJS.Workbook();
+    const fileName = `availability-${Date.now()}.xlsx`;
+    const filePath = path.join(__dirname, "..", "tmp", fileName);
+
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      filename: filePath,
+    });
     const worksheet = workbook.addWorksheet("Наличие");
 
     worksheet.columns = [
@@ -124,6 +129,7 @@ async function sendAvailabilityTable(req, res, next) {
     ];
 
     const total = await Product.countDocuments();
+    const BATCH_SIZE = 5000;
     const totalBatches = Math.ceil(total / BATCH_SIZE);
 
     for (let i = 0; i < totalBatches; i++) {
@@ -134,24 +140,24 @@ async function sendAvailabilityTable(req, res, next) {
         .exec();
 
       for (const product of products) {
-        worksheet.addRow({
-          article: product.article,
-          availabilityInMotea: product.availabilityInMotea || "",
-          quantityInStock: product.quantityInStock || "",
-          availability:
-            product.quantityInStock > 0
-              ? "В наявності"
-              : product.availabilityInMotea === "in stock"
-              ? "Доставка 10 днів"
-              : "Немає в наявності",
-        });
+        worksheet
+          .addRow({
+            article: product.article,
+            availabilityInMotea: product.availabilityInMotea || "",
+            quantityInStock: product.quantityInStock || "",
+            availability:
+              product.quantityInStock > 0
+                ? "В наявності"
+                : product.availabilityInMotea === "in stock"
+                ? "Доставка 10 днів"
+                : "Немає в наявності",
+          })
+          .commit();
       }
     }
 
-    const fileName = `availability-${Date.now()}.xlsx`;
-    const filePath = path.join(__dirname, "..", "tmp", fileName);
-
-    await workbook.xlsx.writeFile(filePath);
+    await worksheet.commit();
+    await workbook.commit();
 
     await sendTelegramFile(filePath, "Таблица наличия", user.chatId);
     fs.unlinkSync(filePath);
@@ -237,7 +243,7 @@ async function updatePromBase(req, res, next) {
       if (rows.length === 0) break;
 
       if (rows.every((row) => !row[0] || row[0].trim() === "")) {
-        break; 
+        break;
       }
 
       const toWrite = rows.map((row, index) => {
