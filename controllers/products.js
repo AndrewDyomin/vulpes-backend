@@ -99,7 +99,7 @@ async function search(req, res, next) {
 }
 
 async function sendAvailabilityTable(req, res, next) {
-  const BATCH_SIZE = 10000;
+  const BATCH_SIZE = 5000;
 
   const { user } = req.user;
 
@@ -129,7 +129,6 @@ async function sendAvailabilityTable(req, res, next) {
     ];
 
     const total = await Product.countDocuments();
-    const BATCH_SIZE = 5000;
     const totalBatches = Math.ceil(total / BATCH_SIZE);
 
     for (let i = 0; i < totalBatches; i++) {
@@ -193,8 +192,9 @@ async function updatePromBase(req, res, next) {
     let rowsM = [];
 
     for await (const product of cursor) {
+      const price = product.price.UAH;
       rowsA.push([String(product.article)]);
-      rowsI.push([product.price.UAH, "UAH", "шт."]);
+      rowsI.push([price, "UAH", "шт."]);
       rowsM.push(["!", product.quantityInStock]);
     }
 
@@ -248,6 +248,7 @@ async function updatePromBase(req, res, next) {
 
       const toWrite = rows.map((row, index) => {
         if (startRow === 1 && index === 0) return row;
+        row[8] = row[23] === "" ? row[8] : Math.round(Number(row[8] * 1.2));
         row[37] = parseCell(row[37]);
         row[38] = parseCell(row[38]);
         row[39] = parseCell(row[39]);
@@ -269,99 +270,6 @@ async function updatePromBase(req, res, next) {
     );
   }
 }
-
-// async function updatePromBase(req, res, next) {
-//   try {
-//     console.log("Update PromBase started...");
-//     let productsInStock = await Product.find({ quantityInStock: { $gt: 0 } }).exec();
-
-//     const client = new google.auth.JWT(
-//       process.env.GOOGLE_CLIENT_EMAIL,
-//       null,
-//       process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-//       ["https://www.googleapis.com/auth/spreadsheets"]
-//     );
-
-//     await client.authorize();
-
-//     const sheets = google.sheets({ version: "v4", auth: client });
-//     const spreadsheetId = "1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU";
-//     const ranges = ["Лист1!A2:A", "Лист1!I2:K", "Лист1!M2:N"];
-//     let rows
-
-//     for (let i = 0; i < 3; i++) {
-//       if (i === 0) {
-//         rows = productsInStock.map(product => [String(product.article)])
-//       } else if (i === 1) {
-//         rows = productsInStock.map(product => [product.price.UAH, 'UAH', 'шт.'])
-//       }else if (i === 2) {
-//         rows = productsInStock.map(product => ['!', product.quantityInStock])
-//       }
-//       await sheets.spreadsheets.values.clear({
-//         spreadsheetId,
-//         range: ranges[i],
-//       });
-
-//       await updateSheets(sheets, spreadsheetId, ranges[i], rows);
-//     }
-
-//     if (productsInStock.length < 1) {
-//       sendTelegramMessage(`Ошибка обновления базы Прома - товары "в наличии" не найдены`, chatId);
-//     }
-//     productsInStock = null;
-//     console.log('Prom base table updated')
-
-//     function delay(ms) {
-//       return new Promise(resolve => setTimeout(resolve, ms));
-//     }
-
-//     await delay(60000);
-
-//     let { data } = await sheets.spreadsheets.values.get({
-//       spreadsheetId,
-//       range: "Лист1!A1:BB",
-//     });
-
-//     let resultArray = data.values || [];
-
-//     let toWrite = resultArray.map((row, index) => {
-//       if (index === 0) {
-//         return row;
-//       } else {
-//         const newRow = [...row]
-//         newRow[37] = newRow[37] === '0' ? '' : parseFloat(row[37].replace(",", "."));
-//         newRow[38] = newRow[38] === '0' ? '' : parseFloat(row[38].replace(",", "."));
-//         newRow[39] = newRow[39] === '0' ? '' : parseFloat(row[39].replace(",", "."));
-//         newRow[40] = newRow[40] === '0' ? '' : parseFloat(row[40].replace(",", "."));
-//         return newRow;
-//       }
-//     })
-
-//     data = null;
-//     resultArray = null;
-
-//     await sheets.spreadsheets.values.clear({
-//       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
-//       range: "Лист1!A1:BB",
-//     });
-
-//     await updateSheets(
-//       sheets,
-//       "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
-//       "Лист1!A1:BB",
-//       toWrite
-//     );
-
-//     toWrite = null
-//     console.log("Prom base MIRROR updated");
-//   } catch (err) {
-//     console.error(`Ошибка импорта: ${err.message}`);
-//     sendTelegramMessage(
-//       `Ошибка импорта обновлённых товаров: ${err.message}`,
-//       chatId
-//     );
-//   }
-// }
 
 module.exports = {
   getAll,
