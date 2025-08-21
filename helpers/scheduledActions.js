@@ -615,7 +615,7 @@ cron.schedule(                               //  check ad spend
 );
 
 cron.schedule(                               //  check orders
-  "0 10 * * 3",
+  "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
 
