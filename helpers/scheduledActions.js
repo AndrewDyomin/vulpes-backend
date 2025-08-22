@@ -344,13 +344,11 @@ async function updateProductsAvailability() {
 function getLastWeeksRanges() {
   const result = [];
   const today = new Date();
-
-  const day = today.getDay();
-
   const endOfLastWeek = new Date(today);
-  const diffToSunday = day === 0 ? 7 : day - 2; 
-  endOfLastWeek.setDate(endOfLastWeek.getDate() - diffToSunday);
-  endOfLastWeek.setHours(0, 0, 0, 0);
+
+  while (endOfLastWeek.getDay() !== 0) {
+    endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+  }
 
   for (let i = 0; i < 6; i++) {
     const end = new Date(endOfLastWeek);
