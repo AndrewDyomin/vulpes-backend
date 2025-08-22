@@ -9,6 +9,7 @@ router.post("/bybarcode", ProductsController.getByBarcode);
 router.post("/byarticle", ProductsController.getByArticle);
 router.post("/search", ProductsController.search);
 router.post("/availability", isAuth, ProductsController.sendAvailabilityTable);
+router.post("/update-prom-base", isAuth, ProductsController.updatePromBase);
 // router.post("/delete", ProductsController.deleteProduct);
 
 module.exports = router;

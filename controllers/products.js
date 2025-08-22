@@ -262,10 +262,11 @@ async function updatePromBase(req, res, next) {
     }
 
     console.log("Prom base MIRROR updated");
+    return res.status(200).send({ message: "Prom base MIRROR updated" });
   } catch (err) {
-    console.error(`Ошибка импорта: ${err.message}`);
+    console.error(`Ошибка обновления базы Прома: ${err.message}`);
     sendTelegramMessage(
-      `Ошибка импорта обновлённых товаров: ${err.message}`,
+      `Ошибка обновления базы Прома: ${err.message}`,
       chatId
     );
   }
