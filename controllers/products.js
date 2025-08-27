@@ -248,7 +248,7 @@ async function updatePromBase(req, res, next) {
 
       const toWrite = rows.map((row, index) => {
         if (startRow === 1 && index === 0) return row;
-        row[8] = row[23] === "" ? row[8] : Math.round(Number(row[8] * 1.2));
+        row[8] = row[23] === "" ? row[8] : Math.round(Number(row[8] * 1.176));
         row[37] = parseCell(row[37]);
         row[38] = parseCell(row[38]);
         row[39] = parseCell(row[39]);
