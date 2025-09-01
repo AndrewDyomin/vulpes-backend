@@ -5,6 +5,7 @@ const ProductsController = require("../../controllers/products");
 const router = express.Router();
 
 router.get("/all", ProductsController.getAll);
+router.get("/compare-year", isAuth, ProductsController.compareYear);
 router.post("/bybarcode", ProductsController.getByBarcode);
 router.post("/byarticle", ProductsController.getByArticle);
 router.post("/search", ProductsController.search);

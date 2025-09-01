@@ -2,6 +2,8 @@
 // const xml2js = require('xml2js');
 const ExcelJS = require("exceljs");
 const Product = require("../models/item");
+const MoteaItem = require("../models/moteaItem");
+const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const { google } = require("googleapis");
@@ -9,6 +11,8 @@ const sendTelegramFile = require("../helpers/sendTelegramFile");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const updateSheets = require("../helpers/updateSheets");
 const chatId = process.env.ADMIN_CHAT_ID;
+const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
+const MAIN_DB_URI = process.env.DB_URI;
 
 async function getAll(req, res, next) {
   try {
@@ -248,7 +252,7 @@ async function updatePromBase(req, res, next) {
       }
 
       const toWrite = rows.map((row, index) => {
-        if (row[12] === '') {
+        if (row[17] === '') {
           noIdItems.push(row[0])
         }
         if (startRow === 1 && index === 0) return row;
@@ -282,6 +286,68 @@ async function updatePromBase(req, res, next) {
   }
 }
 
+async function compareYear (req, res, next) {
+
+  if (!req?.user?.user?.chatId || req?.user?.user?.chatId === '') {
+    return res.status(200).send({ message: "you don't have chatid in our telegram bot" });
+  }
+
+  const batch = 1000                                  // change to 5000
+  // const total = await Product.countDocuments();       
+  // const totalBatches = Math.ceil(total / batch);
+  const totalBatches = 1
+  let itemsWithYears = [];
+
+  try {
+
+  for (let i = 0; i < totalBatches; i++) {
+    const products = await Product.find({})
+      .skip(i * batch)
+      .limit(batch)
+      .lean()
+      .exec();
+
+    for(const product of products) {
+      if (/\b\d{2}-\d{2}\b/.test(product?.name?.UA)) {
+        itemsWithYears.push({article: product.article, name: product.name.UA})
+      }
+    }
+  }
+
+  await mongoose.disconnect();
+  console.log("Disconnected from main DB");
+  await mongoose.connect(DB_MOTEA_FEED_URI);
+  console.log("Connected to Motea feed info DB");
+
+  let allArticles = itemsWithYears.flatMap(item => [item.article, item.article + '-0']);
+
+  let products = await MoteaItem.find({ article: { $in: allArticles } }).exec();
+
+  let productMap = new Map(products.map(p => [p.article, p.name]));
+
+  for (const item of itemsWithYears) {
+    item.trueName = productMap.get(item.article + '-0') || productMap.get(item.article) || undefined;
+  }
+
+  allArticles = null;
+  products = null;
+  productMap = null;
+
+  await mongoose.disconnect();
+  console.log("Disconnected from Motea feed info DB");
+  await mongoose.connect(MAIN_DB_URI);
+  console.log("Connected to main DB");
+
+  console.log(itemsWithYears)
+
+  itemsWithYears = null;
+  return res.status(200).send({ message: "the table will be sent to your telegram" });
+} catch(error) {
+  console.log(error);
+  return res.status(200).send({ message: error });
+}
+}
+
 module.exports = {
   getAll,
   getByBarcode,
@@ -289,4 +355,5 @@ module.exports = {
   search,
   sendAvailabilityTable,
   updatePromBase,
+  compareYear,
 };

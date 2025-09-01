@@ -9,6 +9,10 @@ const itemSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  name: {
+    type: String,
+    default: '',
+  },
   brand: {
     type: String,
     default: '',

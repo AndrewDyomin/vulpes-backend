@@ -243,6 +243,7 @@ async function saveMoteaFeedToDb() {
         .on("data", (row) => {
           if (row.link) {
             const item = {
+              name: row.title,        // delete if errors.
               link: row.link,
               article: row.id,
               brand: row.brand,
