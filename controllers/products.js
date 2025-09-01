@@ -224,6 +224,7 @@ async function updatePromBase(req, res, next) {
     const targetId = "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw";
     let startRow = 1;
     const chunkSize = 1000;
+    const noIdItems = [];
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw",
@@ -247,6 +248,9 @@ async function updatePromBase(req, res, next) {
       }
 
       const toWrite = rows.map((row, index) => {
+        if (row[12] === '') {
+          noIdItems.push(row[0])
+        }
         if (startRow === 1 && index === 0) return row;
         row[8] = row[23] === "" ? row[8] : Math.round(Number(row[8] * 1.176));
         row[37] = parseCell(row[37]);
@@ -262,7 +266,13 @@ async function updatePromBase(req, res, next) {
     }
 
     console.log("Prom base MIRROR updated");
-    return res.status(200).send({ message: "Prom base MIRROR updated" });
+    if (noIdItems.length > 0) {
+      sendTelegramMessage(`Удали дубли в Проме. Я нашел артикулы без ID: ${noIdItems.map(sku => sku + ', ')}.`, chatId)
+    }
+
+    if (res) {
+      return res.status(200).send({ message: "Prom base MIRROR updated" });
+    }
   } catch (err) {
     console.error(`Ошибка обновления базы Прома: ${err.message}`);
     sendTelegramMessage(
