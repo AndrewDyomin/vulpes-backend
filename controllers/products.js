@@ -292,10 +292,9 @@ async function compareYear (req, res, next) {
     return res.status(200).send({ message: "you don't have chatid in our telegram bot" });
   }
 
-  const batch = 1000                                  // change to 5000
-  // const total = await Product.countDocuments();       
-  // const totalBatches = Math.ceil(total / batch);
-  const totalBatches = 1
+  const batch = 1000;
+  const total = await Product.countDocuments();       
+  const totalBatches = Math.ceil(total / batch);
   let itemsWithYears = [];
 
   try {
@@ -337,11 +336,62 @@ async function compareYear (req, res, next) {
   console.log("Disconnected from Motea feed info DB");
   await mongoose.connect(MAIN_DB_URI);
   console.log("Connected to main DB");
+  
+  let wrongYears = [];
 
-  console.log(itemsWithYears)
+  for (const item of itemsWithYears) {
+    if (item.name && item.trueName) {
+      const year = item.name.match(/\b(\d{2})-(\d{2})\b/);
+      const trueYear = item.trueName.match(/\b(\d{2})-(\d{2})\b/);
+      if (year && trueYear && year[0] !== trueYear[0]) {
+        item.fixedName = item.name.replace(year[0], trueYear[0]);
+        wrongYears.push(item)
+      }
+    }
+  }
 
+  if (wrongYears.length > 0) {
+    const fileName = `fixed-names.xlsx`;
+    const filePath = path.join(__dirname, "..", "tmp", fileName);
+
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      filename: filePath,
+    });
+    const worksheet = workbook.addWorksheet("Products");
+
+    worksheet.columns = [
+      { header: "Артикул", key: "article", width: 25 },
+      { header: "Исправленное название", key: "fixedName", width: 35 },
+      { header: "Название в базе", key: "name", width: 35 },
+      { header: "Название у МОТЕА", key: "trueName", width: 35 },
+    ];
+
+    for (const product of wrongYears) {
+      worksheet
+        .addRow({
+          article: product.article,
+          fixedName: product.fixedName || "",
+          name: product.name || "",
+          trueName: product.trueName || "",
+        })
+        .commit();
+    }
+
+    await worksheet.commit();
+    await workbook.commit();
+
+    await sendTelegramFile(filePath, "Таблица с исправленными названиями", req.user.user.chatId);
+    fs.unlinkSync(filePath);
+  }
+  
+  const count = wrongYears.length
   itemsWithYears = null;
-  return res.status(200).send({ message: "the table will be sent to your telegram" });
+  wrongYears = null;
+  if (count > 0) {
+    return res.status(200).send({ message: `Found ${count} wrong names. The table will be sent to your telegram.` });
+  } else {
+    return res.status(200).send({ message: "invalid years not found" });
+  }
 } catch(error) {
   console.log(error);
   return res.status(200).send({ message: error });
