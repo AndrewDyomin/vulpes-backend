@@ -8,14 +8,17 @@ const path = require("path");
 const Product = require("../models/item");
 const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
+const TableRow = require("../models/tableRow");
 const OrdersArchive = require("../models/ordersArchive");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getAdSpendDirect } = require("./checkAds");
 const { reportToOwner } = require("./createWeeklyReport");
 const { checkOrdersToOrder } = require("./checkOrders");
-const { updatePromBase } = require("../controllers/products")
+const { updatePromBase } = require("../controllers/products");
 const CampaignResult = require("../models/campaignResult");
+const updateSheets = require("../helpers/updateSheets");
+const { google } = require("googleapis");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -85,7 +88,6 @@ async function importProductsFromYML() {
 
     const existingArticlesMap = new Map();
 
-    // Используем cursor для экономии памяти
     const cursor = Product.find({}, "article _id name").lean().cursor();
     for await (const doc of cursor) {
       existingArticlesMap.set(doc.article, doc);
@@ -220,6 +222,183 @@ async function importProductsFromYML() {
   }
 }
 
+// function sleep(n) {
+//   return new Promise((resolve) => setTimeout(resolve, n * 1000));
+// }
+
+async function sendToSheets() {
+  const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
+  const client = new google.auth.JWT(
+    process.env.GOOGLE_CLIENT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+  );
+  await client.authorize();
+  const sheets = google.sheets({ version: "v4", auth: client });
+
+  await sheets.spreadsheets.values.clear({
+      spreadsheetId: targetId,
+      range: "Лист1!A2:V20200",
+    });
+
+  const batch = 100;
+  let skip = 0;
+  let hasMore = true;
+  let startRow = 2;
+
+  while (hasMore) {
+    const rows = await TableRow.find({})
+      .skip(skip)
+      .limit(batch)
+      .exec();
+
+    if (!rows.length) break;
+
+    const toTable = rows.map(item => item.row);
+    const endRow = startRow + toTable.length - 1;
+    const range = `Лист1!A${startRow}:V${endRow}`;
+
+    await updateSheets(sheets, targetId, range, toTable);
+
+    startRow = endRow + 1;
+    skip += batch;
+
+    if (rows.length < batch) {
+      hasMore = false;
+    } else {
+      // await sleep(10);
+    }
+  }
+}
+
+
+async function importYMLtoGoogleFeed() {
+  if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
+
+  try {
+    console.log("Импорт в Google MC feed начат...");
+    await TableRow.collection.drop();
+
+    let currentTag = null;
+    let currentProduct = null;
+    let currentParamName = null;
+    let textBuffer = "";
+
+    const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
+    const parser = sax.createStream(true, { trim: true });
+
+    parser.on("opentag", (node) => {
+      currentTag = node.name;
+
+      if (node.name === "offer") {
+        currentProduct = { ...node.attributes, pictures: [], params: {} };
+      }
+
+      if (node.name === "param") {
+        currentParamName = node.attributes.name;
+      }
+    });
+
+    parser.on("text", (text) => {
+      if (currentProduct && currentTag) textBuffer += text;
+    });
+
+    parser.on("cdata", (cdata) => {
+      if (currentProduct && currentTag) textBuffer += cdata;
+    });
+
+    parser.on("closetag", async (tagName) => {
+      if (!currentProduct) return;
+
+      if (tagName === "offer") {
+        currentProduct.quantity_in_stock = Number(currentProduct.quantity_in_stock || 0);
+        currentProduct.price = Number(currentProduct.price || 0);
+        currentProduct.oldprice = Number(currentProduct.oldprice || 0);
+
+        if (!currentProduct.article) return;
+        if (currentProduct.quantity_in_stock < 1) return;
+        if (!currentProduct.url) return;
+        if (currentProduct.url && !currentProduct.url.includes("vulpes.com.ua")) return;
+        if (currentProduct.pictures.length === 0) return;
+
+        const picturesString = currentProduct.pictures.slice(1).join(",");
+        let upperPrice
+        let lowerPrice
+
+        if (!currentProduct.oldprice) {
+          upperPrice = `${currentProduct.price} UAH`
+          lowerPrice = '';
+        } else {
+          upperPrice = `${currentProduct.oldprice} UAH`;
+          lowerPrice = `${currentProduct.price} UAH`;
+        }
+
+        const row = [
+          `${currentProduct.article}-9`,
+          currentProduct.name,
+          currentProduct.description || "",
+          "in_stock",
+          "",
+          "",
+          currentProduct.url,
+          "",
+          currentProduct.pictures[0] || "",
+          upperPrice,
+          lowerPrice,
+          "",
+          "no",
+          "",
+          "",
+          currentProduct.vendor || "",
+          "",
+          "",
+          picturesString,
+          "new",
+          "no",
+        ];
+
+        await TableRow.create({ row })
+
+        currentProduct = null;
+      } else if (textBuffer) {
+        if (tagName === "picture") {
+          currentProduct.pictures.push(textBuffer);
+        } else if (tagName === "param" && currentParamName) {
+          currentProduct.params[currentParamName] = textBuffer;
+          currentParamName = null;
+        } else if (tagName === "description") {
+          currentProduct.description = textBuffer.trim();
+        } else {
+          currentProduct[tagName] = textBuffer.trim();
+        }
+        textBuffer = "";
+      }
+    });
+
+    parser.on("end", async () => {
+      console.log(`[${new Date().toISOString()}] Парсинг товаров в наличии завершён`);
+    });
+
+    parser.on("error", (err) => {
+      console.error("Ошибка парсинга:", err.message);
+      sendTelegramMessage(
+        `Во время обновления товаров в Google MC feed возникла ошибка парсинга: ${err.message}`,
+        chatId
+      );
+    });
+
+    response.data.pipe(parser);
+  } catch (err) {
+    console.error(`Ошибка импорта: ${err.message}`);
+    sendTelegramMessage(
+      `Ошибка импорта товаров в Google MC feed: ${err.message}`,
+      chatId
+    );
+  }
+}
+
+
 async function saveMoteaFeedToDb() {
   try {
     if (mongoose.connection.readyState !== 0) {
@@ -243,7 +422,7 @@ async function saveMoteaFeedToDb() {
         .on("data", (row) => {
           if (row.link) {
             const item = {
-              name: row.title,        // delete if errors.
+              name: row.title, // delete if errors.
               link: row.link,
               article: row.id,
               brand: row.brand,
@@ -367,7 +546,9 @@ function getLastWeeksRanges() {
 }
 
 async function checkAvailabilityOrders() {
-  const targetArray = await OrdersArchive.find({ statusLabel: "заказать (нет на складе МОТЕА)" }).exec();
+  const targetArray = await OrdersArchive.find({
+    statusLabel: "заказать (нет на складе МОТЕА)",
+  }).exec();
   const availableNow = [];
 
   for (const order of targetArray) {
@@ -375,10 +556,10 @@ async function checkAvailabilityOrders() {
 
     if (order.products) {
       for (const product of order.products) {
-        const dbItem = await Product.findOne({article: product.sku}).exec();
+        const dbItem = await Product.findOne({ article: product.sku }).exec();
         if (product?.isSet && product?.isSet[0] !== null) {
           for (const item of product.isSet) {
-            const setItem = await Product.findOne({article: item}).exec();
+            const setItem = await Product.findOne({ article: item }).exec();
             if (setItem?.availabilityInMotea === "in stock") {
               isAvailable = true;
             } else {
@@ -396,23 +577,36 @@ async function checkAvailabilityOrders() {
     }
 
     if (isAvailable) {
-      availableNow.push(order)
+      availableNow.push(order);
     }
   }
 
   const message = `
 Привет! 
-У нас ${targetArray.length} заказов со статусом "заказать (нет на складе МОТЕА)". 
-${availableNow?.length > 0 ? `По моим данным для ${availableNow.length} заказов товары появились в наличии.`: ''}
+У нас ${
+    targetArray.length
+  } заказов со статусом "заказать (нет на складе МОТЕА)". 
+${
+  availableNow?.length > 0
+    ? `По моим данным для ${availableNow.length} заказов товары появились в наличии.`
+    : ""
+}
 Вот информация о них:
-${availableNow.map((order, index) => `${index + 1}). #${order.id} - (${order.products[0].sku})${order.products[0].text}`).join('\n')}
+${availableNow
+  .map(
+    (order, index) =>
+      `${index + 1}). #${order.id} - (${order.products[0].sku})${
+        order.products[0].text
+      }`
+  )
+  .join("\n")}
 
 Эти заказы еще актуальны?
 Пожалуйста перепроверь.
 `;
 
   if (availableNow?.length && availableNow.length > 0) {
-    const managers = await User.find({ role: 'manager' }).exec();
+    const managers = await User.find({ role: "manager" }).exec();
     sendTelegramMessage(message, chatId);
     if (managers[0].chatId) {
       sendTelegramMessage(message, managers[0].chatId);
@@ -420,7 +614,8 @@ ${availableNow.map((order, index) => `${index + 1}). #${order.id} - (${order.pro
   }
 }
 
-cron.schedule(                              // import products at 01:00
+cron.schedule(
+  // import products at 01:00
   "0 1 * * *",
   () => {
     const now = new Date();
@@ -449,7 +644,8 @@ cron.schedule(                              // import products at 01:00
   }
 );
 
-cron.schedule(                              // import products at 17:30
+cron.schedule(
+  // import products at 17:30
   "30 17 * * *",
   () => {
     const now = new Date();
@@ -478,10 +674,10 @@ cron.schedule(                              // import products at 17:30
   }
 );
 
-cron.schedule(                               //  update prom base at 15:30
+cron.schedule(
+  //  update prom base at 15:30
   "30 15 * * *",
   () => {
-
     updatePromBase();
   },
   {
@@ -509,7 +705,8 @@ cron.schedule(
   }
 );
 
-cron.schedule(                              //  update availability at 01:20
+cron.schedule(
+  //  update availability at 01:20
   "20 1 * * *",
   () => {
     try {
@@ -528,7 +725,8 @@ cron.schedule(                              //  update availability at 01:20
   }
 );
 
-cron.schedule(                              //  update availability at 17:50
+cron.schedule(
+  //  update availability at 17:50
   "50 17 * * *",
   () => {
     try {
@@ -571,7 +769,8 @@ cron.schedule(
   }
 );
 
-cron.schedule(                               //  check ad spend
+cron.schedule(
+  //  check ad spend
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -613,7 +812,8 @@ cron.schedule(                               //  check ad spend
   }
 );
 
-cron.schedule(                               //  check orders
+cron.schedule(
+  //  check orders
   "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -628,10 +828,13 @@ cron.schedule(                               //  check orders
   }
 );
 
-cron.schedule(                               //  check not availability orders
+cron.schedule(
+  //  check not availability orders
   "0 10 * * 1-5",
   async () => {
-    console.log('Запуск задачи по проверке заказов в статусе "Заказать (нет на складе MOTEA)"...');
+    console.log(
+      'Запуск задачи по проверке заказов в статусе "Заказать (нет на складе MOTEA)"...'
+    );
 
     await checkAvailabilityOrders();
 
@@ -643,11 +846,35 @@ cron.schedule(                               //  check not availability orders
   }
 );
 
-cron.schedule(                               //  weekly report to owner
+cron.schedule(
+  //  weekly report to owner
   "59 17 * * 5",
   () => {
-
     reportToOwner();
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(
+  //  update available rows base
+  "49 19 * * *",
+  () => {
+    importYMLtoGoogleFeed();
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(
+  //  update google MC feed table
+  "55 19 * * *",
+  () => {
+    sendToSheets();
   },
   {
     scheduled: true,
