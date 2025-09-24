@@ -103,6 +103,7 @@ async function reportToOwner() {
 
 
     newOrders.forEach((order) => {
+      if (!order?.products || order.products.length === 0) return;
       order.products.forEach((product) => {
         const selfPrice = Number(product.costPrice) * 1.52;
         const mar = Number(product.price.toFixed(2)) - Number(selfPrice.toFixed(2));
