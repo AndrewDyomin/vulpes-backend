@@ -187,6 +187,10 @@ const itemSchema = new mongoose.Schema({
     type: Array,
     default: [null],
   },
+  bikeList: {
+    type: Array,
+    default: [null],
+  },
 });
 
 module.exports = mongoose.model("Item", itemSchema);
