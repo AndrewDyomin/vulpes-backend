@@ -202,4 +202,34 @@ cron.schedule(
   }
 );
 
-module.exports = { getAll, getByFilter, getByArticle };
+async function orderedStatus(req, res, next) {
+  const ordersArray = req.body.orders
+  console.log(ordersArray)
+
+  try {
+    const url = "https://vulpes.salesdrive.me/api/order/update/";
+    const headers = {
+      "X-Api-Key": process.env.X_API_KEY,
+      "Content-Type": "application/json",
+    };
+
+    for (const order of ordersArray) {
+      const data = {
+        id: order,
+        data: {
+          statusId: "17",
+        },
+      };
+
+      await axios.post(url, data, { headers });
+    }
+
+    
+    res.status(200).send({ message: "OK" });
+  } catch(err) {
+    console.log(err)
+  }
+  
+}
+
+module.exports = { getAll, getByFilter, getByArticle, orderedStatus };
