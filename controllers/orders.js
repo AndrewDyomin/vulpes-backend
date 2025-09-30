@@ -28,6 +28,7 @@ const headers = {
 //     { value: 14, text: 'заказать (нет на складе МОТЕА)' },
 //     { value: 15, text: 'Появилось в наличии' },
 //     { value: 16, text: 'Замовити в МРА' },
+//     { value: 17, text: 'Заказано' },
 //   ]
 
 async function getAll(req, res, next) {
@@ -38,7 +39,7 @@ async function getAll(req, res, next) {
     const params = {
       page: 1,
       filter: {
-        statusId: ["1", "2", "3", "4", "9", "10", "11", "13", "14", "15", "16"],
+        statusId: ["1", "2", "3", "4", "9", "10", "11", "13", "14", "15", "16", "17"],
       },
     };
     let hasMore = true;
@@ -150,7 +151,7 @@ async function getByFilter(req, res, next) {
     } else if (filter === "in-work" || filter === 0) {
       const params = {
         page: 1,
-        filter: { statusId: ["1", "2", "3", "4", "9", "10", "11", "13"] },
+        filter: { statusId: ["1", "2", "3", "4", "9", "10", "11", "13", "14", "15", "16", "17"] },
       };
 
       const response = await axios.get(url, { headers, params });
