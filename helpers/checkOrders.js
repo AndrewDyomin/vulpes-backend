@@ -42,10 +42,23 @@ const changeTable = async () => {
     const sheets = google.sheets({ version: "v4", auth: client });
     const spreadsheetId = "16kaSBC3xnJQON80jYzUE5ok7N37R_vXGUmpJHX4A6Uw";
     const range = "Bestellung!A:Z";
-    await sheets.spreadsheets.values.clear({
-        spreadsheetId,
-        range,
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            updateCells: {
+              range: {
+                sheetId: 0
+              },
+              fields: "*"
+            }
+          }
+        ]
+      }
     });
+
     const rows = [["order №", "sku", "amount", "Bestand"]];
 
     const targetOrders = await fetchOrders();
