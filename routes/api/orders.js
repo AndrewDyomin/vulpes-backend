@@ -10,6 +10,7 @@ router.post("/id", isAuth, OrdersController.getAll);
 router.post("/by-filter", isAuth, OrdersController.getByFilter);
 router.post("/by-article", isAuth, OrdersController.getByArticle);
 router.post("/from-table", OrdersController.orderedStatus);
+router.post("/calc-orders-to-motea", OrdersController.calcOrdersToMotea);
 // router.post("/delete", ProductsController.deleteProduct);
 
 module.exports = router;

@@ -4,6 +4,8 @@ const cron = require("node-cron");
 const OrdersArchive = require("../models/ordersArchive");
 const Product = require("../models/item");
 const ordersArchive = require("../models/ordersArchive");
+const { google } = require("googleapis");
+const updateSheets = require("../helpers/updateSheets");
 require("dotenv").config();
 
 const url = "https://vulpes.salesdrive.me/api/order/list/";
@@ -232,4 +234,80 @@ async function orderedStatus(req, res, next) {
   
 }
 
-module.exports = { getAll, getByFilter, getByArticle, orderedStatus };
+async function calcOrdersToMotea(req, res, next) {
+  if (!req.body?.orders || req.body.orders.length === 0) {
+    res.status(200).send({ message: "Список заказов пуст. Проверьте отметки 'JA/NEIN' на листе Bestellung, там не должно быть пустых ячеек." })
+    return;
+  }
+  const ordersFromTable = req.body.orders;
+  const rows = [["order №", "sku", "amount"]];
+  const orderArray = [];
+
+  for (const i of ordersFromTable) {
+    const target = await OrdersArchive.findOne({ id: Number(i) }).exec();
+    const order = {
+      id: target.id,
+      statusLabel: target.statusLabel,
+      products: target.products.map((product) => ({
+        amount: product.amount,
+        sku: product.sku,
+        isSet: product.isSet || [],
+      })),
+    };
+    for (const product of order.products) {
+      if (
+        product.isSet &&
+        product.isSet?.length > 0 &&
+        product.isSet[0] !== null
+      ) {
+        for (const item of product.isSet) {
+          const targetChild = orderArray.find(order => order.item === item)
+          if (!targetChild) {
+              const child = { order: [order.id], item, amount: product.amount};
+              orderArray.push(child);
+          } else {
+              targetChild.order.push(order.id);
+              targetChild.amount += product.amount;
+          }
+        }
+      } else {
+          const targetChild = orderArray.find(order => order.item === product.sku)
+          if (!targetChild) {
+              const child = { order: [order.id], item: product.sku, amount: product.amount};
+              orderArray.push(child);
+          } else {
+              targetChild.order.push(order.id);
+              targetChild.amount += product.amount;
+          }
+      }
+    }
+  }
+
+  for (const i of orderArray) {
+    const row = [`${i.order.join(', ')}`, `${i.item}`, i.amount]; 
+    rows.push(row);
+  }
+
+  const client = new google.auth.JWT(
+    process.env.GOOGLE_CLIENT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+  );
+
+  await client.authorize();
+
+  const sheets = google.sheets({ version: "v4", auth: client });
+  const spreadsheetId = "16kaSBC3xnJQON80jYzUE5ok7N37R_vXGUmpJHX4A6Uw";
+  const range = "Endgültige Bestellung!A:Z";
+  await sheets.spreadsheets.values.clear({
+      spreadsheetId,
+      range,
+  });
+
+  await updateSheets(sheets, spreadsheetId, range, rows);
+
+  res.status(200).send({ message: "Компоненты заказа пересчитаны" })
+};
+
+module.exports = { getAll, getByFilter, getByArticle, orderedStatus, calcOrdersToMotea };
