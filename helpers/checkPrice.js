@@ -158,7 +158,7 @@ async function priceCheck() {
         );
       }
 
-      if (difference < 3) {
+      if (difference < 5) {
         continue;
       }
 
@@ -173,7 +173,7 @@ async function priceCheck() {
     } catch (err) {
       if (err?.response?.status === 429) {
         console.log("Block 429!!!");
-        await sleep(180000);
+        await sleep(200000);
       }
       errors.push(['-', 'Ошибка при обработке артикула', item.article, err.message]);
     }
