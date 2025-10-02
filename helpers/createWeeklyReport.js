@@ -19,7 +19,7 @@ function getCurrentWeekRange() {
 
   return {
     startDate: start.toISOString().slice(0, 10),
-    endDate: today.toISOString().slice(0, 10),
+    endDate: `${today.toISOString().slice(0, 10)} 23:59:59`,
   };
 }
 
@@ -122,8 +122,8 @@ async function reportToOwner() {
 Привет! Вот как прошла эта неделя:
 
 • Новых заказов: ${newOrders.length}
-• На общую сумму: ${newOrdersPrice}грн.
-• Примерная маржа: ${marja}грн.
+• На общую сумму: ${Math.round(newOrdersPrice)}грн.
+• Примерная маржа: ${Math.round(marja)}грн.
 • Самый активный день: ${activityDate} (${activityCount})
 
 ${noneSelfPrice.length > 0 ? `Товары без себестоимости:

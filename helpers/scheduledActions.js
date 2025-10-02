@@ -754,8 +754,8 @@ cron.schedule(
     const child = fork(checkPrice);
 
     child.on("exit", (code) => {
-      sendTelegramMessage(`Проверка цен завершёна с кодом ${code}`, chatId);
-      console.log(`Проверка цен завершёна с кодом ${code}`);
+      sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
+      console.log(`Проверка цен завершена с кодом ${code}`);
     });
 
     child.on("error", (err) => {
