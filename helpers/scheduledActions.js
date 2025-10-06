@@ -238,9 +238,9 @@ async function sendToSheets() {
   const sheets = google.sheets({ version: "v4", auth: client });
 
   await sheets.spreadsheets.values.clear({
-      spreadsheetId: targetId,
-      range: "Лист1!A2:V20200",
-    });
+    spreadsheetId: targetId,
+    range: "Лист1!A2:V20200",
+  });
 
   const batch = 100;
   let skip = 0;
@@ -248,14 +248,11 @@ async function sendToSheets() {
   let startRow = 2;
 
   while (hasMore) {
-    const rows = await TableRow.find({})
-      .skip(skip)
-      .limit(batch)
-      .exec();
+    const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
 
     if (!rows.length) break;
 
-    const toTable = rows.map(item => item.row);
+    const toTable = rows.map((item) => item.row);
     const endRow = startRow + toTable.length - 1;
     const range = `Лист1!A${startRow}:V${endRow}`;
 
@@ -271,7 +268,6 @@ async function sendToSheets() {
     }
   }
 }
-
 
 async function importYMLtoGoogleFeed() {
   if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
@@ -312,23 +308,26 @@ async function importYMLtoGoogleFeed() {
       if (!currentProduct) return;
 
       if (tagName === "offer") {
-        currentProduct.quantity_in_stock = Number(currentProduct.quantity_in_stock || 0);
+        currentProduct.quantity_in_stock = Number(
+          currentProduct.quantity_in_stock || 0
+        );
         currentProduct.price = Number(currentProduct.price || 0);
         currentProduct.oldprice = Number(currentProduct.oldprice || 0);
 
         if (!currentProduct.article) return;
         if (currentProduct.quantity_in_stock < 1) return;
         if (!currentProduct.url) return;
-        if (currentProduct.url && !currentProduct.url.includes("vulpes.com.ua")) return;
+        if (currentProduct.url && !currentProduct.url.includes("vulpes.com.ua"))
+          return;
         if (currentProduct.pictures.length === 0) return;
 
         const picturesString = currentProduct.pictures.slice(1).join(",");
-        let upperPrice
-        let lowerPrice
+        let upperPrice;
+        let lowerPrice;
 
         if (!currentProduct.oldprice) {
-          upperPrice = `${currentProduct.price} UAH`
-          lowerPrice = '';
+          upperPrice = `${currentProduct.price} UAH`;
+          lowerPrice = "";
         } else {
           upperPrice = `${currentProduct.oldprice} UAH`;
           lowerPrice = `${currentProduct.price} UAH`;
@@ -358,7 +357,7 @@ async function importYMLtoGoogleFeed() {
           "no",
         ];
 
-        await TableRow.create({ row })
+        await TableRow.create({ row });
 
         currentProduct = null;
       } else if (textBuffer) {
@@ -377,7 +376,9 @@ async function importYMLtoGoogleFeed() {
     });
 
     parser.on("end", async () => {
-      console.log(`[${new Date().toISOString()}] Парсинг товаров в наличии завершён`);
+      console.log(
+        `[${new Date().toISOString()}] Парсинг товаров в наличии завершён`
+      );
     });
 
     parser.on("error", (err) => {
@@ -397,7 +398,6 @@ async function importYMLtoGoogleFeed() {
     );
   }
 }
-
 
 async function saveMoteaFeedToDb() {
   try {
@@ -546,7 +546,7 @@ function getLastWeeksRanges() {
 }
 
 async function checkAvailabilityOrders() {
-  const targetArray = await OrdersArchive.find({
+  let targetArray = await OrdersArchive.find({
     statusLabel: "заказать (нет на складе МОТЕА)",
   }).exec();
   const availableNow = [];
@@ -581,7 +581,7 @@ async function checkAvailabilityOrders() {
     }
   }
 
-  const message = `
+  let message = `
 Привет! 
 У нас ${
     targetArray.length
@@ -606,6 +606,73 @@ ${availableNow
 `;
 
   if (availableNow?.length && availableNow.length > 0) {
+    const managers = await User.find({ role: "manager" }).exec();
+    sendTelegramMessage(message, chatId);
+    if (managers[0].chatId) {
+      sendTelegramMessage(message, managers[0].chatId);
+    }
+  }
+
+  targetArray = await OrdersArchive.find({
+    statusLabel: "заказать",
+  }).exec();
+  const inStockNow = [];
+
+  for (const order of targetArray) {
+    let inStock = false;
+
+    if (order.products) {
+      for (const product of order.products) {
+        const dbItem = await Product.findOne({ article: product.sku }).exec();
+        if (product?.isSet && product?.isSet[0] !== null) {
+          for (const item of product.isSet) {
+            const setItem = await Product.findOne({ article: item }).exec();
+            if (setItem?.quantityInStock > 0) {
+              inStock = true;
+            } else {
+              inStock = false;
+            }
+          }
+        } else {
+          if (dbItem?.quantityInStock > 0) {
+            inStock = true;
+          } else {
+            inStock = false;
+          }
+        }
+      }
+    }
+
+    if (inStock) {
+      inStockNow.push(order);
+    }
+  }
+
+  message = `
+Привет! 
+У нас ${
+    targetArray.length
+  } заказов со статусом "заказать". 
+${
+  inStockNow?.length > 0
+    ? `По моим данным для ${inStockNow.length} заказов товары есть в наличии на складе.`
+    : ""
+}
+Вот информация о них:
+${inStockNow
+  .map(
+    (order, index) =>
+      `${index + 1}). #${order.id} - (${order.products[0].sku})${
+        order.products[0].text
+      }`
+  )
+  .join("\n")}
+
+Может я где-то ошибся?
+Пожалуйста перепроверь.
+`;
+
+  if (inStockNow?.length && inStockNow.length > 0) {
     const managers = await User.find({ role: "manager" }).exec();
     sendTelegramMessage(message, chatId);
     if (managers[0].chatId) {
