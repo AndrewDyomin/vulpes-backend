@@ -925,8 +925,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update available rows base
+cron.schedule(    //  update available rows base
   "49 19 * * *",
   () => {
     importYMLtoGoogleFeed();
@@ -937,8 +936,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update google MC feed table
+cron.schedule(    //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();

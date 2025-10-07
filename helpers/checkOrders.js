@@ -4,6 +4,7 @@ const Product = require("../models/item");
 const sendTelegramMessage = require("./sendTelegramMessage");
 const { google } = require("googleapis");
 const updateSheets = require("../helpers/updateSheets");
+const axios = require("axios");
 
 const fetchOrders = async () => {
   try {
@@ -26,6 +27,70 @@ const fetchOrders = async () => {
     console.error("Error fetching orders:", error);
   }
 };
+
+const getDeliveryDate = async (item) => {
+  const itemInfo = await Product.findOne({article: item}).exec();
+  const link = itemInfo.linkInMotea;
+  if (!link) {return null;}
+  const response = await axios.get(link);
+
+  const startToken = '<p class="motea-cart-box-info-li firstelement" id="motea-cart-box-info-delivery">';
+  const endToken = "</p>";
+
+  const startIndex = response.data.indexOf(startToken);
+  const endIndex = response.data.indexOf(endToken, startIndex);
+
+  if (startIndex === -1 || endIndex === -1) {
+    console.log("Тег не найден");
+    return null;
+  }
+
+  const targetTag = response.data.slice(startIndex + startToken.length, endIndex).trim();
+
+  const matches = targetTag.match(/(\d{2})\.(\d{2})\.(\d{4})/g);
+  const [day, month, year] = matches[0].split('.').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return date.getTime();
+}
+
+const checkDeliveryDate = async (targetOrders) => {
+  const result = [];
+
+  for (const order of targetOrders) {
+    const isInStock = [];
+    for (const product of order.products) {
+      if (product.isSet && product.isSet?.length > 0 && product.isSet[0] !== null) {
+        for (const item of product.isSet) {
+          // перебираем товары из набора
+          const deliveryDate = await getDeliveryDate(item);
+          if (!deliveryDate) continue;
+          const now = new Date();
+          const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+          const diffDays = Math.ceil((deliveryDate - today) / (1000 * 60 * 60 * 24));
+          if (diffDays > 10) {
+            isInStock.push(false)
+          }
+        }
+      } else {
+        // перебираем товары из заказа
+        const deliveryDate = await getDeliveryDate(product.sku);
+        if (!deliveryDate) continue;
+        const now = new Date();
+        const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+        const diffDays = Math.floor((deliveryDate - today) / (1000 * 60 * 60 * 24));
+        if (diffDays > 10) {
+          isInStock.push(false)
+        }
+      }
+    }
+    if (!isInStock.includes(false)) {
+      result.push(order);
+    }
+  }
+
+  return result;
+}
 
 const changeTable = async () => {
   try {
@@ -62,9 +127,10 @@ const changeTable = async () => {
     const rows = [["order №", "sku", "amount", "Bestand"]];
 
     const targetOrders = await fetchOrders();
+    const filteredOrders = await checkDeliveryDate(targetOrders);
     const orderArray = [];
 
-    for (const order of targetOrders) {
+    for (const order of filteredOrders) {
       for (const product of order.products) {
         if (
           product.isSet &&

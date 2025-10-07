@@ -61,7 +61,6 @@ async function getAll(req, res, next) {
         const option = statusOptions.find(
           (status) => Number(status.value) === Number(order.statusId)
         );
-        console.log(order.statusId)
         order.statusLabel = option.text;
         if (order?.products) {
           for (const product of order.products) {
