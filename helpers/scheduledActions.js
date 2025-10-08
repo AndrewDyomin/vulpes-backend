@@ -222,10 +222,6 @@ async function importProductsFromYML() {
   }
 }
 
-// function sleep(n) {
-//   return new Promise((resolve) => setTimeout(resolve, n * 1000));
-// }
-
 async function sendToSheets() {
   const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
   const client = new google.auth.JWT(
@@ -619,7 +615,7 @@ ${availableNow
   const inStockNow = [];
 
   for (const order of targetArray) {
-    let inStock = false;
+    const inStock = [];
 
     if (order.products) {
       for (const product of order.products) {
@@ -628,22 +624,22 @@ ${availableNow
           for (const item of product.isSet) {
             const setItem = await Product.findOne({ article: item }).exec();
             if (setItem?.quantityInStock > 0) {
-              inStock = true;
+              inStock.push(true);
             } else {
-              inStock = false;
+              inStock.push(false);
             }
           }
         } else {
           if (dbItem?.quantityInStock > 0) {
-            inStock = true;
+            inStock.push(true);
           } else {
-            inStock = false;
+            inStock.push(false);
           }
         }
       }
     }
 
-    if (inStock) {
+    if (!inStock.includes(false)) {
       inStockNow.push(order);
     }
   }
@@ -681,8 +677,7 @@ ${inStockNow
   }
 }
 
-cron.schedule(
-  // import products at 01:00
+cron.schedule(    // import products at 01:00
   "0 1 * * *",
   () => {
     const now = new Date();
@@ -711,8 +706,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  // import products at 17:30
+cron.schedule(    // import products at 17:30
   "30 17 * * *",
   () => {
     const now = new Date();
@@ -879,8 +873,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  check orders
+cron.schedule(    //  check orders
   "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -895,8 +888,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  check not availability orders
+cron.schedule(    //  check not availability orders
   "0 10 * * 1-5",
   async () => {
     console.log(
