@@ -78,7 +78,7 @@ async function importProductsFromYML() {
   try {
     console.log("Импорт начат...");
 
-    let existingArticlesMap = new Map();
+    const existingArticlesMap = new Map();
 
     let cursor = Product.find({}, "article _id name").lean().cursor();
     for await (const doc of cursor) {
@@ -170,12 +170,14 @@ async function importProductsFromYML() {
           await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), {
             ordered: false,
           });
+          console.log('writed ', newProducts.length, ' new products')
         }
 
         if (productsToUpdate.length >= CHUNK_SIZE) {
           await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), {
             ordered: false,
           });
+          console.log('updated ', productsToUpdate.length, ' products')
         }
       } else if (currentProduct && currentTag && textBuffer) {
         currentProduct[currentTag] = textBuffer;
@@ -186,10 +188,12 @@ async function importProductsFromYML() {
     parser.on("end", async () => {
       if (newProducts.length > 0) {
         await Product.insertMany(newProducts, { ordered: false });
+        console.log('writed ', newProducts.length, ' new products')
       }
 
       if (productsToUpdate.length > 0) {
         await Product.bulkWrite(productsToUpdate, { ordered: false });
+        console.log('updated ', productsToUpdate.length, ' products')
       }
 
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
@@ -204,10 +208,9 @@ async function importProductsFromYML() {
       );
     });
 
-    response.data.pipe(parser);
+    await response.data.pipe(parser);
     response = null;
     cursor = null;
-    existingArticlesMap = null;
     newProducts = [];
     productsToUpdate = [];
   } catch (err) {
