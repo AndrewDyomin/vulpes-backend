@@ -26,14 +26,6 @@ const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 
-const format = (number) => {
-  if (number < 10) {
-    return "0" + number;
-  } else {
-    return number;
-  }
-};
-
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
   console.log("Disconnected from main DB");
@@ -86,21 +78,21 @@ async function importProductsFromYML() {
   try {
     console.log("Импорт начат...");
 
-    const existingArticlesMap = new Map();
+    let existingArticlesMap = new Map();
 
-    const cursor = Product.find({}, "article _id name").lean().cursor();
+    let cursor = Product.find({}, "article _id name").lean().cursor();
     for await (const doc of cursor) {
       existingArticlesMap.set(doc.article, doc);
     }
 
-    const newProducts = [];
-    const productsToUpdate = [];
+    let newProducts = [];
+    let productsToUpdate = [];
 
     let currentTag = null;
     let currentProduct = null;
     let textBuffer = "";
 
-    const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
+    let response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
     const parser = sax.createStream(true, { trim: true });
 
     parser.on("opentag", (node) => {
@@ -213,6 +205,11 @@ async function importProductsFromYML() {
     });
 
     response.data.pipe(parser);
+    response = null;
+    cursor = null;
+    existingArticlesMap = null;
+    newProducts = [];
+    productsToUpdate = [];
   } catch (err) {
     console.error(`Ошибка импорта: ${err.message}`);
     sendTelegramMessage(
@@ -407,7 +404,7 @@ async function saveMoteaFeedToDb() {
     await MoteaItem.collection.drop();
 
     const url = process.env.MOTEA_FEED;
-    const response = await axios.get(url, { responseType: "stream" });
+    let response = await axios.get(url, { responseType: "stream" });
 
     let batch = [];
     let totalCount = 0;
@@ -471,6 +468,8 @@ async function saveMoteaFeedToDb() {
         });
     });
 
+    response = null;
+
     await mongoose.disconnect();
     console.log("Disconnected from Motea feed info DB");
 
@@ -488,7 +487,7 @@ async function updateProductsAvailability() {
 
   while (hasMore) {
     console.log(`${skip / 1000}).`);
-    const batch = await Product.find({}).skip(skip).limit(BATCH_SIZE).exec();
+    let batch = await Product.find({}).skip(skip).limit(BATCH_SIZE).exec();
 
     const updatedBatch = await fetchAvailability(batch);
 
@@ -510,11 +509,9 @@ async function updateProductsAvailability() {
 
     skip += BATCH_SIZE;
     hasMore = batch.length === BATCH_SIZE;
+    batch = null;
   }
-  sendTelegramMessage(
-    "Информация о наличии товаров в МОТЕА обновлена.",
-    chatId
-  );
+  sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
 }
 
 function getLastWeeksRanges() {
@@ -680,16 +677,6 @@ ${inStockNow
 cron.schedule(    // import products at 01:00
   "0 1 * * *",
   () => {
-    const now = new Date();
-    const today = format(now.getDate());
-    const month = format(now.getMonth() + 1);
-    const hours = format(now.getHours());
-    const minutes = format(now.getMinutes());
-    const seconds = format(now.getSeconds());
-    console.log(
-      `Scheduled function triggered at ${today}.${month} ${hours}:${minutes}:${seconds}.`
-    );
-
     try {
       importProductsFromYML();
     } catch (error) {
@@ -709,16 +696,6 @@ cron.schedule(    // import products at 01:00
 cron.schedule(    // import products at 17:30
   "30 17 * * *",
   () => {
-    const now = new Date();
-    const today = format(now.getDate());
-    const month = format(now.getMonth() + 1);
-    const hours = format(now.getHours());
-    const minutes = format(now.getMinutes());
-    const seconds = format(now.getSeconds());
-    console.log(
-      `Scheduled function triggered at ${today}.${month} ${hours}:${minutes}:${seconds}.`
-    );
-
     try {
       importProductsFromYML();
     } catch (error) {
@@ -766,8 +743,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update availability at 01:20
+cron.schedule(    //  update availability at 01:20
   "20 1 * * *",
   () => {
     try {
@@ -786,8 +762,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update availability at 17:50
+cron.schedule(    //  update availability at 17:50
   "50 17 * * *",
   () => {
     try {
@@ -830,8 +805,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  check ad spend
+cron.schedule(    //  check ad spend
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -905,8 +879,7 @@ cron.schedule(    //  check not availability orders
   }
 );
 
-cron.schedule(
-  //  weekly report to owner
+cron.schedule(    //  weekly report to owner
   "59 17 * * 5",
   () => {
     reportToOwner();
