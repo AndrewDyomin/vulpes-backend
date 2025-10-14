@@ -7,6 +7,8 @@ const ordersArchive = require("../models/ordersArchive");
 const { google } = require("googleapis");
 const updateSheets = require("../helpers/updateSheets");
 require("dotenv").config();
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const chatId = process.env.ADMIN_CHAT_ID;
 
 const url = "https://vulpes.salesdrive.me/api/order/list/";
 const headers = {
@@ -83,7 +85,7 @@ async function getAll(req, res, next) {
     console.log("Заказы скопированы");
   } catch (error) {
     console.error("Error fetching orders:", error);
-    next(error);
+    sendTelegramMessage(`Ошибка при синхронизации заказов: ${error}`, chatId);
   }
 }
 
