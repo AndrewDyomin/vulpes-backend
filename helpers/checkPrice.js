@@ -127,7 +127,7 @@ async function priceCheck() {
 
   for (const item of linksArray) {
     if (i >= 200) {
-      await sleep(30000);
+      await sleep(50000);
       i = 0;
     }
 
@@ -173,7 +173,7 @@ async function priceCheck() {
     } catch (err) {
       if (err?.response?.status === 429) {
         console.log("Block 429!!!");
-        await sleep(200000);
+        await sleep(150000);
       }
       errors.push(['-', 'Ошибка при обработке артикула', item.article, err.message]);
     }

@@ -170,14 +170,12 @@ async function importProductsFromYML() {
           await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), {
             ordered: false,
           });
-          console.log('writed ', newProducts.length, ' new products')
         }
 
         if (productsToUpdate.length >= CHUNK_SIZE) {
           await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), {
             ordered: false,
           });
-          console.log('updated ', productsToUpdate.length, ' products')
         }
       } else if (currentProduct && currentTag && textBuffer) {
         currentProduct[currentTag] = textBuffer;
@@ -188,12 +186,10 @@ async function importProductsFromYML() {
     parser.on("end", async () => {
       if (newProducts.length > 0) {
         await Product.insertMany(newProducts, { ordered: false });
-        console.log('writed ', newProducts.length, ' new products')
       }
 
       if (productsToUpdate.length > 0) {
         await Product.bulkWrite(productsToUpdate, { ordered: false });
-        console.log('updated ', productsToUpdate.length, ' products')
       }
 
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
@@ -259,8 +255,44 @@ async function sendToSheets() {
 
     if (rows.length < batch) {
       hasMore = false;
-    } else {
-      // await sleep(10);
+    }
+  }
+
+  const tableOfCovers = "131RvA-bT2mnqc05jtJiN2S_SW5e9wLIa9beBs6rUWQo"; // Таблица с чехлами
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId: tableOfCovers,
+    range: "Лист1!A2:V20200",
+  });
+  skip = 0;
+  hasMore = true;
+  startRow = 2;
+
+  while (hasMore) {
+    const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
+
+    if (!rows.length) break;
+
+    const toTable = [];
+
+    for (const obj of rows) {
+      const row = obj.row;
+      const sku = row[0].replace("-9", "");
+      const product = await Product.findOne({article: sku}).exec();
+      if (product.category === "1167") {
+        toTable.push([`${sku}-10`, ...row.slice(1)])
+      }
+    }
+
+    const endRow = startRow + toTable.length - 1;
+    const range = `Лист1!A${startRow}:V${endRow}`;
+
+    await updateSheets(sheets, tableOfCovers, range, toTable);
+
+    startRow = endRow + 1;
+    skip += batch;
+
+    if (rows.length < batch) {
+      hasMore = false;
     }
   }
 }
