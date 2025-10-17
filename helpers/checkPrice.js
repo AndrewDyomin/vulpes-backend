@@ -127,7 +127,7 @@ async function priceCheck() {
 
   for (const item of linksArray) {
     if (i >= 200) {
-      await sleep(50000);
+      await sleep(30000);
       i = 0;
     }
 
@@ -164,7 +164,7 @@ async function priceCheck() {
 
       excelData.push([item.article, dbPrice, mItem.sku, mPrice]);
 
-      if (excelData.length >= 5000) {
+      if (excelData.length >= 2000) {
         await sendExcel(excelData, `Changed price ${today}.${month}(${nameIndex})`);
         nameIndex++;
         excelData.length = 0;
@@ -173,7 +173,7 @@ async function priceCheck() {
     } catch (err) {
       if (err?.response?.status === 429) {
         console.log("Block 429!!!");
-        await sleep(150000);
+        await sleep(200000);
       }
       errors.push(['-', 'Ошибка при обработке артикула', item.article, err.message]);
     }
