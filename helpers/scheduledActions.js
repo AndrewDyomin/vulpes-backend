@@ -25,6 +25,7 @@ const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
+let isChild = false;
 
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
@@ -819,20 +820,26 @@ cron.schedule(    //  update availability at 17:50
 cron.schedule(
   "30 18 * * *",
   () => {
-    const checkPrice = path.join(__dirname, "checkPrice.js");
-    console.log("Запуск проверки цен...");
+    if (!isChild) {
+      const checkPrice = path.join(__dirname, "checkPrice.js");
+      console.log("Запуск проверки цен...");
+      isChild = true;
 
-    const child = fork(checkPrice);
+      const child = fork(checkPrice);
 
-    child.on("exit", (code) => {
-      sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
-      console.log(`Проверка цен завершена с кодом ${code}`);
-    });
+      child.on("exit", (code) => {
+        sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
+        console.log(`Проверка цен завершена с кодом ${code}`);
+        isChild = false;
+      });
 
-    child.on("error", (err) => {
-      sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId);
-      console.error("Ошибка проверки цен:", err);
-    });
+      child.on("error", (err) => {
+        sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId);
+        console.error("Ошибка проверки цен:", err);
+        isChild = false;
+      });
+    }
+    console.log('Price check has already started')
   },
   {
     scheduled: true,
