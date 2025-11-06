@@ -63,7 +63,7 @@ const checkDeliveryDate = async (targetOrders) => {
       if (product.isSet && product.isSet?.length > 0 && product.isSet[0] !== null) {
         for (const item of product.isSet) {
           // перебираем товары из набора
-          const deliveryDate = await getDeliveryDate(item);
+          const deliveryDate = await getDeliveryDate(item.sku);
           if (!deliveryDate) continue;
           const now = new Date();
           const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
@@ -138,13 +138,13 @@ const changeTable = async () => {
           product.isSet[0] !== null
         ) {
           for (const item of product.isSet) {
-            const targetChild = orderArray.find(order => order.item === item)
+            const targetChild = orderArray.find(order => order.item === item.sku)
             if (!targetChild) {
-                const child = { order: [order.id], item, amount: product.amount};
+                const child = { order: [order.id], item: item.sku, amount: product.amount * item.count};
                 orderArray.push(child);
             } else {
                 targetChild.order.push(order.id);
-                targetChild.amount += product.amount;
+                targetChild.amount += product.amount * item.count;
             }
           }
         } else {

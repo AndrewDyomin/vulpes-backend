@@ -588,7 +588,7 @@ async function checkAvailabilityOrders() {
         const dbItem = await Product.findOne({ article: product.sku }).exec();
         if (product?.isSet && product?.isSet[0] !== null) {
           for (const item of product.isSet) {
-            const setItem = await Product.findOne({ article: item }).exec();
+            const setItem = await Product.findOne({ article: item.sku }).exec();
             if (setItem?.availabilityInMotea === "in stock") {
               isAvailable = true;
             } else {
@@ -655,7 +655,7 @@ ${availableNow
         const dbItem = await Product.findOne({ article: product.sku }).exec();
         if (product?.isSet && product?.isSet[0] !== null) {
           for (const item of product.isSet) {
-            const setItem = await Product.findOne({ article: item }).exec();
+            const setItem = await Product.findOne({ article: item.sku }).exec();
             if (setItem?.quantityInStock > 0) {
               inStock.push(true);
             } else {

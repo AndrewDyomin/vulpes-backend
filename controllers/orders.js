@@ -112,7 +112,8 @@ async function getByArticle(req, res, next) {
         }
         if (product?.isSet && product.isSet[0] !== null) {
           parent.set.push(...product.isSet);
-          if (product.isSet.includes(targetArticle)) {
+          // if (product.isSet.includes(targetArticle)) {
+          if (product.isSet.some(item => item?.sku === targetArticle)) {
             bool = true;
           }
         }
@@ -263,13 +264,13 @@ async function calcOrdersToMotea(req, res, next) {
         product.isSet[0] !== null
       ) {
         for (const item of product.isSet) {
-          const targetChild = orderArray.find(order => order.item === item)
+          const targetChild = orderArray.find(order => order.item === item.sku)
           if (!targetChild) {
-              const child = { order: [order.id], item, amount: product.amount};
+              const child = { order: [order.id], item: item.sku, amount: product.amount * item.count};
               orderArray.push(child);
           } else {
               targetChild.order.push(order.id);
-              targetChild.amount += product.amount;
+              targetChild.amount += product.amount * item.count;
           }
         }
       } else {
