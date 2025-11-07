@@ -3,8 +3,8 @@ const axios = require("axios");
 const sax = require("sax");
 const csv = require("csv-parser");
 const mongoose = require("mongoose");
-const { fork } = require("child_process");
-const path = require("path");
+// const { fork } = require("child_process");
+// const path = require("path");
 const Product = require("../models/item");
 const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
@@ -25,7 +25,7 @@ const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
-let isChild = false;
+const HELPER_URL = process.env.HELPER_URL;
 
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
@@ -710,6 +710,34 @@ ${inStockNow
   }
 }
 
+async function checkPrice() {
+  const TIMEOUT = 3 * 60 * 1000;
+  const RETRY_DELAY = 2 * 60 * 1000;
+  console.log('Check price started')
+
+  try {
+    const { data } = await axios.post(HELPER_URL, {}, { timeout: TIMEOUT });
+
+    console.log(`[${new Date().toLocaleString()}] Server response:`, data);
+
+    if (data.message === 'Price check started.') {
+      console.log('ok');
+    } else if (data.message === 'The service is busy, working on the previous task.') {
+      console.log('ok');
+    } else {
+      console.log("Unexpected response:", data);
+    }
+
+  } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      console.log(`[${new Date().toLocaleString()}] No response within 3 minutes - repeat the request...`);
+    } else {
+      console.error(`[${new Date().toLocaleString()}] Request error:`, error.message);
+    }
+    setTimeout(() => checkPrice(), RETRY_DELAY);
+  }
+}
+
 cron.schedule(    // import products at 01:00
   "0 1 * * *",
   () => {
@@ -818,28 +846,9 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "30 18 * * *",
+  "*/15 * * * *",
   () => {
-    if (!isChild) {
-      const checkPrice = path.join(__dirname, "checkPrice.js");
-      console.log("Запуск проверки цен...");
-      isChild = true;
-
-      const child = fork(checkPrice);
-
-      child.on("exit", (code) => {
-        sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
-        console.log(`Проверка цен завершена с кодом ${code}`);
-        isChild = false;
-      });
-
-      child.on("error", (err) => {
-        sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId);
-        console.error("Ошибка проверки цен:", err);
-        isChild = false;
-      });
-    }
-    console.log('Price check has already started')
+    checkPrice();
   },
   {
     scheduled: true,

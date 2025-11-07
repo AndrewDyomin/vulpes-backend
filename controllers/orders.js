@@ -195,17 +195,17 @@ async function getByFilter(req, res, next) {
   }
 }
 
-cron.schedule(
-  "*/30 * * * *",
-  () => {
-    console.log("Копирую заказы...");
-    getAll();
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  }
-);
+// cron.schedule(
+//   "*/30 * * * *",
+//   () => {
+//     console.log("Копирую заказы...");
+//     getAll();
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Kiev",
+//   }
+// );
 
 async function orderedStatus(req, res, next) {
   const ordersArray = req.body.orders
