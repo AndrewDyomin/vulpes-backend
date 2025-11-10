@@ -26,6 +26,7 @@ const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 const HELPER_URL = process.env.HELPER_URL;
+let isPending = false;
 
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
@@ -715,16 +716,22 @@ async function checkPrice() {
   const RETRY_DELAY = 2 * 60 * 1000;
   console.log('Check price started')
 
+  if (isPending) return;
+
   try {
+    isPending = true;
     const { data } = await axios.post(HELPER_URL, {}, { timeout: TIMEOUT });
 
     console.log(`[${new Date().toLocaleString()}] Server response:`, data);
 
     if (data.message === 'Price check started.') {
+      isPending = false;
       console.log('ok');
     } else if (data.message === 'The service is busy, working on the previous task.') {
+      isPending = false;
       console.log('ok');
     } else {
+      isPending = false;
       console.log("Unexpected response:", data);
     }
 
@@ -732,6 +739,7 @@ async function checkPrice() {
     if (error.code === "ECONNABORTED") {
       console.log(`[${new Date().toLocaleString()}] No response within 3 minutes - repeat the request...`);
     } else {
+      isPending = false;
       console.error(`[${new Date().toLocaleString()}] Request error:`, error.message);
     }
     setTimeout(() => checkPrice(), RETRY_DELAY);
@@ -846,7 +854,7 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "*/15 * * * *",
+  "*/10 * * * *",
   () => {
     checkPrice();
   },
