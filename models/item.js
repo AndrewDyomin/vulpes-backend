@@ -115,6 +115,16 @@ const itemSchema = new mongoose.Schema({
       default: 0,
     },
   },
+  moteaPrice: {
+    UAH: {
+      type: Number,
+      default: 0,
+    },
+    date: {
+      type: String,
+      default: '2025-11-26T18:42:13.527Z',
+    },
+  },
   images: {
     type: Array,
     default: [''],

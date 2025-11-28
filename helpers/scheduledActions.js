@@ -4,7 +4,9 @@ const sax = require("sax");
 const csv = require("csv-parser");
 const mongoose = require("mongoose");
 // const { fork } = require("child_process");
-// const path = require("path");
+const ExcelJS = require("exceljs");
+const fs = require("fs");
+const path = require("path");
 const Product = require("../models/item");
 const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
@@ -12,6 +14,7 @@ const TableRow = require("../models/tableRow");
 const OrdersArchive = require("../models/ordersArchive");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const sendTelegramFile = require("./sendTelegramFile");
 const { getAdSpendDirect } = require("./checkAds");
 const { reportToOwner } = require("./createWeeklyReport");
 const { checkOrdersToOrder } = require("./checkOrders");
@@ -746,6 +749,47 @@ async function checkPrice() {
   }
 }
 
+async function sendPriceDifference() {
+  let c = 0;
+  const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 });
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Цены");
+  worksheet.columns = [
+    { header: "Артикул", key: "article", width: 25 },
+    { header: "Наш прайс", key: "dbPrice", width: 15 },
+    { header: "Прайс в Мотеа", key: "mPrice", width: 15 },
+  ];
+
+  for (const item of dbItems) {
+    if (!item?.moteaPrice?.UAH) continue;
+
+    let difference = Math.round(
+      ((Number(item.price.UAH) - Number(item.moteaPrice.UAH)) / Number(item.price.UAH)) * 100
+    );
+
+    if (Number(item.price.UAH) < Number(item.moteaPrice.UAH)) {
+      difference = Math.round(
+        ((Number(item.moteaPrice.UAH) - Number(item.price.UAH)) / Number(item.moteaPrice.UAH)) * 100
+      );
+    }
+
+    if (difference >= 5) {
+      c++;
+      worksheet.addRow({
+        article: item.article,
+        dbPrice: item.price.UAH,
+        mPrice: item.moteaPrice.UAH,
+      });
+    }
+  }
+  const fileName = `Обновление цен ${c}.xlsx`;
+  const filePath = path.join(__dirname, "..", "tmp", fileName);
+
+  await workbook.xlsx.writeFile(filePath);
+  await sendTelegramFile(filePath, "", chatId);
+  fs.unlinkSync(filePath);
+}
+
 cron.schedule(    // import products at 01:00
   "0 1 * * *",
   () => {
@@ -820,6 +864,7 @@ cron.schedule(    //  update availability at 01:20
   () => {
     try {
       updateProductsAvailability();
+      sendPriceDifference();
     } catch (error) {
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage(
@@ -854,7 +899,7 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "*/10 * * * *",
+  "*/15 * * * *",
   () => {
     checkPrice();
   },
