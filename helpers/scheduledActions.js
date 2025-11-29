@@ -717,7 +717,6 @@ ${inStockNow
 async function checkPrice() {
   const TIMEOUT = 3 * 60 * 1000;
   const RETRY_DELAY = 2 * 60 * 1000;
-  console.log('Check price started')
 
   if (isPending) return;
 
@@ -899,7 +898,7 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "*/15 * * * *",
+  "*/10 * * * *",
   () => {
     checkPrice();
   },
