@@ -974,8 +974,6 @@ cron.schedule(    //  check not availability orders
     await checkAvailabilityOrders();
 
     console.log("Проверка заказов завершена.");
-
-    await sendPriceDifference();
   },
   {
     scheduled: true,
@@ -1009,6 +1007,17 @@ cron.schedule(    //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(    //  send updated price
+  "0 11 * * 1-5",
+  async () => {
+    await sendPriceDifference();
   },
   {
     scheduled: true,
