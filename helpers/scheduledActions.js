@@ -759,6 +759,8 @@ async function sendPriceDifference() {
     { header: "Прайс в Мотеа", key: "mPrice", width: 15 },
   ];
 
+  console.log('writing price difference table...')
+
   for (const item of cursor) {
     if (!item?.moteaPrice?.UAH) continue;
 
@@ -1015,7 +1017,7 @@ cron.schedule(    //  update google MC feed table
 );
 
 cron.schedule(    //  send updated price
-  "20 11 * * 1-5",
+  "33 11 * * 1-5",
   async () => {
     await sendPriceDifference();
   },
