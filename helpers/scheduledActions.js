@@ -761,7 +761,7 @@ async function sendPriceDifference() {
 
   console.log('writing price difference table...')
 
-  for (const item of cursor) {
+  for await(const item of cursor) {
     if (!item?.moteaPrice?.UAH) continue;
 
     let difference = Math.round(
@@ -1017,7 +1017,7 @@ cron.schedule(    //  update google MC feed table
 );
 
 cron.schedule(    //  send updated price
-  "33 11 * * 1-5",
+  "25 13 * * 1-5",
   async () => {
     await sendPriceDifference();
   },
