@@ -1015,7 +1015,7 @@ cron.schedule(    //  update google MC feed table
 );
 
 cron.schedule(    //  send updated price
-  "0 11 * * 1-5",
+  "05 11 * * 1-5",
   async () => {
     await sendPriceDifference();
   },
