@@ -863,7 +863,6 @@ cron.schedule(    //  update availability at 01:20
   () => {
     try {
       updateProductsAvailability();
-      sendPriceDifference();
     } catch (error) {
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage(
@@ -975,6 +974,8 @@ cron.schedule(    //  check not availability orders
     await checkAvailabilityOrders();
 
     console.log("Проверка заказов завершена.");
+
+    await sendPriceDifference();
   },
   {
     scheduled: true,
