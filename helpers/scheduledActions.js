@@ -750,7 +750,7 @@ async function checkPrice() {
 
 async function sendPriceDifference() {
   let c = 0;
-  const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 });
+  const cursor = Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 }).cursor();
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Цены");
   worksheet.columns = [
@@ -759,7 +759,7 @@ async function sendPriceDifference() {
     { header: "Прайс в Мотеа", key: "mPrice", width: 15 },
   ];
 
-  for (const item of dbItems) {
+  for (const item of cursor) {
     if (!item?.moteaPrice?.UAH) continue;
 
     let difference = Math.round(
@@ -1015,7 +1015,7 @@ cron.schedule(    //  update google MC feed table
 );
 
 cron.schedule(    //  send updated price
-  "05 11 * * 1-5",
+  "20 11 * * 1-5",
   async () => {
     await sendPriceDifference();
   },
