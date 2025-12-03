@@ -716,7 +716,6 @@ ${inStockNow
 
 async function checkPrice() {
   const TIMEOUT = 3 * 60 * 1000;
-  const RETRY_DELAY = 2 * 60 * 1000;
 
   if (isPending) return;
 
@@ -738,13 +737,8 @@ async function checkPrice() {
     }
 
   } catch (error) {
-    if (error.code === "ECONNABORTED") {
-      console.log(`[${new Date().toLocaleString()}] No response within 3 minutes - repeat the request...`);
-    } else {
       isPending = false;
       console.error(`[${new Date().toLocaleString()}] Request error:`, error.message);
-    }
-    setTimeout(() => checkPrice(), RETRY_DELAY);
   }
 }
 
