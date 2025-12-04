@@ -6,7 +6,7 @@ const cheerio = require('cheerio');
 
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
-let isWorkong = false;
+let isWorking = false;
 const blackList = ['265984', 'A544007', '239859', '560012', '247557', 'A017124', '992918', 'A041129', '287483', '950647', 'A111768', 'A108957', 'A108939', 'A108973', 'A108985', 'A108949'];
 
 // const format = (number) => {
@@ -117,12 +117,12 @@ function extractSearchData(html) {
 
 async function checkPrice() {
 
-  if (isWorkong) {
-    return; 
+  if (isWorking) {
+    return isWorking; 
   }
 
   try {
-    isWorkong = true;
+    isWorking = true;
     console.log("Price check started...");
 
     console.log("Connected to main DB");
@@ -206,12 +206,13 @@ async function checkPrice() {
     }
 
     console.log(`Price check completed.`);
-    isWorkong = false;
+    isWorking = false;
 
-    return;
+    return isWorking;
   } catch (error) {
     console.log(`Price check failed due to an error: ${error}.`);
-    isWorkong = false;
+    isWorking = false;
+    return isWorking;
   }
 }
 
