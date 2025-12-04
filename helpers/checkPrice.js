@@ -155,12 +155,15 @@ async function checkPrice() {
       }
 
       try {
+        const targetArray = await Product.find({article: item.article}).exec()
+        for (const target of targetArray) {
+          await Product.findByIdAndUpdate(target._id, {moteaPrice: { UAH: target?.moteaPrice?.UAH, date: now }})
+        }
         const response = await axios.get(link);
         await sleep(1000);
         let data = extractGa4Data(response.data);
         if (!data) {
           console.log('GA4 data not found');
-          const targetArray = await Product.find({article: item.article}).exec()
           for (const target of targetArray) {
             await Product.findByIdAndUpdate(target._id, {moteaPrice: { UAH: null, date: now }})
           }
@@ -175,7 +178,6 @@ async function checkPrice() {
           const t = data.find(i => i.url.includes(item.article.toLowerCase()));
           if (!t) {
             console.log('article not found')
-            const targetArray = await Product.find({article: item.article}).exec()
             for (const target of targetArray) {
               await Product.findByIdAndUpdate(target._id, {moteaPrice: { UAH: null, date: now }})
             }
@@ -185,14 +187,12 @@ async function checkPrice() {
         }
 
         if (!mPrice) {
-          const targetArray = await Product.find({article: item.article}).exec()
           for (const target of targetArray) {
             await Product.findByIdAndUpdate(target._id, {moteaPrice: { UAH: null, date: now }})
           }
           continue;
         }
 
-        const targetArray = await Product.find({article: item.article}).exec()
         for (const target of targetArray) {
           await Product.findByIdAndUpdate(target._id, {moteaPrice: { UAH: mPrice, date: now }})
         }
