@@ -134,7 +134,8 @@ async function checkPrice() {
     linksArray = null;
     let c = 0;
 
-    for (const item of dbItems) {
+    for (let i = 0; i < dbItems.length; i++) {
+      const item = dbItems[i];
       c++
       if (c % 100 === 0) {
         console.log(c, ' : ', dbItems.length)
@@ -206,6 +207,8 @@ async function checkPrice() {
         }
         console.log('-', 'Ошибка при обработке артикула', item.article, err.message);
       }
+
+      dbItems[i] = null;
     }
 
     console.log(`Price check completed.`);
