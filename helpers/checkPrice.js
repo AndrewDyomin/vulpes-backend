@@ -204,6 +204,8 @@ async function checkPrice() {
         if (err?.response?.status === 429) {
           console.log("Block 429!!!");
           await sleep(20000);
+        } else if (err.message === 'Client must be connected before running operations') {
+          await sleep(300000);
         }
         console.log('-', 'Ошибка при обработке артикула', item.article, err.message);
       }
