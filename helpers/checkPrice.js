@@ -130,6 +130,7 @@ async function checkPrice() {
     const exchangeRate = 48.5;
     const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 });
     const linksArray = await fetchLinks(dbItems);
+    const linksMap = new Map(linksArray.map(i => [i.article, i.link]));
     const errors = [];
     let c = 0;
 
@@ -149,7 +150,8 @@ async function checkPrice() {
         continue;
       }
 
-      const link = linksArray.find(i => i.article === item.article)?.link || linksArray.find(i => i.article === `${item.article}-0`)?.link;
+      // const link = linksArray.find(i => i.article === item.article)?.link || linksArray.find(i => i.article === `${item.article}-0`)?.link;
+      const link = linksMap.get(item.article) || linksMap.get(`${item.article}-0`);
       if (!link) {
         continue;
       }
