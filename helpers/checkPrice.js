@@ -129,9 +129,9 @@ async function checkPrice() {
     const now = new Date();
     const exchangeRate = 48.5;
     const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 });
-    const linksArray = await fetchLinks(dbItems);
+    let linksArray = await fetchLinks(dbItems);
     const linksMap = new Map(linksArray.map(i => [i.article, i.link]));
-    const errors = [];
+    linksArray = null;
     let c = 0;
 
     for (const item of dbItems) {
@@ -161,7 +161,7 @@ async function checkPrice() {
         for (const target of targetArray) {
           await Product.findByIdAndUpdate(target._id, {moteaPrice: { UAH: target?.moteaPrice?.UAH, date: now }})
         }
-        const response = await axios.get(link);
+        let response = await axios.get(link);
         await sleep(1000);
         let data = extractGa4Data(response.data);
         if (!data) {
@@ -171,6 +171,7 @@ async function checkPrice() {
           }
           continue;
         }
+        response = null;
         const mItem = data.find((i) => i?.product?.price)?.product;
         let mPrice = Math.round(mItem?.price * exchangeRate) || null;
 
@@ -203,7 +204,7 @@ async function checkPrice() {
           console.log("Block 429!!!");
           await sleep(20000);
         }
-        errors.push(['-', 'Ошибка при обработке артикула', item.article, err.message]);
+        console.log('-', 'Ошибка при обработке артикула', item.article, err.message);
       }
     }
 
