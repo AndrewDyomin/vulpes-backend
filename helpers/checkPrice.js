@@ -224,4 +224,4 @@ async function checkPrice() {
   }
 }
 
-module.exports = checkPrice();
+module.exports = checkPrice;
