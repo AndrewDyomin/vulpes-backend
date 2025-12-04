@@ -22,14 +22,13 @@ const { updatePromBase } = require("../controllers/products");
 const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
+const checkPrice = require('./checkPrice');
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
-const HELPER_URL = process.env.HELPER_URL;
-let isPending = false;
 
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
@@ -714,34 +713,6 @@ ${inStockNow
   }
 }
 
-async function checkPrice() {
-  const TIMEOUT = 3 * 60 * 1000;
-
-  if (isPending) return;
-
-  try {
-    isPending = true;
-    const { data } = await axios.post(HELPER_URL, {}, { timeout: TIMEOUT });
-
-    console.log(`[${new Date().toLocaleString()}] Server response:`, data);
-
-    if (data.message === 'Price check started.') {
-      isPending = false;
-      console.log('ok');
-    } else if (data.message === 'The service is busy, working on the previous task.') {
-      isPending = false;
-      console.log('ok');
-    } else {
-      isPending = false;
-      console.log("Unexpected response:", data);
-    }
-
-  } catch (error) {
-      isPending = false;
-      console.error(`[${new Date().toLocaleString()}] Request error:`, error.message);
-  }
-}
-
 async function sendPriceDifference() {
   let c = 0;
   const cursor = Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 }).cursor();
@@ -893,7 +864,7 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "*/10 * * * *",
+  "*/1 * * * *",
   () => {
     checkPrice();
   },
