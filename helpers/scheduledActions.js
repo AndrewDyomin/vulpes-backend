@@ -29,7 +29,6 @@ const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
-let checkingInProgress = false;
 
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
@@ -867,8 +866,7 @@ cron.schedule(    //  update availability at 17:50
 cron.schedule(
   "*/10 * * * *",
   () => {
-    checkingInProgress = checkPrice();
-    console.log('Is checking:', checkingInProgress);
+    checkPrice();
   },
   {
     scheduled: true,
