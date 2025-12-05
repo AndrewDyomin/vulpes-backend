@@ -865,7 +865,7 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "* */2 * * *",
+  "1 */2 * * *",
   () => {
     if (!isChild) {
       const checkPrice = path.join(__dirname, "checkPrice.js");
