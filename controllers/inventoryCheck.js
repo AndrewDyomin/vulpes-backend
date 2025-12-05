@@ -3,6 +3,7 @@
 const XLSX = require("xlsx");
 const InventoryCheck = require("../models/inventoryCheck");
 const Product = require("../models/item");
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 
 const format = (number) => {
   if (number < 10) {
@@ -80,6 +81,7 @@ async function add(req, res, next) {
 
   try {
     await InventoryCheck.create({ name, items });
+    sendTelegramMessage(`${req.body?.user?.name} добавил новую инвентаризацию.`, process.env.ADMIN_CHAT_ID);
 
     res.status(200).json({ message: "Inventory check created." });
   } catch (error) {
