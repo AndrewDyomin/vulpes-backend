@@ -869,7 +869,7 @@ cron.schedule(
   () => {
     if (!isChild) {
       const checkPrice = path.join(__dirname, "checkPrice.js");
-      console.log("Запуск проверки цен...");
+      console.log("Время проверить цены");
       isChild = true;
 
       const child = fork(checkPrice);
