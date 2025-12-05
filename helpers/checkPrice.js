@@ -6,7 +6,6 @@ const cheerio = require('cheerio');
 
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
-let isWorking = false;
 const blackList = ['265984', 'A544007', '239859', '560012', '247557', 'A017124', '992918', 'A041129', '287483', '950647', 'A111768', 'A108957', 'A108939', 'A108973', 'A108985', 'A108949'];
 
 // const format = (number) => {
@@ -117,14 +116,15 @@ function extractSearchData(html) {
 
 async function checkPrice() {
 
-  if (isWorking) {
-    return isWorking; 
-  }
+  // if (isWorking) {
+  //   return; 
+  // }
 
   try {
-    isWorking = true;
+    // isWorking = true;
     console.log("Price check started...");
 
+    await mongoose.connect(MAIN_DB_URI);
     console.log("Connected to main DB");
     const now = new Date();
     const exchangeRate = 48.5;
@@ -151,7 +151,6 @@ async function checkPrice() {
         continue;
       }
 
-      // const link = linksArray.find(i => i.article === item.article)?.link || linksArray.find(i => i.article === `${item.article}-0`)?.link;
       const link = linksMap.get(item.article) || linksMap.get(`${item.article}-0`);
       if (!link) {
         continue;
@@ -214,14 +213,9 @@ async function checkPrice() {
     }
 
     console.log(`Price check completed.`);
-    isWorking = false;
-
-    return isWorking;
   } catch (error) {
     console.log(`Price check failed due to an error: ${error}.`);
-    isWorking = false;
-    return isWorking;
   }
 }
 
-module.exports = checkPrice;
+checkPrice();

@@ -3,7 +3,7 @@ const axios = require("axios");
 const sax = require("sax");
 const csv = require("csv-parser");
 const mongoose = require("mongoose");
-// const { fork } = require("child_process");
+const { fork } = require("child_process");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 const path = require("path");
@@ -22,13 +22,14 @@ const { updatePromBase } = require("../controllers/products");
 const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
-const checkPrice = require('./checkPrice');
+// const checkPrice = require('./checkPrice');
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
+let isChild = false;
 
 const fetchAvailability = async (array) => {
   await mongoose.disconnect();
@@ -866,7 +867,27 @@ cron.schedule(    //  update availability at 17:50
 cron.schedule(
   "*/10 * * * *",
   () => {
-    checkPrice();
+    if (!isChild) {
+      const checkPrice = path.join(__dirname, "checkPrice.js");
+      console.log("Запуск проверки цен...");
+      isChild = true;
+
+      const child = fork(checkPrice);
+
+      child.on("exit", (code) => {
+        sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
+        console.log(`Проверка цен завершена с кодом ${code}`);
+        isChild = false;
+      });
+
+      child.on("error", (err) => {
+        sendTelegramMessage(`Ошибка проверки цен: ${err}`, chatId);
+        console.error("Ошибка проверки цен:", err);
+        isChild = false;
+      });
+    } else {
+      console.log('Price check has already started')
+    }
   },
   {
     scheduled: true,
