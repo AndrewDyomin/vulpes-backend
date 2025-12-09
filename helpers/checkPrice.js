@@ -116,14 +116,12 @@ function extractSearchData(html) {
 
 async function checkPrice() {
 
-  // if (isWorking) {
-  //   return; 
-  // }
-
   try {
-    // isWorking = true;
     console.log("Price check started...");
 
+    axios.post(process.env.HELPER_URL);
+    console.log("Called the assistant");
+    
     await mongoose.connect(MAIN_DB_URI);
     console.log("Connected to main DB");
     const now = new Date();
