@@ -728,17 +728,12 @@ async function sendPriceDifference() {
   console.log('writing price difference table...')
 
   for await(const item of cursor) {
-    if (!item?.moteaPrice?.UAH) continue;
+    const db = Number(item?.price?.UAH);
+    const mt = Number(item?.moteaPrice?.UAH);
 
-    let difference = Math.round(
-      ((Number(item.price.UAH) - Number(item.moteaPrice.UAH)) / Number(item.price.UAH)) * 100
-    );
+    if (!db || !mt) continue;
 
-    if (Number(item.price.UAH) < Number(item.moteaPrice.UAH)) {
-      difference = Math.round(
-        ((Number(item.moteaPrice.UAH) - Number(item.price.UAH)) / Number(item.moteaPrice.UAH)) * 100
-      );
-    }
+    const difference = Math.round(Math.abs(db - mt) / db * 100);
 
     if (difference >= 5) {
       c++;
@@ -865,7 +860,7 @@ cron.schedule(    //  update availability at 17:50
 );
 
 cron.schedule(
-  "1 */2 * * *",
+  "1 */3 * * *",
   () => {
     if (!isChild) {
       const checkPrice = path.join(__dirname, "checkPrice.js");
@@ -1003,7 +998,7 @@ cron.schedule(    //  update google MC feed table
 );
 
 cron.schedule(    //  send updated price
-  "45 8 * * 1-5",
+  "45 10 * * 1-5",
   async () => {
     await sendPriceDifference();
   },
