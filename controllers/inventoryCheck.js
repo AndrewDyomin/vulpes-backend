@@ -81,7 +81,7 @@ async function add(req, res, next) {
 
   try {
     await InventoryCheck.create({ name, items });
-    sendTelegramMessage(`${req.body?.user?.user.name} добавил новую инвентаризацию.`, process.env.ADMIN_CHAT_ID);
+    sendTelegramMessage(`${req?.user?.user.name} добавил новую инвентаризацию.`, process.env.ADMIN_CHAT_ID);
 
     res.status(200).json({ message: "Inventory check created." });
   } catch (error) {
