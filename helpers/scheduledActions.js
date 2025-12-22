@@ -69,6 +69,8 @@ const fetchAvailability = async (array) => {
     };
   });
 
+  availabilityMap.clear();
+  linkMap.clear();
   await mongoose.disconnect();
   console.log("Disconnected from Motea feed info DB");
   await mongoose.connect(MAIN_DB_URI);
@@ -197,11 +199,17 @@ async function importProductsFromYML() {
         await Product.bulkWrite(productsToUpdate, { ordered: false });
       }
 
+      existingArticlesMap.clear()
+      parser.removeAllListeners();
+      response.data.destroy();
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
       sendTelegramMessage("База данных товаров успешно обновлена.", chatId);
     });
 
     parser.on("error", (err) => {
+      existingArticlesMap.clear()
+      parser.removeAllListeners();
+      response.data.destroy();
       console.error("Ошибка парсинга:", err.message);
       sendTelegramMessage(
         `Во время обновления товаров возникла ошибка парсинга: ${err.message}`,
@@ -717,7 +725,7 @@ ${inStockNow
 async function sendPriceDifference() {
   let c = 0;
   const cursor = Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 }).cursor();
-  const workbook = new ExcelJS.Workbook();
+  let workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Цены");
   worksheet.columns = [
     { header: "Артикул", key: "article", width: 25 },
@@ -749,6 +757,8 @@ async function sendPriceDifference() {
 
   await workbook.xlsx.writeFile(filePath);
   await sendTelegramFile(filePath, "", chatId);
+  workbook.removeAllListeners();
+  workbook = null;
   fs.unlinkSync(filePath);
 }
 
