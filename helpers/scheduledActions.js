@@ -199,15 +199,15 @@ async function importProductsFromYML() {
         await Product.bulkWrite(productsToUpdate, { ordered: false });
       }
 
-      existingArticlesMap.clear()
+      existingArticlesMap.clear();
       parser.removeAllListeners();
-      response.data.destroy();
+      response.destroy();
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
       sendTelegramMessage("База данных товаров успешно обновлена.", chatId);
     });
 
     parser.on("error", (err) => {
-      existingArticlesMap.clear()
+      existingArticlesMap.clear();
       parser.removeAllListeners();
       response.data.destroy();
       console.error("Ошибка парсинга:", err.message);
@@ -290,9 +290,9 @@ async function sendToSheets() {
     for (const obj of rows) {
       const row = obj.row;
       const sku = row[0].replace("-9", "");
-      const product = await Product.findOne({article: sku}).exec();
+      const product = await Product.findOne({ article: sku }).exec();
       if (product.category === "1167") {
-        toTable.push([`${sku}-10`, ...row.slice(1)])
+        toTable.push([`${sku}-10`, ...row.slice(1)]);
       }
     }
 
@@ -559,7 +559,10 @@ async function updateProductsAvailability() {
     hasMore = batch.length === BATCH_SIZE;
     batch = null;
   }
-  sendTelegramMessage("Информация о наличии товаров в МОТЕА обновлена.", chatId);
+  sendTelegramMessage(
+    "Информация о наличии товаров в МОТЕА обновлена.",
+    chatId
+  );
 }
 
 function getLastWeeksRanges() {
@@ -691,9 +694,7 @@ ${availableNow
 
   message = `
 Привет! 
-У нас ${
-    targetArray.length
-  } заказов со статусом "заказать". 
+У нас ${targetArray.length} заказов со статусом "заказать". 
 ${
   inStockNow?.length > 0
     ? `По моим данным для ${inStockNow.length} заказов товары есть в наличии на складе.`
@@ -724,7 +725,10 @@ ${inStockNow
 
 async function sendPriceDifference() {
   let c = 0;
-  const cursor = Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 }).cursor();
+  const cursor = Product.find(
+    {},
+    { article: 1, price: 1, moteaPrice: 1, _id: 0 }
+  ).cursor();
   let workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Цены");
   worksheet.columns = [
@@ -733,15 +737,15 @@ async function sendPriceDifference() {
     { header: "Прайс в Мотеа", key: "mPrice", width: 15 },
   ];
 
-  console.log('writing price difference table...')
+  console.log("writing price difference table...");
 
-  for await(const item of cursor) {
+  for await (const item of cursor) {
     const db = Number(item?.price?.UAH);
     const mt = Number(item?.moteaPrice?.UAH);
 
     if (!db || !mt) continue;
 
-    const difference = Math.round(Math.abs(db - mt) / db * 100);
+    const difference = Math.round((Math.abs(db - mt) / db) * 100);
 
     if (difference >= 5) {
       c++;
@@ -762,7 +766,8 @@ async function sendPriceDifference() {
   fs.unlinkSync(filePath);
 }
 
-cron.schedule(    // import products at 01:00
+cron.schedule(
+  // import products at 01:00
   "0 1 * * *",
   () => {
     try {
@@ -781,7 +786,8 @@ cron.schedule(    // import products at 01:00
   }
 );
 
-cron.schedule(    // import products at 17:30
+cron.schedule(
+  // import products at 17:30
   "30 17 * * *",
   () => {
     try {
@@ -831,7 +837,8 @@ cron.schedule(
   }
 );
 
-cron.schedule(    //  update availability at 01:20
+cron.schedule(
+  //  update availability at 01:20
   "20 1 * * *",
   () => {
     try {
@@ -850,7 +857,8 @@ cron.schedule(    //  update availability at 01:20
   }
 );
 
-cron.schedule(    //  update availability at 17:50
+cron.schedule(
+  //  update availability at 17:50
   "50 17 * * *",
   () => {
     try {
@@ -891,7 +899,7 @@ cron.schedule(
         isChild = false;
       });
     } else {
-      console.log('Price check has already started')
+      console.log("Price check has already started");
     }
   },
   {
@@ -900,7 +908,8 @@ cron.schedule(
   }
 );
 
-cron.schedule(    //  check ad spend
+cron.schedule(
+  //  check ad spend
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -942,7 +951,8 @@ cron.schedule(    //  check ad spend
   }
 );
 
-cron.schedule(    //  check orders
+cron.schedule(
+  //  check orders
   "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -957,7 +967,8 @@ cron.schedule(    //  check orders
   }
 );
 
-cron.schedule(    //  check not availability orders
+cron.schedule(
+  //  check not availability orders
   "0 10 * * 1-5",
   async () => {
     console.log(
@@ -974,7 +985,8 @@ cron.schedule(    //  check not availability orders
   }
 );
 
-cron.schedule(    //  weekly report to owner
+cron.schedule(
+  //  weekly report to owner
   "59 17 * * 5",
   () => {
     reportToOwner();
@@ -985,7 +997,8 @@ cron.schedule(    //  weekly report to owner
   }
 );
 
-cron.schedule(    //  update available rows base
+cron.schedule(
+  //  update available rows base
   "49 19 * * *",
   () => {
     importYMLtoGoogleFeed();
@@ -996,7 +1009,8 @@ cron.schedule(    //  update available rows base
   }
 );
 
-cron.schedule(    //  update google MC feed table
+cron.schedule(
+  //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
@@ -1007,7 +1021,8 @@ cron.schedule(    //  update google MC feed table
   }
 );
 
-cron.schedule(    //  send updated price
+cron.schedule(
+  //  send updated price
   "45 10 * * 1-5",
   async () => {
     await sendPriceDifference();
