@@ -201,7 +201,6 @@ async function importProductsFromYML() {
 
       existingArticlesMap.clear();
       parser.removeAllListeners();
-      response.destroy();
       console.log(`[${new Date().toISOString()}] Импорт завершён`);
       sendTelegramMessage("База данных товаров успешно обновлена.", chatId);
     });

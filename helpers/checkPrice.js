@@ -125,7 +125,7 @@ async function checkPrice() {
     await mongoose.connect(MAIN_DB_URI);
     console.log("Connected to main DB");
     const now = new Date();
-    const exchangeRate = 48.5;
+    const exchangeRate = 49.5;
     const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, _id: 0 });
     let linksArray = await fetchLinks(dbItems);
     const linksMap = new Map(linksArray.map(i => [i.article, i.link]));
