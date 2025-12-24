@@ -879,6 +879,9 @@ cron.schedule(
 cron.schedule(
   "1 */3 * * *",
   () => {
+    axios.post(process.env.HELPER_URL);
+    console.log("Called the assistant");
+    
     if (!isChild) {
       const checkPrice = path.join(__dirname, "checkPrice.js");
       console.log("Время проверить цены");
