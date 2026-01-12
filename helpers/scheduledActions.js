@@ -875,9 +875,6 @@ cron.schedule(    //  update availability
 cron.schedule(
   "1 */3 * * *",
   () => {
-    axios.post(process.env.HELPER_URL);
-    console.log("Called the assistant");
-    
     if (!isChild) {
       const checkPrice = path.join(__dirname, "checkPrice.js");
       console.log("Время проверить цены");
@@ -899,6 +896,18 @@ cron.schedule(
     } else {
       console.log("Price check has already started");
     }
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Kiev",
+  }
+);
+
+cron.schedule(
+  "*/20 * * * *",
+  () => {
+    axios.post(process.env.HELPER_URL);
+    console.log("Called the assistant");
   },
   {
     scheduled: true,
