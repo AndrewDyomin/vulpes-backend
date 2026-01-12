@@ -906,8 +906,13 @@ cron.schedule(
 cron.schedule(
   "*/20 * * * *",
   () => {
-    axios.post(process.env.HELPER_URL);
-    console.log("Called the assistant");
+    try {
+      axios.post(process.env.HELPER_URL);
+      console.log("Called the assistant");
+    } catch (err) {
+      console.log("Called the assistant error: ", err);
+    }
+    
   },
   {
     scheduled: true,
