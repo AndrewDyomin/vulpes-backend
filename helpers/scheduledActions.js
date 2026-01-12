@@ -765,9 +765,8 @@ async function sendPriceDifference() {
   fs.unlinkSync(filePath);
 }
 
-cron.schedule(
-  // import products at 01:00
-  "0 1 * * *",
+cron.schedule(    // import products at 01:00
+  "30 */6 * * *",
   () => {
     try {
       importProductsFromYML();
@@ -785,29 +784,27 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  // import products at 17:30
-  "30 17 * * *",
-  () => {
-    try {
-      importProductsFromYML();
-    } catch (error) {
-      console.error("Ошибка при выполнении cron-задачи:", error);
-      sendTelegramMessage(
-        `Ошибка при выполнении cron-задачи: ${error}`,
-        chatId
-      );
-    }
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  }
-);
+// cron.schedule(    // import products at 17:30
+//   "30 17 * * *",
+//   () => {
+//     try {
+//       importProductsFromYML();
+//     } catch (error) {
+//       console.error("Ошибка при выполнении cron-задачи:", error);
+//       sendTelegramMessage(
+//         `Ошибка при выполнении cron-задачи: ${error}`,
+//         chatId
+//       );
+//     }
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Kiev",
+//   }
+// );
 
-cron.schedule(
-  //  update prom base at 15:30
-  "30 15 * * *",
+cron.schedule(    //  update prom base at 15:30
+  "20 */3 * * *",
   () => {
     updatePromBase();
   },
@@ -836,9 +833,8 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update availability at 01:20
-  "20 1 * * *",
+cron.schedule(    //  update availability
+  "25 */11 * * *",
   () => {
     try {
       updateProductsAvailability();
@@ -856,25 +852,25 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update availability at 17:50
-  "50 17 * * *",
-  () => {
-    try {
-      updateProductsAvailability();
-    } catch (error) {
-      console.error("Ошибка при выполнении cron-задачи:", error);
-      sendTelegramMessage(
-        `Ошибка при выполнении cron-задачи: ${error}`,
-        chatId
-      );
-    }
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  }
-);
+// cron.schedule(
+//   //  update availability at 17:50
+//   "50 17 * * *",
+//   () => {
+//     try {
+//       updateProductsAvailability();
+//     } catch (error) {
+//       console.error("Ошибка при выполнении cron-задачи:", error);
+//       sendTelegramMessage(
+//         `Ошибка при выполнении cron-задачи: ${error}`,
+//         chatId
+//       );
+//     }
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Kiev",
+//   }
+// );
 
 cron.schedule(
   "1 */3 * * *",
@@ -910,8 +906,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  check ad spend
+cron.schedule(    //  check ad spend
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -953,8 +948,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  check orders
+cron.schedule(    //  check orders
   "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -969,8 +963,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  check not availability orders
+cron.schedule(  //  check not availability orders
   "0 10 * * 1-5",
   async () => {
     console.log(
@@ -980,6 +973,8 @@ cron.schedule(
     await checkAvailabilityOrders();
 
     console.log("Проверка заказов завершена.");
+
+    await sendPriceDifference();
   },
   {
     scheduled: true,
@@ -987,8 +982,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  weekly report to owner
+cron.schedule(    //  weekly report to owner
   "59 17 * * 5",
   () => {
     reportToOwner();
@@ -999,8 +993,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update available rows base
+cron.schedule(    //  update available rows base
   "49 19 * * *",
   () => {
     importYMLtoGoogleFeed();
@@ -1011,8 +1004,7 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  update google MC feed table
+cron.schedule(    //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
@@ -1023,14 +1015,13 @@ cron.schedule(
   }
 );
 
-cron.schedule(
-  //  send updated price
-  "45 10 * * 1-5",
-  async () => {
-    await sendPriceDifference();
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  }
-);
+// cron.schedule(    //  send updated price
+//   "45 10 * * 1-5",
+//   async () => {
+//     await sendPriceDifference();
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Kiev",
+//   }
+// );
