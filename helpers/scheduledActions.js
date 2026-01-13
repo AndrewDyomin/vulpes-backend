@@ -22,6 +22,7 @@ const { updatePromBase } = require("../controllers/products");
 const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
+const { getAll } = require("../controllers/orders");
 // const checkPrice = require('./checkPrice');
 
 const CHUNK_SIZE = 500;
@@ -904,9 +905,11 @@ cron.schedule(
 );
 
 cron.schedule(
-  "*/20 * * * *",
-  () => {
+  "*/30 * * * *",
+  async () => {
     try {
+      console.log("Копирую заказы...");
+      await getAll();
       axios.post(process.env.HELPER_URL);
       console.log("Called the assistant");
     } catch (err) {
