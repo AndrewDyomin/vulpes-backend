@@ -910,7 +910,7 @@ cron.schedule(
     try {
       console.log("Копирую заказы...");
       await getAll();
-      axios.post(process.env.HELPER_URL);
+      axios.post(process.env.HELPER_URL, {}, {timeout: 10000});
       console.log("Called the assistant");
     } catch (err) {
       console.log("Called the assistant error: ", err);
