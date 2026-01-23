@@ -165,9 +165,9 @@ async function getByFilter(req, res, next) {
 
       for (const order of ordersArray) {
         const option = statusOptions.find(
-          (status) => status.value === order.statusId
+          (stat) => Number(stat.value) === Number(order.statusId)
         );
-        order.statusLabel = option.text;
+        order.statusLabel = option?.text;
       }
 
       return res.status(200).send({ ...response.data });
@@ -183,14 +183,15 @@ async function getByFilter(req, res, next) {
 
       for (const order of ordersArray) {
         const option = statusOptions.find(
-          (status) => status.value === order.statusId
+          (stat) => Number(stat.value) === Number(order.statusId)
         );
-        order.statusLabel = option.text;
+        order.statusLabel = option?.text;
       }
 
       return res.status(200).send({ ...response.data });
     }
   } catch (error) {
+    console.log(error)
     next(error);
   }
 }
