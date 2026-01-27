@@ -882,7 +882,7 @@ cron.schedule(
       isChild = true;
 
       const child = fork(checkPrice, [], {
-        execArgv: ['--max-old-space-size=256']
+        execArgv: ['--max-old-space-size=200']
       });
 
       child.on("exit", (code) => {
@@ -915,7 +915,7 @@ cron.schedule(
       await axios.get(process.env.HELPER_URL);
       console.log("Called the assistant");
     } catch (err) {
-      console.log("Called the assistant error: ", err);
+      console.log("Called the assistant error: ", err?.code);
     }
     
   },

@@ -231,7 +231,7 @@ async function checkPrice() {
     for (let i = 0; i < dbItems.length; i++) {
       const item = dbItems[i];
       c++
-      if (c % 100 === 0) {
+      if (c % 500 === 0) {
         console.log(c, ' : ', dbItems.length)
       }
 
