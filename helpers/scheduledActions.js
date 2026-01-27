@@ -881,7 +881,9 @@ cron.schedule(
       console.log("Время проверить цены");
       isChild = true;
 
-      const child = fork(checkPrice);
+      const child = fork(checkPrice, [], {
+        execArgv: ['--max-old-space-size=256']
+      });
 
       child.on("exit", (code) => {
         sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
