@@ -1,6 +1,5 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-// const cron = require("node-cron");
 const OrdersArchive = require("../models/ordersArchive");
 const Product = require("../models/item");
 const ordersArchive = require("../models/ordersArchive");
@@ -195,18 +194,6 @@ async function getByFilter(req, res, next) {
     next(error);
   }
 }
-
-// cron.schedule(
-//   "*/30 * * * *",
-//   () => {
-//     console.log("Копирую заказы...");
-//     getAll();
-//   },
-//   {
-//     scheduled: true,
-//     timezone: "Europe/Kiev",
-//   }
-// );
 
 async function orderedStatus(req, res, next) {
   const ordersArray = req.body.orders
