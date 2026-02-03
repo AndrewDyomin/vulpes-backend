@@ -150,14 +150,15 @@ async function checkPrice() {
         let data = await extractHtml(response.body);
         response = null;
         
-        let mPrice = data?.price || null;
+        let mPrice = Math.round(Number(data?.price) * exchangeRate) || null;
 
         if (!mPrice) {
           console.log('search starting')
           const search = await fetch(`https://www.motea.com/en/catalogsearch/result/?q=${item.article}`);
 
           data = await extractSearchData(search.body)
-          const t = data.find(i => i.url.includes(item.article.toLowerCase()));
+          console.log(data)
+          const t = data?.find(i => i.url.includes(item.article.toLowerCase()));
           if (!t) {
             console.log(item.article, 'article not found')
             await Product.findByIdAndUpdate(item._id, {moteaPrice: { UAH: null, date: now }})
