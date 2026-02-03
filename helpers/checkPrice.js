@@ -189,6 +189,8 @@ async function checkPrice() {
     console.log(`Price check completed.`);
   } catch (error) {
     console.log(`Price check failed due to an error: ${error}.`);
+    await mongoose.disconnect();
+    process.exit(1);
   }
   await mongoose.disconnect();
   process.exit(0);
