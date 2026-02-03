@@ -152,7 +152,7 @@ async function sendAvailabilityTable(req, res, next) {
               product.quantityInStock > 0
                 ? "В наявності"
                 : product.availabilityInMotea === "in stock"
-                ? "Доставка 10 днів"
+                ? "Доставка 10-18 днів"
                 : "Немає в наявності",
           })
           .commit();
