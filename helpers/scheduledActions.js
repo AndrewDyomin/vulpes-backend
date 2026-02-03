@@ -591,7 +591,7 @@ function getLastWeeksRanges() {
 
 async function checkAvailabilityOrders() {
   let targetArray = await OrdersArchive.find({
-    statusLabel: "заказать (нет на складе МОТЕА)",
+    statusLabel: "замовити (немає на складі МОТЕА)",
   }).exec();
   const availableNow = [];
 
@@ -629,7 +629,7 @@ async function checkAvailabilityOrders() {
 Привет! 
 У нас ${
     targetArray.length
-  } заказов со статусом "заказать (нет на складе МОТЕА)". 
+  } заказов со статусом "замовити (немає на складі МОТЕА)". 
 ${
   availableNow?.length > 0
     ? `По моим данным для ${availableNow.length} заказов товары появились в наличии.`
@@ -658,9 +658,9 @@ ${availableNow
   }
 
   targetArray = await OrdersArchive.find({
-    statusLabel: "заказать",
+    statusLabel: "замовити",
   }).exec();
-  const inStockNow = [];
+  let inStockNow = [];
 
   for (const order of targetArray) {
     const inStock = [];
@@ -694,7 +694,74 @@ ${availableNow
 
   message = `
 Привет! 
-У нас ${targetArray.length} заказов со статусом "заказать". 
+У нас ${targetArray.length} заказов со статусом "замовити". 
+${
+  inStockNow?.length > 0
+    ? `По моим данным для ${inStockNow.length} заказов товары есть в наличии на складе.`
+    : ""
+}
+Вот информация о них:
+${inStockNow
+  .map(
+    (order, index) =>
+      `${index + 1}). #${order.id} - (${order.products[0].sku})${
+        order.products[0].text
+      }`
+  )
+  .join("\n")}
+
+Может я где-то ошибся?
+Пожалуйста перепроверь.
+`;
+
+  if (inStockNow?.length && inStockNow.length > 0) {
+    const managers = await User.find({ role: "manager" }).exec();
+    sendTelegramMessage(message, chatId);
+    if (managers[0].chatId) {
+      sendTelegramMessage(message, managers[0].chatId);
+    }
+  }
+
+  targetArray = await OrdersArchive.find({
+    statusLabel: "замовлено",
+  }).exec();
+  inStockNow = [];
+
+  console.log("Проверим - замовлено...")
+
+  for (const order of targetArray) {
+    const inStock = [];
+
+    if (order.products) {
+      for (const product of order.products) {
+        const dbItem = await Product.findOne({ article: product.sku }).exec();
+        if (product?.isSet && product?.isSet[0] !== null) {
+          for (const item of product.isSet) {
+            const setItem = await Product.findOne({ article: item.sku }).exec();
+            if (setItem?.quantityInStock >= 0) {
+              inStock.push(true);
+            } else {
+              inStock.push(false);
+            }
+          }
+        } else {
+          if (dbItem?.quantityInStock >= 0) {
+            inStock.push(true);
+          } else {
+            inStock.push(false);
+          }
+        }
+      }
+    }
+
+    if (!inStock.includes(false)) {
+      inStockNow.push(order);
+    }
+  }
+
+  message = `
+Привет! 
+У нас ${targetArray.length} заказов со статусом "замовлено". 
 ${
   inStockNow?.length > 0
     ? `По моим данным для ${inStockNow.length} заказов товары есть в наличии на складе.`
