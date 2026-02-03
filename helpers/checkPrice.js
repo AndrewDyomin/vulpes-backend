@@ -169,12 +169,17 @@ async function extractSearchData(body) {
 // }
 
 async function extractHtml(body) {
-  let html = '';
+  const MAX_SIZE = 500_000; // 500 KB
+  let size = 0;
+  const chunks = [];
 
   for await (const chunk of body) {
-    html += chunk.toString();
+    size += chunk.length;
+    if (size > MAX_SIZE) break;
+    chunks.push(chunk);
   }
 
+  const html = Buffer.concat(chunks).toString('utf8');
   const $ = cheerio.load(html);
   const container = $('.product-info-price').first();
   if (!container.length) return null;
@@ -329,14 +334,19 @@ async function checkPrice() {
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
     const exchangeRate = 49.5;
-    const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, linkInMotea: 1, _id: 1 });
+    // const dbItems = await Product.find({}, { article: 1, price: 1, moteaPrice: 1, linkInMotea: 1, _id: 1 });
+    // let c = 0;
+
+    // for (let i = 0; i < dbItems.length; i++) {
+    //   const item = dbItems[i];
+    const cursor = Product.find({}, { article: 1, price: 1, moteaPrice: 1, linkInMotea: 1, _id: 1 }).cursor();
+
     let c = 0;
 
-    for (let i = 0; i < dbItems.length; i++) {
-      const item = dbItems[i];
+    for await (const item of cursor) {
       c++
       if (c % 500 === 0) {
-        console.log(c, ' : ', dbItems.length)
+        console.log(c)
       }
 
       if (blackList.includes(item.article)) {
@@ -395,7 +405,7 @@ async function checkPrice() {
         console.log('-', 'Ошибка при обработке артикула', item.article, err.message);
       }
 
-      dbItems[i] = null;
+      // dbItems[i] = null;
     }
 
     console.log(`Price check completed.`);
