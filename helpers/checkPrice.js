@@ -133,7 +133,7 @@ async function checkPrice() {
     const now = new Date();
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    const exchangeRate = 49.5;
+    const exchangeRate = 50.5;
 
     const BATCH_SIZE = 500;
     let lastId = null;
