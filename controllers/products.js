@@ -271,7 +271,7 @@ async function updatePromBase(req, res, next) {
 
     console.log("Prom base MIRROR updated");
     if (noIdItems.length > 0) {
-      sendTelegramMessage(`Удали дубли в Проме. Я нашел артикулы без ID: ${noIdItems.map(sku => sku + ', ')}.`, chatId)
+      sendTelegramMessage(`Удали дубли в Проме. Я нашел артикулы без ID: ${noIdItems.join(', ')}.`, chatId)
     }
 
     if (res) {
