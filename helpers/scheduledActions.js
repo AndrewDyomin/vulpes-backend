@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 const axios = require("axios");
+const fetch = require("node-fetch");
 const sax = require("sax");
 const csv = require("csv-parser");
 const mongoose = require("mongoose");
@@ -23,7 +24,6 @@ const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
-// const checkPrice = require('./checkPrice');
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -233,80 +233,88 @@ async function importProductsFromYML() {
 
 async function sendToSheets() {
   const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
-  const client = new google.auth.JWT(
-    process.env.GOOGLE_CLIENT_EMAIL,
-    null,
-    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    ["https://www.googleapis.com/auth/spreadsheets"]
-  );
-  await client.authorize();
-  const sheets = google.sheets({ version: "v4", auth: client });
+  try {
+    const client = new google.auth.JWT(
+      process.env.GOOGLE_CLIENT_EMAIL,
+      null,
+      process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      ["https://www.googleapis.com/auth/spreadsheets"]
+    );
+    await client.authorize();
+    const sheets = google.sheets({ version: "v4", auth: client });
 
-  await sheets.spreadsheets.values.clear({
-    spreadsheetId: targetId,
-    range: "Лист1!A2:V20200",
-  });
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: targetId,
+      range: "Лист1!A2:V20200",
+    });
 
-  const batch = 100;
-  let skip = 0;
-  let hasMore = true;
-  let startRow = 2;
+    const batch = 100;
+    let skip = 0;
+    let hasMore = true;
+    let startRow = 2;
 
-  while (hasMore) {
-    const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
+    while (hasMore) {
+      const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
 
-    if (!rows.length) break;
+      if (!rows.length) break;
 
-    const toTable = rows.map((item) => item.row);
-    const endRow = startRow + toTable.length - 1;
-    const range = `Лист1!A${startRow}:V${endRow}`;
+      const toTable = rows.map((item) => item.row);
+      const endRow = startRow + toTable.length - 1;
+      const range = `Лист1!A${startRow}:V${endRow}`;
 
-    await updateSheets(sheets, targetId, range, toTable);
+      await updateSheets(sheets, targetId, range, toTable);
 
-    startRow = endRow + 1;
-    skip += batch;
+      startRow = endRow + 1;
+      skip += batch;
 
-    if (rows.length < batch) {
-      hasMore = false;
-    }
-  }
-
-  const tableOfCovers = "131RvA-bT2mnqc05jtJiN2S_SW5e9wLIa9beBs6rUWQo"; // Таблица с чехлами
-  await sheets.spreadsheets.values.clear({
-    spreadsheetId: tableOfCovers,
-    range: "Лист1!A2:V20200",
-  });
-  skip = 0;
-  hasMore = true;
-  startRow = 2;
-
-  while (hasMore) {
-    const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
-
-    if (!rows.length) break;
-
-    const toTable = [];
-
-    for (const obj of rows) {
-      const row = obj.row;
-      const sku = row[0].replace("-9", "");
-      const product = await Product.findOne({ article: sku }).exec();
-      if (product.category === "1167") {
-        toTable.push([`${sku}-10`, ...row.slice(1)]);
+      if (rows.length < batch) {
+        hasMore = false;
       }
     }
 
-    const endRow = startRow + toTable.length - 1;
-    const range = `Лист1!A${startRow}:V${endRow}`;
+    const tableOfCovers = "131RvA-bT2mnqc05jtJiN2S_SW5e9wLIa9beBs6rUWQo"; // Таблица с чехлами
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: tableOfCovers,
+      range: "Лист1!A2:V20200",
+    });
+    skip = 0;
+    hasMore = true;
+    startRow = 2;
 
-    await updateSheets(sheets, tableOfCovers, range, toTable);
+    while (hasMore) {
+      const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
 
-    startRow = endRow + 1;
-    skip += batch;
+      if (!rows.length) break;
 
-    if (rows.length < batch) {
-      hasMore = false;
+      const toTable = [];
+
+      for (const obj of rows) {
+        const row = obj.row;
+        const sku = row[0].replace("-9", "");
+        const product = await Product.findOne({ article: sku }).exec();
+        if (product.category === "1167") {
+          toTable.push([`${sku}-10`, ...row.slice(1)]);
+        }
+      }
+
+      const endRow = startRow + toTable.length - 1;
+      const range = `Лист1!A${startRow}:V${endRow}`;
+
+      await updateSheets(sheets, tableOfCovers, range, toTable);
+
+      startRow = endRow + 1;
+      skip += batch;
+
+      if (rows.length < batch) {
+        hasMore = false;
+      }
     }
+  } catch(err) {
+    console.log('Google feed table are not updated. Error:', err.response.data)
+    sendTelegramMessage(
+      `Во время обновления таблицы в Google MC feed возникла ошибка : ${JSON.stringify(err.response.data)}`,
+      chatId
+    );
   }
 }
 
@@ -979,7 +987,7 @@ cron.schedule(
     try {
       console.log("Копирую заказы...");
       await getAll();
-      await axios.get(process.env.HELPER_URL);
+      await fetch(process.env.HELPER_URL);
       console.log("Called the assistant");
     } catch (err) {
       console.log("Called the assistant error: ", err?.code);
@@ -1100,14 +1108,3 @@ cron.schedule(    //  update google MC feed table
     timezone: "Europe/Kiev",
   }
 );
-
-// cron.schedule(    //  send updated price
-//   "45 10 * * 1-5",
-//   async () => {
-//     await sendPriceDifference();
-//   },
-//   {
-//     scheduled: true,
-//     timezone: "Europe/Kiev",
-//   }
-// );
