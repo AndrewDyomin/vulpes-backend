@@ -7,6 +7,7 @@ const { google } = require("googleapis");
 const updateSheets = require("../helpers/updateSheets");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const { changeTable } = require("../helpers/checkOrders");
 const chatId = process.env.ADMIN_CHAT_ID;
 
 const url = "https://vulpes.salesdrive.me/api/order/list/";
@@ -33,6 +34,10 @@ const headers = {
 //     { value: 16, text: 'Замовити в МРА' },
 //     { value: 17, text: 'Заказано' },
 //   ]
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function getAll(req, res, next) {
   let allOrders = [];
@@ -197,7 +202,7 @@ async function getByFilter(req, res, next) {
 
 async function orderedStatus(req, res, next) {
   const ordersArray = req.body.orders
-  console.log(ordersArray)
+  console.log(ordersArray, '- - - -', req.body.cancel)
 
   try {
     const url = "https://vulpes.salesdrive.me/api/order/update/";
@@ -207,20 +212,33 @@ async function orderedStatus(req, res, next) {
     };
 
     for (const order of ordersArray) {
-      const data = {
-        id: order,
-        data: {
-          statusId: "17",
-        },
-      };
+      if (!req.body?.cancel) {
+        const data = {
+          id: order,
+          data: {
+            statusId: "17",
+          },
+        };
 
-      await axios.post(url, data, { headers });
+        await axios.post(url, data, { headers });
+      } else if (req.body?.cancel) {
+        const data = {
+          id: order,
+          data: {
+            statusId: "13",
+          },
+        };
+
+        await axios.post(url, data, { headers });
+      }
+      
     }
 
     
     res.status(200).send({ message: "OK" });
   } catch(err) {
     console.log(err)
+    res.status(500).send({ message: err });
   }
   
 }
@@ -301,4 +319,74 @@ async function calcOrdersToMotea(req, res, next) {
   res.status(200).send({ message: "Компоненты заказа пересчитаны" })
 };
 
-module.exports = { getAll, getByFilter, getByArticle, orderedStatus, calcOrdersToMotea };
+async function fetchOrdersToMotea(req, res, next) {
+  const result = [];
+  const client = new google.auth.JWT(
+    process.env.GOOGLE_CLIENT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+  );
+
+  try{
+    await client.authorize();
+    const sheets = google.sheets({ version: "v4", auth: client });
+    const spreadsheetId = "16kaSBC3xnJQON80jYzUE5ok7N37R_vXGUmpJHX4A6Uw";
+
+    const { data } = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: "Bestellung!A2:E",
+    });
+    let rowNumber = 2;
+
+    for (const row of data.values) {
+      result.push({ numbers: row[0] || '', sku: row[1] || '', amount: row[2] || '', bestand: row[3] || '', name: row[4] || '', row: rowNumber, pending: false });
+      rowNumber++;
+    }
+
+    res.status(200).send(result);
+  } catch(err) {
+    res.status(500).send({ message: err });
+  }
+}
+
+async function updateRowToMotea(req, res, next) {
+  const { value, row } = req.body;
+  const bestand = value === '' ? 'JA' : value === 'JA' ? 'NEIN' : '';
+  const client = new google.auth.JWT(
+    process.env.GOOGLE_CLIENT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+  );
+
+  try{
+    await client.authorize();
+    const sheets = google.sheets({ version: "v4", auth: client });
+    const spreadsheetId = "16kaSBC3xnJQON80jYzUE5ok7N37R_vXGUmpJHX4A6Uw";
+    const r = await updateSheets(sheets, spreadsheetId, `Bestellung!D${row}`, [[bestand]]);
+  
+    if (r && r?.status === 200) {
+      res.status(200).send(bestand);
+    } else {
+      res.status(200).send(value);
+    }
+  } catch(err) {
+    console.log(err)
+    res.status(500).send(value);
+  }
+}
+
+async function recalcOrdersToMotea(req, res, next) {
+  try {
+    await getAll();
+    await changeTable()
+    await sleep(20000)
+    res.status(200).send({ message: "OK" });
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: "ERROR" });
+  }
+}
+
+module.exports = { getAll, getByFilter, getByArticle, orderedStatus, calcOrdersToMotea, fetchOrdersToMotea, updateRowToMotea, recalcOrdersToMotea };
