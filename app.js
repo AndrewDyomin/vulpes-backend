@@ -14,6 +14,7 @@ const ReceiveRoutes = require('./routes/api/receive');
 const TelegramRoutes = require('./routes/api/telegram');
 const FilesRoutes = require('./routes/api/files');
 const StatisticRoutes = require('./routes/api/stat');
+const PuigRoutes = require('./routes/api/puig');
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -34,6 +35,7 @@ app.use("/receive-products", ReceiveRoutes);
 app.use("/files", isAuth, FilesRoutes);
 app.use("/webhook", TelegramRoutes);
 app.use("/stat", isAuth, StatisticRoutes);
+app.use("/puig-api", isAuth, PuigRoutes);
 
 
 app.use((req, res) => {
