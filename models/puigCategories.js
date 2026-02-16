@@ -9,6 +9,18 @@ const puigCategoriesSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  title_ru: {
+    type: String,
+    default: '',
+  },
+  title_uk: {
+    type: String,
+    default: '',
+  },
+  image: {
+    type: String,
+    default: '',
+  },
 });
 
 module.exports = mongoose.model("PuigCategories", puigCategoriesSchema);

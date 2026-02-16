@@ -174,13 +174,9 @@ async function checkPrice() {
         }
 
         try {
-          await Product.findByIdAndUpdate(item._id, {
-            moteaPrice: { UAH: item?.moteaPrice?.UAH, date: now },
-          });
-          let response = await fetch(link);
+          const response = await fetch(link);
           await sleep(1000);
           let data = await extractHtml(response.body);
-          response = null;
 
           let mPrice = Math.round(Number(data?.price) * exchangeRate) || null;
 
@@ -197,7 +193,7 @@ async function checkPrice() {
             if (!t) {
               console.log(item.article, "article not found");
               await Product.findByIdAndUpdate(item._id, {
-                moteaPrice: { UAH: null, date: now },
+                moteaPrice: { UAH: null, date: yesterday },
               });
               continue;
             }
