@@ -9,11 +9,27 @@ const puigProductsSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  titleRu: {
+    type: String,
+    default: '',
+  },
+  titleUk: {
+    type: String,
+    default: '',
+  },
   category_id: {
     type: Number,
     required: [true, "Category-id is required"],
   },
   description: {
+    type: String,
+    default: '',
+  },
+  descriptionRu: {
+    type: String,
+    default: '',
+  },
+  descriptionUk: {
     type: String,
     default: '',
   },

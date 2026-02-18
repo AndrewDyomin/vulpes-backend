@@ -9,11 +9,11 @@ const puigCategoriesSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  title_ru: {
+  titleRu: {
     type: String,
     default: '',
   },
-  title_uk: {
+  titleUk: {
     type: String,
     default: '',
   },

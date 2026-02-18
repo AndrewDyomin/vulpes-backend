@@ -101,6 +101,10 @@ const puigArticlesSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  priceUAH: {
+    type: String,
+    default: "",
+  },
   homologations: {
     abe: {
       type: String,
