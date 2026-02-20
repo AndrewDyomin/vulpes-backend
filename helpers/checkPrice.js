@@ -135,7 +135,7 @@ async function checkPrice() {
     yesterday.setDate(now.getDate() - 1);
     const exchangeRate = 50.5;
 
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 200;
     let lastId = null;
     let c = 0;
 
@@ -181,7 +181,7 @@ async function checkPrice() {
           let mPrice = Math.round(Number(data?.price) * exchangeRate) || null;
 
           if (!mPrice) {
-            console.log("search starting");
+            console.log(item.article, "-search starting");
             const search = await fetch(
               `https://www.motea.com/en/catalogsearch/result/?q=${item.article}`,
             );

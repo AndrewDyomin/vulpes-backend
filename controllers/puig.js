@@ -3,7 +3,13 @@ const updateSheets = require("../helpers/updateSheets");
 const Categories = require("../models/puigCategories");
 const Products = require("../models/puigProducts");
 const Articles = require("../models/puigArticles");
+const path = require("path");
+const { fork } = require("child_process");
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const isEqual = require('node:util').isDeepStrictEqual;
+
+let isChild = false;
+const chatId = process.env.ADMIN_CHAT_ID;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -157,6 +163,38 @@ async function updateProduct(req, res, next) {
   }
 }
 
+async function checkProductsUpdates(req, res, next) {
+  if (!isChild) {
+    const checkProducts = path.join(__dirname, '../helpers', "checkPuigProductsUpdates.js");
+    isChild = true;
+
+    if (req) {
+      res.status(200).send({ message: "Check updates started" });
+    }
+
+    const child = fork(checkProducts, [], {
+      execArgv: ["--max-old-space-size=150"],
+    });
+
+    child.on("exit", (code) => {
+      sendTelegramMessage(`Проверка продуктов Puig завершена с кодом ${code}`, chatId);
+      console.log(`Проверка продуктов Puig завершена с кодом ${code}`);
+      isChild = false;
+    });
+
+    child.on("error", (err) => {
+      sendTelegramMessage(`Ошибка проверки продуктов Puig: ${err}`, chatId);
+      console.error("Ошибка проверки продуктов Puig:", err);
+      isChild = false;
+    });
+  } else {
+    console.log("Update check has already started");
+    if (req) {
+      res.status(200).send({ message: "Update check has already started" });
+    }
+  }
+}
+
 module.exports = {
   getCategories,
   updateCategory,
@@ -165,4 +203,5 @@ module.exports = {
   getProductById,
   translateString,
   updateProduct,
+  checkProductsUpdates,
 };

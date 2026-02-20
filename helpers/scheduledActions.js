@@ -153,8 +153,8 @@ async function importProductsFromYML() {
           images: Array.isArray(currentProduct.picture)
             ? currentProduct.picture
             : currentProduct.picture
-            ? [currentProduct.picture]
-            : [],
+              ? [currentProduct.picture]
+              : [],
         };
 
         if (currentProduct.barcode) {
@@ -213,7 +213,7 @@ async function importProductsFromYML() {
       console.error("Ошибка парсинга:", err.message);
       sendTelegramMessage(
         `Во время обновления товаров возникла ошибка парсинга: ${err.message}`,
-        chatId
+        chatId,
       );
     });
 
@@ -226,7 +226,7 @@ async function importProductsFromYML() {
     console.error(`Ошибка импорта: ${err.message}`);
     sendTelegramMessage(
       `Ошибка импорта обновлённых товаров: ${err.message}`,
-      chatId
+      chatId,
     );
   }
 }
@@ -238,7 +238,7 @@ async function sendToSheets() {
       process.env.GOOGLE_CLIENT_EMAIL,
       null,
       process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      ["https://www.googleapis.com/auth/spreadsheets"]
+      ["https://www.googleapis.com/auth/spreadsheets"],
     );
     await client.authorize();
     const sheets = google.sheets({ version: "v4", auth: client });
@@ -309,17 +309,21 @@ async function sendToSheets() {
         hasMore = false;
       }
     }
-  } catch(err) {
-    console.log('Google feed table are not updated. Error:', err.response.data)
+  } catch (err) {
+    console.log("Google feed table are not updated. Error:", err.response.data);
     sendTelegramMessage(
       `Во время обновления таблицы в Google MC feed возникла ошибка : ${JSON.stringify(err.response.data)}`,
-      chatId
+      chatId,
     );
   }
 }
 
 async function importYMLtoGoogleFeed() {
-  if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
+  if (!PRODUCTS_URI) {
+    // throw new Error("PRODUCTS_URI не указана в .env");
+    sendTelegramMessage("ERROR!!! - PRODUCTS_URI не указана в .env", chatId);
+    return;
+  }
 
   try {
     console.log("Импорт в Google MC feed начат...");
@@ -358,7 +362,7 @@ async function importYMLtoGoogleFeed() {
 
       if (tagName === "offer") {
         currentProduct.quantity_in_stock = Number(
-          currentProduct.quantity_in_stock || 0
+          currentProduct.quantity_in_stock || 0,
         );
         currentProduct.price = Number(currentProduct.price || 0);
         currentProduct.oldprice = Number(currentProduct.oldprice || 0);
@@ -426,7 +430,7 @@ async function importYMLtoGoogleFeed() {
 
     parser.on("end", async () => {
       console.log(
-        `[${new Date().toISOString()}] Парсинг товаров в наличии завершён`
+        `[${new Date().toISOString()}] Парсинг товаров в наличии завершён`,
       );
     });
 
@@ -434,7 +438,7 @@ async function importYMLtoGoogleFeed() {
       console.error("Ошибка парсинга:", err.message);
       sendTelegramMessage(
         `Во время обновления товаров в Google MC feed возникла ошибка парсинга: ${err.message}`,
-        chatId
+        chatId,
       );
     });
 
@@ -443,7 +447,7 @@ async function importYMLtoGoogleFeed() {
     console.error(`Ошибка импорта: ${err.message}`);
     sendTelegramMessage(
       `Ошибка импорта товаров в Google MC feed: ${err.message}`,
-      chatId
+      chatId,
     );
   }
 }
@@ -505,7 +509,7 @@ async function saveMoteaFeedToDb() {
             } catch (err) {
               console.error("Ошибка финального insertMany:", err);
               sendTelegramMessage(
-                `Ошибка финального insertMany в базу: ${err}`
+                `Ошибка финального insertMany в базу: ${err}`,
               );
               reject(err);
             }
@@ -514,7 +518,7 @@ async function saveMoteaFeedToDb() {
           console.log(`Обработка завершена. Всего записей: ${totalCount}`);
           sendTelegramMessage(
             `Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`,
-            chatId
+            chatId,
           );
           resolve();
         })
@@ -569,7 +573,7 @@ async function updateProductsAvailability() {
   }
   sendTelegramMessage(
     "Информация о наличии товаров в МОТЕА обновлена.",
-    chatId
+    chatId,
   );
 }
 
@@ -649,7 +653,7 @@ ${availableNow
     (order, index) =>
       `${index + 1}). #${order.id} - (${order.products[0].sku})${
         order.products[0].text
-      }`
+      }`,
   )
   .join("\n")}
 
@@ -714,7 +718,7 @@ ${inStockNow
     (order, index) =>
       `${index + 1}). #${order.id} - (${order.products[0].sku})${
         order.products[0].text
-      }`
+      }`,
   )
   .join("\n")}
 
@@ -735,7 +739,7 @@ ${inStockNow
   }).exec();
   inStockNow = [];
 
-  console.log("Проверим - замовлено...")
+  console.log("Проверим - замовлено...");
 
   for (const order of targetArray) {
     const inStock = [];
@@ -781,7 +785,7 @@ ${inStockNow
     (order, index) =>
       `${index + 1}). #${order.id} - (${order.products[0].sku})${
         order.products[0].text
-      }`
+      }`,
   )
   .join("\n")}
 
@@ -802,7 +806,7 @@ async function sendPriceDifference() {
   let c = 0;
   const cursor = Product.find(
     {},
-    { article: 1, price: 1, moteaPrice: 1, _id: 0 }
+    { article: 1, price: 1, moteaPrice: 1, _id: 0 },
   ).cursor();
   let workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Цены");
@@ -841,7 +845,7 @@ async function sendPriceDifference() {
   fs.unlinkSync(filePath);
 }
 
-cron.schedule(    // import products at 01:00
+cron.schedule(    // import products
   "30 */6 * * *",
   () => {
     try {
@@ -850,34 +854,15 @@ cron.schedule(    // import products at 01:00
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage(
         `Ошибка при выполнении cron-задачи: ${error}`,
-        chatId
+        chatId,
       );
     }
   },
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
-
-// cron.schedule(    // import products at 17:30
-//   "30 17 * * *",
-//   () => {
-//     try {
-//       importProductsFromYML();
-//     } catch (error) {
-//       console.error("Ошибка при выполнении cron-задачи:", error);
-//       sendTelegramMessage(
-//         `Ошибка при выполнении cron-задачи: ${error}`,
-//         chatId
-//       );
-//     }
-//   },
-//   {
-//     scheduled: true,
-//     timezone: "Europe/Kiev",
-//   }
-// );
 
 cron.schedule(    //  update prom base at 15:30
   "20 */3 * * *",
@@ -887,7 +872,7 @@ cron.schedule(    //  update prom base at 15:30
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
 cron.schedule(
@@ -899,14 +884,14 @@ cron.schedule(
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage(
         `Ошибка при выполнении cron-задачи: ${error}`,
-        chatId
+        chatId,
       );
     }
   },
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
 cron.schedule(    //  update availability
@@ -918,37 +903,17 @@ cron.schedule(    //  update availability
       console.error("Ошибка при выполнении cron-задачи:", error);
       sendTelegramMessage(
         `Ошибка при выполнении cron-задачи: ${error}`,
-        chatId
+        chatId,
       );
     }
   },
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-// cron.schedule(
-//   //  update availability at 17:50
-//   "50 17 * * *",
-//   () => {
-//     try {
-//       updateProductsAvailability();
-//     } catch (error) {
-//       console.error("Ошибка при выполнении cron-задачи:", error);
-//       sendTelegramMessage(
-//         `Ошибка при выполнении cron-задачи: ${error}`,
-//         chatId
-//       );
-//     }
-//   },
-//   {
-//     scheduled: true,
-//     timezone: "Europe/Kiev",
-//   }
-// );
-
-cron.schedule(
+cron.schedule(    // check price
   "1 */3 * * *",
   () => {
     if (!isChild) {
@@ -957,7 +922,7 @@ cron.schedule(
       isChild = true;
 
       const child = fork(checkPrice, [], {
-        execArgv: ['--max-old-space-size=200']
+        execArgv: ["--max-old-space-size=150"],
       });
 
       child.on("exit", (code) => {
@@ -978,7 +943,7 @@ cron.schedule(
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
 cron.schedule(
@@ -992,15 +957,15 @@ cron.schedule(
     } catch (err) {
       console.log("Called the assistant error: ", err?.code);
     }
-    
   },
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-cron.schedule(    //  check ad spend
+cron.schedule(
+  //  check ad spend
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -1027,7 +992,7 @@ cron.schedule(    //  check ad spend
         await CampaignResult.findByIdAndUpdate(
           weekReport._id,
           { campaigns: result },
-          { new: true }
+          { new: true },
         ).exec();
       }
 
@@ -1039,10 +1004,11 @@ cron.schedule(    //  check ad spend
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-cron.schedule(    //  check orders
+cron.schedule(
+  //  check orders
   "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -1054,14 +1020,14 @@ cron.schedule(    //  check orders
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-cron.schedule(  //  check not availability orders
+cron.schedule(    //  check not availability orders
   "0 10 * * 1-5",
   async () => {
     console.log(
-      'Запуск задачи по проверке заказов в статусе "Заказать (нет на складе MOTEA)"...'
+      'Запуск задачи по проверке заказов в статусе "Заказать (нет на складе MOTEA)"...',
     );
 
     await checkAvailabilityOrders();
@@ -1073,10 +1039,11 @@ cron.schedule(  //  check not availability orders
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-cron.schedule(    //  weekly report to owner
+cron.schedule(
+  //  weekly report to owner
   "59 17 * * 5",
   () => {
     reportToOwner();
@@ -1084,10 +1051,11 @@ cron.schedule(    //  weekly report to owner
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-cron.schedule(    //  update available rows base
+cron.schedule(
+  //  update available rows base
   "49 19 * * *",
   () => {
     importYMLtoGoogleFeed();
@@ -1095,10 +1063,11 @@ cron.schedule(    //  update available rows base
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );
 
-cron.schedule(    //  update google MC feed table
+cron.schedule(
+  //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
@@ -1106,5 +1075,5 @@ cron.schedule(    //  update google MC feed table
   {
     scheduled: true,
     timezone: "Europe/Kiev",
-  }
+  },
 );

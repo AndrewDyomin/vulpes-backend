@@ -12,5 +12,6 @@ router.get("/products-by-category/:id", PuigController.getProductsByCategory);
 router.get("/product-by-id/:id", PuigController.getProductById);
 router.post("/translate/", PuigController.translateString);
 router.post("/update-product/", PuigController.updateProduct);
+router.get("/check-articles-updates", PuigController.checkProductsUpdates);
 
 module.exports = router;
