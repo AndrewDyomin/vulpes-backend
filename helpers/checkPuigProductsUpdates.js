@@ -129,7 +129,7 @@ async function checkPuigProductsUpdates() {
               pvp_recommended: pArt.pvp_recomended,
               origin: pArt.origin,
               hs_code: pArt.hs_code,
-              images: [ ...pArt.multimedia.images, ...pArt.multimedia.onbike.media ]
+              images: [ ...(pArt.multimedia?.images || []), ...(pArt.multimedia?.onbike?.map(i => i.media) || []) ]
             })
           }
           continue;
