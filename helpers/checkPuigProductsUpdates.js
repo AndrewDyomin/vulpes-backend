@@ -74,31 +74,8 @@ async function checkPuigProductsUpdates() {
           await sleep(5000)
         }
       }
-      const { data } = await axios.get(`https://api.puighitechparts.de/en/references/${article}`,
-        {
-          headers: {
-            "Api-Token": process.env.PUIG_TOKEN,
-          },
-        },
-      );
-      addCount();
-
-      for (const variant of data.data.variations) {
-        while (true) {
-          const minute = Number(new Date().getMinutes())
-          if (currentMinute.count < 30 || currentMinute.min !== minute) {
-            break;
-          } else {
-            await sleep(5000)
-          }
-        }
-        const art = await Articles.findOne({ code: article, 'colour.code': variant }).exec();
-
-        if (art?.outdated === 1) {
-          continue;
-        }
-
-        const { data } = await axios.get(`https://api.puighitechparts.de/en/references/${article}/${variant}`,
+      try {
+        const { data } = await axios.get(`https://api.puighitechparts.de/en/references/${article}`,
           {
             headers: {
               "Api-Token": process.env.PUIG_TOKEN,
@@ -106,80 +83,112 @@ async function checkPuigProductsUpdates() {
           },
         );
         addCount();
-        const pArt = data.data;
 
-        if (!art) {
-          // TO DO --- add article
-          console.log(article, variant, '- not found in base!', 'outdated=', pArt.outdated);
+        for (const variant of data.data.variations) {
+          while (true) {
+            const minute = Number(new Date().getMinutes())
+            if (currentMinute.count < 30 || currentMinute.min !== minute) {
+              break;
+            } else {
+              await sleep(5000)
+            }
+          }
+          try {
+            const art = await Articles.findOne({ code: article, 'colour.code': variant }).exec();
 
-          if (pArt.outdated === 1) {
-            await Articles.create({ code: pArt.code, colour: { code: pArt.colour}, outdated: pArt.outdated })
-          } else {
-            await Articles.create({ 
-              code: pArt.code,
-              colour: {
-                code: pArt.colour,
+            if (art?.outdated === 1) {
+              continue;
+            }
+
+            const { data } = await axios.get(`https://api.puighitechparts.de/en/references/${article}/${variant}`,
+              {
+                headers: {
+                  "Api-Token": process.env.PUIG_TOKEN,
+                },
               },
-              stock: pArt.stock,
-              stock_prevision: pArt.stock_prevision,
-              outdated: pArt.outdated,
-              barcode: pArt.barcode,
-              alternative: pArt.alternative,
-              pvp: pArt.pvp,
-              pvp_recommended: pArt.pvp_recomended,
-              origin: pArt.origin,
-              hs_code: pArt.hs_code,
-              images: [ ...(pArt.multimedia?.images || []), ...(pArt.multimedia?.onbike?.map(i => i.media) || []) ]
-            })
-          }
-          continue;
-        }
+            );
+            addCount();
+            const pArt = data.data;
 
-        const diff = {};
+            if (!art) {
+              // TO DO --- add article
+              console.log(article, variant, '- not found in base!', 'outdated=', pArt.outdated);
 
-        if (pArt.stock !== art.stock || art.stock_prevision !== pArt.stock_prevision) {
-          diff.stock = pArt.stock;
-          diff.stock_prevision = pArt.stock_prevision;
-        }
-
-        if (pArt.outdated !== art.outdated) {
-          diff.outdated = pArt.outdated
-        }
-
-        if (pArt.pvp !== art.pvp || art.pvp_recommended !== pArt.pvp_recomended) {
-          diff.pvp = pArt.pvp
-          diff.pvp_recommended = pArt.pvp_recomended
-        }
-
-        if (pArt?.multimedia?.images?.length > 0 || pArt?.multimedia?.onbike?.length > 0) {
-          const incoming = [];
-          for (const image of pArt?.multimedia?.images) {
-            if (!incoming.includes(image)) {
-              incoming.push(image);
+              if (pArt.outdated === 1) {
+                await Articles.create({ code: pArt.code, colour: { code: pArt.colour}, outdated: pArt.outdated })
+              } else {
+                await Articles.create({ 
+                  code: pArt.code,
+                  colour: {
+                    code: pArt.colour,
+                  },
+                  stock: pArt.stock,
+                  stock_prevision: pArt.stock_prevision,
+                  outdated: pArt.outdated,
+                  barcode: pArt.barcode,
+                  alternative: pArt.alternative,
+                  pvp: pArt.pvp,
+                  pvp_recommended: pArt.pvp_recomended,
+                  origin: pArt.origin,
+                  hs_code: pArt.hs_code,
+                  images: [ ...(pArt.multimedia?.images || []), ...(pArt.multimedia?.onbike?.map(i => i.media) || []) ]
+                })
+              }
+              continue;
             }
-          }
-          for (const image of pArt?.multimedia?.onbike) {
-            if (!incoming.includes(image.media)) {
-              incoming.push(image.media);
+
+            const diff = {};
+
+            if (pArt.stock !== art.stock || art.stock_prevision !== pArt.stock_prevision) {
+              diff.stock = pArt.stock;
+              diff.stock_prevision = pArt.stock_prevision;
             }
+
+            if (pArt.outdated !== art.outdated) {
+              diff.outdated = pArt.outdated
+            }
+
+            if (pArt.pvp !== art.pvp || art.pvp_recommended !== pArt.pvp_recomended) {
+              diff.pvp = pArt.pvp
+              diff.pvp_recommended = pArt.pvp_recomended
+            }
+
+            if (pArt?.multimedia?.images?.length > 0 || pArt?.multimedia?.onbike?.length > 0) {
+              const incoming = [];
+              for (const image of pArt?.multimedia?.images) {
+                if (!incoming.includes(image)) {
+                  incoming.push(image);
+                }
+              }
+              for (const image of pArt?.multimedia?.onbike) {
+                if (!incoming.includes(image.media)) {
+                  incoming.push(image.media);
+                }
+              }
+              
+              const arraysEqual = art.images.length === incoming.length && incoming.every(img => art.images.includes(img));
+
+              if (!arraysEqual) {
+                diff.images = [ ...incoming ];
+              }
+            }
+
+            if (pArt.barcode !== art.barcode) {
+              diff.barcode = pArt.barcode
+            }
+
+            if (Object.keys(diff).length > 0) {
+              await Articles.findByIdAndUpdate(art._id, { $set: diff }, { new: true }).exec();
+            }
+            console.log(currentMinute);
+            console.log(article, variant, '- diff = ', diff)
+          } catch(err) {
+            console.log(err)
           }
           
-          const arraysEqual = art.images.length === incoming.length && incoming.every(img => art.images.includes(img));
-
-          if (!arraysEqual) {
-            diff.images = [ ...incoming ];
-          }
         }
-
-        if (pArt.barcode !== art.barcode) {
-          diff.barcode = pArt.barcode
-        }
-
-        if (Object.keys(diff).length > 0) {
-          await Articles.findByIdAndUpdate(art._id, { $set: diff }, { new: true }).exec();
-        }
-        console.log(currentMinute);
-        console.log(article, variant, '- diff = ', diff)
+      } catch(err) {
+        console.log(err)
       }
     }
     await LastUpdate.findByIdAndUpdate({ _id: lastFilterDate._id }, { date: newFilterDate, previousDate: filterDate })
