@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { type } = require("../schemas/user");
 
 const itemSchema = new mongoose.Schema({
   article: {
@@ -114,6 +115,10 @@ const itemSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
+  },
+  vendorprice: {
+    type: Number,
+    default: null,
   },
   moteaPrice: {
     UAH: {
