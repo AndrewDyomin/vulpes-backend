@@ -120,7 +120,6 @@ async function importProductsFromYML() {
       if (!currentProduct) return;
 
       if (tagName === "offer") {
-        console.log(currentProduct)
         const article = currentProduct.article;
         if (!article) return;
         const target = existingArticlesMap.get(article);
