@@ -120,6 +120,7 @@ async function importProductsFromYML() {
       if (!currentProduct) return;
 
       if (tagName === "offer") {
+        console.log(currentProduct)
         const article = currentProduct.article;
         if (!article) return;
         const target = existingArticlesMap.get(article);
@@ -159,6 +160,10 @@ async function importProductsFromYML() {
 
         if (currentProduct.barcode) {
           data.barcode = currentProduct.barcode;
+        }
+
+        if (currentProduct?.vendorprice && currentProduct?.vendorprice !== '0') {
+          data.vendorprice = currentProduct.vendorprice;
         }
 
         if (target) {
@@ -1077,3 +1082,5 @@ cron.schedule(
     timezone: "Europe/Kiev",
   },
 );
+
+importProductsFromYML();
