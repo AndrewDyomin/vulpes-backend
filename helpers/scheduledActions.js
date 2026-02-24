@@ -163,7 +163,7 @@ async function importProductsFromYML() {
         }
 
         if (currentProduct?.vendorprice && currentProduct?.vendorprice !== '0') {
-          data.vendorprice = currentProduct.vendorprice;
+          data.vendorprice = Number(currentProduct.vendorprice);
         }
 
         if (target) {
@@ -1082,5 +1082,3 @@ cron.schedule(
     timezone: "Europe/Kiev",
   },
 );
-
-importProductsFromYML();
