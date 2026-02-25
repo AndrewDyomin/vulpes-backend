@@ -808,11 +808,13 @@ ${inStockNow
 
 async function sendPriceDifference() {
   let c = 0;
+  const lowerPrice = [];
+
   const cursor = Product.find(
     {},
-    { article: 1, price: 1, moteaPrice: 1, _id: 0 },
+    { article: 1, price: 1, moteaPrice: 1, vendorprice: 1, _id: 0 },
   ).cursor();
-  let workbook = new ExcelJS.Workbook();
+  const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Цены");
   worksheet.columns = [
     { header: "Артикул", key: "article", width: 25 },
@@ -824,18 +826,35 @@ async function sendPriceDifference() {
 
   for await (const item of cursor) {
     const db = Number(item?.price?.UAH);
-    const mt = Number(item?.moteaPrice?.UAH);
+    const mt = Number(item?.moteaPrice?.UAH) || 0;
+    const vendor = Number(item?.vendorprice) || 0;
+    let targetPrice = mt;
 
-    if (!db || !mt) continue;
+    if (!db) continue;
 
-    const difference = Math.round((Math.abs(db - mt) / db) * 100);
+    if (vendor) {
+      const minPrice = vendor * 1.9 >= db ? vendor * 1.9 : db;
 
-    if (difference >= 5) {
+      if (targetPrice < minPrice) {
+        targetPrice = minPrice;
+        const difference = Math.round((Math.abs(db - targetPrice) / db) * 100);
+
+        if (difference >= 3) {
+          lowerPrice.push(item.article);
+        }
+      }
+    }
+
+    if (targetPrice === 0) continue;
+
+    const difference = Math.round((Math.abs(db - targetPrice) / db) * 100);
+
+    if (difference >= 3) {
       c++;
       worksheet.addRow({
         article: item.article,
         dbPrice: item.price.UAH,
-        mPrice: item.moteaPrice.UAH,
+        mPrice: Math.round(targetPrice),
       });
     }
   }
@@ -843,9 +862,22 @@ async function sendPriceDifference() {
   const filePath = path.join(__dirname, "..", "tmp", fileName);
 
   await workbook.xlsx.writeFile(filePath);
-  await sendTelegramFile(filePath, "", chatId);
-  workbook.removeAllListeners();
-  workbook = null;
+
+  if (lowerPrice.length > 0) {
+    const limit = 50;
+
+    const text = `Вот список артикулов: ${
+      lowerPrice.slice(0, limit).join(', ')
+    }${
+      lowerPrice.length > limit ? ' ...и ещё ' + (lowerPrice.length - limit) + ' шт.' : ''
+    }`;
+
+    await sendTelegramFile(filePath, `Для ${lowerPrice.length} артикулов цена была автоматически поднята (т.к. прибыль < 100%).`, chatId);
+    await sendTelegramMessage(text, chatId);
+  } else {
+    await sendTelegramFile(filePath, "", chatId);
+  }
+
   fs.unlinkSync(filePath);
 }
 
