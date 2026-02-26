@@ -75,6 +75,14 @@ const puigProductsSchema = new mongoose.Schema({
     type: Array,
     default: [],
   },
+  warning: {
+    type: Boolean,
+    default: false,
+  },
+  enableSplitting: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("PuigProducts", puigProductsSchema);

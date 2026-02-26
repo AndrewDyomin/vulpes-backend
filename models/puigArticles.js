@@ -27,6 +27,11 @@ const puigArticlesSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  horoshopStatus: {
+    type: String,
+    enum: ["on", "canceled", "off"],
+    default: 'off'
+  },
   mesures: {
     packaging: {
       weight: {
@@ -136,6 +141,10 @@ const puigArticlesSchema = new mongoose.Schema({
   bikes: {
     type: String,
     default: "",
+  },
+  bikesArray: {
+    type: Array,
+    defaul: [],
   },
   multimedia: {
     type: String,

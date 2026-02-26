@@ -6,6 +6,7 @@ const Articles = require("../models/puigArticles");
 const path = require("path");
 const { fork } = require("child_process");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const axios = require("axios");
 const isEqual = require('node:util').isDeepStrictEqual;
 
 let isChild = false;
@@ -136,6 +137,7 @@ async function updateProduct(req, res, next) {
     });
 
     if (Object.keys(diff).length > 0) {
+      diff.warning = false;
       await Products.findByIdAndUpdate(draft._id, { $set: diff }, { new: true }).exec();
     }
 
@@ -195,6 +197,80 @@ async function checkProductsUpdates(req, res, next) {
   }
 }
 
+async function changeHoroshopStatus(req, res) {
+  const { code, color, command } = req.params;
+  console.log(code, color, command)
+  try {
+    await Articles.findOneAndUpdate({ code, 'colour.code': color }, { horoshopStatus: command })
+    res.status(200).send({ message: "Status changed" });
+  }catch(err) {
+    res.status(500).send(JSON.stringify(err));
+  }
+}
+
+async function updateBikesByArticle(req, res) {
+  const { code, link } = req.body;
+  const array = [];
+  try {
+    console.log(code, link)
+
+    const { data } = await axios.get(link,
+      {
+        headers: {
+          "Api-Token": process.env.PUIG_TOKEN,
+        },
+      },
+    );
+    const puigArray = data.data.bikes;
+
+    for (const bike of puigArray) {
+      const targetBrand = array.find(i => i.brand === bike.brand);
+      if (!targetBrand) {
+        array.push({ brand: bike.brand, models: [{ model: bike.model, year: [Number(bike.year)] }] })
+      } else {
+        const targetModel = targetBrand.models.find(i => i.model === bike.model);
+        if (!targetModel) {
+          targetBrand.models.push({ model: bike.model, year: [Number(bike.year)] });
+        } else {
+          targetModel.year.push(Number(bike.year));
+        }
+      }
+    }
+
+    for (const brand of array) {
+      for (const model of brand.models) {
+          const sorted = [ ...model.year ].sort((a, b) => a - b);
+
+          const result = [];
+          let start = sorted[0];
+          let prev = sorted[0];
+
+          for (let i = 1; i < sorted.length; i++) {
+            const current = sorted[i];
+
+            if (current === prev + 1) {
+              prev = current;
+            } else {
+              result.push(start === prev ? `${start}` : `${start}-${prev}`);
+              start = current;
+              prev = current;
+            }
+          }
+
+          result.push(start === prev ? `${start}` : `${start}-${prev}`);
+
+          model.year = result;
+      }
+      brand.models.sort((a, b) => a.model.localeCompare(b.model));
+    }
+
+    res.status(200).send([ ...array ].sort((a, b) => a.brand.localeCompare(b.brand)));
+  } catch(err) {
+    console.log(err)
+    res.status(500).send(JSON.stringify(err));
+  }
+}
+
 module.exports = {
   getCategories,
   updateCategory,
@@ -204,4 +280,6 @@ module.exports = {
   translateString,
   updateProduct,
   checkProductsUpdates,
+  changeHoroshopStatus,
+  updateBikesByArticle,
 };

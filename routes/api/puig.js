@@ -10,8 +10,10 @@ router.post("/categories", PuigController.updateCategory);
 router.get("/categories/:id", PuigController.getCategoryById);
 router.get("/products-by-category/:id", PuigController.getProductsByCategory);
 router.get("/product-by-id/:id", PuigController.getProductById);
-router.post("/translate/", PuigController.translateString);
-router.post("/update-product/", PuigController.updateProduct);
+router.post("/translate", PuigController.translateString);
+router.post("/update-product", PuigController.updateProduct);
 router.get("/check-articles-updates", PuigController.checkProductsUpdates);
+router.get("/horoshop/:code/:color/:command", PuigController.changeHoroshopStatus);
+router.post("/update-bikes-by-article", PuigController.updateBikesByArticle);
 
 module.exports = router;
