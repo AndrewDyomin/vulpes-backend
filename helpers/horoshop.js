@@ -134,8 +134,8 @@ async function generateHoroshopProduct(article) {
             parent_article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
             article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
             title: {
-              ru: `${product.titleRu} для ${brand.brand} ${model.model} ${year}`,
-              ua: `${product.titleUk} для ${brand.brand} ${model.model} ${year}`,
+              ru: `${product.titleRu} для ${brand.brand} ${model.model} ${year} ${targetColor.description}`,
+              ua: `${product.titleUk} для ${brand.brand} ${model.model} ${year} ${targetColor.uk}`,
             },
             description: {
               ru: product.descriptionRu,
@@ -189,8 +189,8 @@ async function generateHoroshopProduct(article) {
       parent_article: `${article.code}${article.colour.code}`,
       article: `${article.code}${article.colour.code}`,
       title: {
-        ru: `${product.titleRu}`,
-        ua: `${product.titleUk}`,
+        ru: `${product.titleRu} ${targetColor.description}`,
+        ua: `${product.titleUk} ${targetColor.uk}`,
       },
       description: {
         ru: product.descriptionRu,
@@ -334,7 +334,5 @@ async function checkProductsForHoroshop() {
     }
   }
 }
-
-checkProductsForHoroshop();
 
 module.exports = { checkProductsForHoroshop };
