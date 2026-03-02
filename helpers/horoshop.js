@@ -240,45 +240,54 @@ async function generateHoroshopProduct(article) {
   return result;
 }
 
-async function getArticlesFromHoroshop(article) {
+async function getArticlesFromHoroshop(art) {
   const token = await getToken();
-  const product = await Product.findOne({ id: article.product.id }).exec();
+  const product = await Product.findOne({ id: art.product.id }).exec();
+  const articles = [];
   const result = [];
 
   if (product.enableSplitting) {
-    for (const [brandIndex, brand] of article.bikesArray.entries()) {
+    for (const [brandIndex, brand] of art.bikesArray.entries()) {
       for (const [modelIndex, model] of brand.models.entries()) {
-        for (const [i, year] of model.year.entries()) {
-          const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
-            {
-              expr: {
-                article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
-              },
-              token: token,
-            },
-          );
-          if (data.response.products.length > 0) {
-            result.push(data.response.products.map(a => a));
-          }
+        for (let i = 0; i < model.year.length; i++) {
+          articles.push(`${art.code}${art.colour.code}-${brandIndex}${modelIndex}${i}`);
         }
       }
     }
   } else {
-    const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
-      {
-        expr: {
-          article: `${article.code}${article.colour.code}`,
+    articles.push(`${art.code}${art.colour.code}`);
+  }
+
+  if (articles.length > 0) {
+    try {
+      const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
+        {
+          expr: {
+            article: articles,
+          },
+          token: token,
         },
-        token: token,
-      },
-    );
-    if (data.response.products.length > 0) {
-      result.push(data.response.products.map(a => a));
+      );
+
+      if (data.response.products.length > 0) {
+        result.push(...data.response.products);
+      }
+    } catch(err) {
+      console.log(err)
     }
   }
-  
 
   return result;
+}
+
+async function changeStatus(data, status) {
+  try {
+    const newProducts = data.map(a => ({ ...a, presence: status }));
+    const token = await getToken();
+    await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: newProducts, token })
+  } catch(err) {
+    console.log(err)
+  }
 }
 
 async function checkProductsForHoroshop() {
@@ -290,14 +299,11 @@ async function checkProductsForHoroshop() {
     const data = await getArticlesFromHoroshop(art);
 
     if (redFlag.includes(art.stock) || redFlag.includes(art.stock_prevision)) {
-      console.log(art.code + art.colour.code, "no stock", data.response);
-      if (data.response.products.length === 0) {
+      console.log(art.code + art.colour.code, "no stock", data);
+      if (data.length === 0) {
         continue;
       } else {
-        console.log('finded', data.response.products);
-        const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: newProducts, token: await getToken() });
-        console.log(res.data.response)
-        // TO DO Обработать смену статуса наличия.
+        await changeStatus(data, 'Немає в наявності');
         continue;
       }
     }
@@ -311,24 +317,15 @@ async function checkProductsForHoroshop() {
       continue;
     }
     
-    if (data.response.products.length === 0) {
+    if (data.length === 0) {
       const draft = await generateHoroshopProduct(art)
       if (!draft.length === 0) continue;
-
-      draft.map(d => newProducts.push(d));
+      newProducts.push(...draft);
     }
   }
   
   if (newProducts.length > 0) {
     const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: newProducts, token: await getToken() });
-    console.log(res.data.response)
-    // {
-    //   log: [
-    //     { article: '22206N-00', info: [Array] },
-    //     { article: '22206N-10', info: [Array] }
-    //   ]
-    // }
-
 
     if (res.data.status === 'OK') {
       for (const log of res.data.response.log) {
