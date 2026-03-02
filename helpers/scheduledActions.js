@@ -24,6 +24,7 @@ const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
+const { checkProductsForHoroshop } = require("./horoshop");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -981,7 +982,7 @@ cron.schedule(    // check price
   },
 );
 
-cron.schedule(
+cron.schedule(    // TO DO --- Перенеси ХОРОШОП на отдельное расписание...
   "*/30 * * * *",
   async () => {
     try {
@@ -989,6 +990,7 @@ cron.schedule(
       await getAll();
       await fetch(process.env.HELPER_URL);
       console.log("Called the assistant");
+      await checkProductsForHoroshop();
     } catch (err) {
       console.log("Called the assistant error: ", err?.code);
     }
