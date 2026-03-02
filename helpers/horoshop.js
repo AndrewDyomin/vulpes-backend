@@ -124,15 +124,15 @@ async function generateHoroshopProduct(article) {
   );
 
   if (product.enableSplitting) {
-    for (const brand of article.bikesArray) {
+    for (const [brandIndex, brand] of article.bikesArray.entries()) {
       for (const [modelIndex, model] of brand.models.entries()) {
         for (const [i, year] of model.year.entries()) {
           const targetColor = colors.find(
             (c) => c.code === article.colour.code,
           );
           const draft = {
-            parent_article: `${article.code}${article.colour.code}-${modelIndex}${i}`,
-            article: `${article.code}${article.colour.code}-${modelIndex}${i}`,
+            parent_article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
+            article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
             title: {
               ru: `${product.titleRu} для ${brand.brand} ${model.model} ${year}`,
               ua: `${product.titleUk} для ${brand.brand} ${model.model} ${year}`,
@@ -240,31 +240,68 @@ async function generateHoroshopProduct(article) {
   return result;
 }
 
+async function getArticlesFromHoroshop(article) {
+  const token = await getToken();
+  const product = await Product.findOne({ id: article.product.id }).exec();
+  const result = [];
+
+  if (product.enableSplitting) {
+    for (const [brandIndex, brand] of article.bikesArray.entries()) {
+      for (const [modelIndex, model] of brand.models.entries()) {
+        for (const [i, year] of model.year.entries()) {
+          const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
+            {
+              expr: {
+                article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
+              },
+              token: token,
+            },
+          );
+          if (data.response.products.length > 0) {
+            result.push(data.response.products.map(a => a));
+          }
+        }
+      }
+    }
+  } else {
+    const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
+      {
+        expr: {
+          article: `${article.code}${article.colour.code}`,
+        },
+        token: token,
+      },
+    );
+    if (data.response.products.length > 0) {
+      result.push(data.response.products.map(a => a));
+    }
+  }
+  
+
+  return result;
+}
+
 async function checkProductsForHoroshop() {
   const redFlag = ["Available on", "Few units in stock"];
   const articlesArray = await Articles.find({ horoshopStatus: "on" }).exec();
   const newProducts = [];
 
   for (const art of articlesArray) {
+    const data = await getArticlesFromHoroshop(art);
+
     if (redFlag.includes(art.stock) || redFlag.includes(art.stock_prevision)) {
-      const token = await getToken();
-      const { data } = await axios.post(
-        "https://vulpes.com.ua/api/catalog/export/",
-        {
-          expr: {
-            article: `${art.code}${art.colour.code}`,
-          },
-          token: token,
-        },
-      );
       console.log(art.code + art.colour.code, "no stock", data.response);
       if (data.response.products.length === 0) {
         continue;
       } else {
+        console.log('finded', data.response.products);
+        const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: newProducts, token: await getToken() });
+        console.log(res.data.response)
         // TO DO Обработать смену статуса наличия.
         continue;
       }
     }
+
     if (art.outdated === 1) {
       await Product.findOneAndUpdate({ id: art.product.id }, { warning: true });
       await Articles.findByIdAndUpdate(
@@ -274,11 +311,12 @@ async function checkProductsForHoroshop() {
       continue;
     }
     
-    const draft = await generateHoroshopProduct(art)
-    if (!draft.length === 0) continue;
+    if (data.response.products.length === 0) {
+      const draft = await generateHoroshopProduct(art)
+      if (!draft.length === 0) continue;
 
-    draft.map(d => newProducts.push(d));
-    // console.log('newProducts: ', newProducts);
+      draft.map(d => newProducts.push(d));
+    }
   }
   
   if (newProducts.length > 0) {

@@ -962,7 +962,6 @@ cron.schedule(    // check price
       });
 
       child.on("exit", (code) => {
-        sendTelegramMessage(`Проверка цен завершена с кодом ${code}`, chatId);
         console.log(`Проверка цен завершена с кодом ${code}`);
         isChild = false;
       });
