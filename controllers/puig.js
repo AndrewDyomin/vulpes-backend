@@ -199,7 +199,6 @@ async function checkProductsUpdates(req, res, next) {
 
 async function changeHoroshopStatus(req, res) {
   const { code, color, command } = req.params;
-  console.log(code, color, command)
   try {
     await Articles.findOneAndUpdate({ code, 'colour.code': color }, { horoshopStatus: command })
     res.status(200).send({ message: "Status changed" });
@@ -209,10 +208,9 @@ async function changeHoroshopStatus(req, res) {
 }
 
 async function updateBikesByArticle(req, res) {
-  const { code, link } = req.body;
+  const { link } = req.body;
   const array = [];
   try {
-    console.log(code, link)
 
     const { data } = await axios.get(link,
       {
