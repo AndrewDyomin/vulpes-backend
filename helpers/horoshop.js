@@ -299,7 +299,6 @@ async function checkProductsForHoroshop() {
     const data = await getArticlesFromHoroshop(art);
 
     if (redFlag.includes(art.stock) || redFlag.includes(art.stock_prevision)) {
-      console.log(art.code + art.colour.code, "no stock", data);
       if (data.length === 0) {
         continue;
       } else {
