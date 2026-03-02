@@ -43,7 +43,7 @@ async function getAll(req, res, next) {
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([
-      InventoryCheck.find().skip(skip).limit(limit).exec(),
+      InventoryCheck.find().sort({ _id: -1 }).skip(skip).limit(limit).exec(),
       InventoryCheck.countDocuments(),
     ]);
 
