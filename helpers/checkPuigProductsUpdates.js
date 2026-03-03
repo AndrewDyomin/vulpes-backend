@@ -38,6 +38,7 @@ async function checkPuigProductsUpdates() {
     const filterDate = lastFilterDate?.date || lastFilterDate?.previousDate;
     const currentMinute = { min: Number(date.getMinutes()), count: 0 };
     const newFilterDate = getDateString(now);
+    let count = 0;
 
     function addCount() {
       const minute = Number(new Date().getMinutes())
@@ -95,6 +96,7 @@ async function checkPuigProductsUpdates() {
           }
           try {
             const art = await Articles.findOne({ code: article, 'colour.code': variant }).exec();
+            count ++;
 
             if (art?.outdated === 1) {
               continue;
@@ -111,7 +113,6 @@ async function checkPuigProductsUpdates() {
             const pArt = data.data;
 
             if (!art) {
-              // TO DO --- add article
               console.log(article, variant, '- not found in base!', 'outdated=', pArt.outdated);
 
               if (pArt.outdated === 1) {
@@ -181,7 +182,7 @@ async function checkPuigProductsUpdates() {
               await Articles.findByIdAndUpdate(art._id, { $set: diff }, { new: true }).exec();
             }
             console.log(currentMinute);
-            console.log(article, variant, '- diff = ', diff)
+            console.log(count, '- из 27081???');
           } catch(err) {
             console.log(err)
           }
