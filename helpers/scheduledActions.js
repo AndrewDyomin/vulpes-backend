@@ -3,7 +3,7 @@ const axios = require("axios");
 const fetch = require("node-fetch");
 const sax = require("sax");
 const csv = require("csv-parser");
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const { fork } = require("child_process");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
@@ -28,16 +28,16 @@ const { checkProductsForHoroshop } = require("./horoshop");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
-const MAIN_DB_URI = process.env.DB_URI;
-const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
+// const MAIN_DB_URI = process.env.DB_URI;
+// const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 let isChild = false;
 
 const fetchAvailability = async (array) => {
-  await mongoose.disconnect();
-  console.log("Disconnected from main DB");
-  await mongoose.connect(DB_MOTEA_FEED_URI);
-  console.log("Connected to Motea feed info DB");
+  // await mongoose.disconnect();
+  // console.log("Disconnected from main DB");
+  // await mongoose.connect(DB_MOTEA_FEED_URI);
+  // console.log("Connected to Motea feed info DB");
 
   const articles = array.map((p) => p.article);
   const variantArticles = array.map((p) => `${p.article}-0`);
@@ -73,10 +73,10 @@ const fetchAvailability = async (array) => {
 
   availabilityMap.clear();
   linkMap.clear();
-  await mongoose.disconnect();
-  console.log("Disconnected from Motea feed info DB");
-  await mongoose.connect(MAIN_DB_URI);
-  console.log("Connected to main DB");
+  // await mongoose.disconnect();
+  // console.log("Disconnected from Motea feed info DB");
+  // await mongoose.connect(MAIN_DB_URI);
+  // console.log("Connected to main DB");
 
   return arrayCopy;
 };
@@ -459,13 +459,13 @@ async function importYMLtoGoogleFeed() {
 
 async function saveMoteaFeedToDb() {
   try {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-      console.log("Disconnected from main DB");
-    }
+    // if (mongoose.connection.readyState !== 0) {
+    //   await mongoose.disconnect();
+    //   console.log("Disconnected from main DB");
+    // }
 
-    await mongoose.connect(DB_MOTEA_FEED_URI);
-    console.log("Connected to Motea feed info DB");
+    // await mongoose.connect(DB_MOTEA_FEED_URI);
+    // console.log("Connected to Motea feed info DB");
     await MoteaItem.collection.drop();
 
     const url = process.env.MOTEA_FEED;
@@ -535,11 +535,11 @@ async function saveMoteaFeedToDb() {
 
     response = null;
 
-    await mongoose.disconnect();
-    console.log("Disconnected from Motea feed info DB");
+    // await mongoose.disconnect();
+    // console.log("Disconnected from Motea feed info DB");
 
-    await mongoose.connect(MAIN_DB_URI);
-    console.log("Reconnected to main DB");
+    // await mongoose.connect(MAIN_DB_URI);
+    // console.log("Reconnected to main DB");
   } catch (err) {
     console.error("Ошибка обработки:", "err");
   }
