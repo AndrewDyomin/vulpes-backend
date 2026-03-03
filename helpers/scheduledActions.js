@@ -992,7 +992,7 @@ cron.schedule(    // TO DO --- Перенеси ХОРОШОП на отдель
       console.log("Called the assistant");
       await checkProductsForHoroshop();
     } catch (err) {
-      console.log("Called the assistant error: ", err?.code);
+      console.log("Called the assistant error: ", err?.code || err);
     }
   },
   {
