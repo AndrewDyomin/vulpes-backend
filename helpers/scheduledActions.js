@@ -1,6 +1,5 @@
 const cron = require("node-cron");
 const axios = require("axios");
-const fetch = require("node-fetch");
 const sax = require("sax");
 const csv = require("csv-parser");
 // const mongoose = require("mongoose");
@@ -988,7 +987,7 @@ cron.schedule(    // TO DO --- Перенеси ХОРОШОП на отдель
     try {
       console.log("Копирую заказы...");
       await getAll();
-      await fetch(process.env.HELPER_URL);
+      await axios.get(process.env.HELPER_URL);
       console.log("Called the assistant");
       await checkProductsForHoroshop();
     } catch (err) {
