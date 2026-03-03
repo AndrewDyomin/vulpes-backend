@@ -24,7 +24,7 @@ const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
-const { checkProductsForHoroshop } = require("./horoshop");
+const { checkProductsForHoroshop } = require("../helpers/horoshop");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
