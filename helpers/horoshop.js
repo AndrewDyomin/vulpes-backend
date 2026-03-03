@@ -2,6 +2,7 @@ const axios = require("axios");
 const User = require("../models/user");
 const Articles = require("../models/puigArticles");
 const Product = require("../models/puigProducts");
+const sendTelegramMessage = require("./sendTelegramMessage");
 
 const categories = [
   { id: 1152, name: "Tank pads" },
@@ -94,6 +95,8 @@ const colors = [
   { code: "Z", description: "Gold", uk: "Золотий" },
   { code: "S", description: "Graphics", uk: "Graphics" },
 ];
+
+const redFlag = ["Available on", "Few units in stock"];
 
 async function getToken() {
   const user = await User.findOne({ name: "horoshop" }).exec();
@@ -290,8 +293,101 @@ async function changeStatus(data, status) {
   }
 }
 
+async function checkProductsFromHoroshop() {
+  let page = 0;
+  const updatedProducts = [];
+  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { stock: 1, stock_prevision: 1, priceUAH: 1, images: 1 }).exec();
+  const articlesMap = new Map();
+  for (const a of articlesArray) {
+    const key = `${a.code}_${a.colour.code}`;
+    articlesMap.set(key, a);
+  }
+  let token = await getToken();
+
+  while(true) {
+    try {
+      console.log('response: ', page)
+      const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
+        {
+          offset: page,
+          limit: 500,
+          includedParams: ["price", "presence", "images", "export_to_marketplace", "supplier"],
+          token,
+        },
+      );
+
+      page += 500;
+      for (const product of data.response.products) {
+        if (product.supplier.value === "Puig") {
+          const article = product.article.includes('-') ? product.article.split('-')[0] : product.article;
+          const art = article.slice(0, -1);
+          const colorCode = article.slice(-1);
+          const key = `${art}_${colorCode}`;
+          const target = articlesMap.get(key);
+          if (!target) {
+            updatedProducts.push({ article: product.article, parent_article: product.parent_article, presence: 'Немає в наявності', export_to_marketplace: [] });
+            continue;
+          };
+          const targetStatus = redFlag.includes(target.stock) || redFlag.includes(target.stock_prevision) ? 'Немає в наявності' : "Доставка 10-18 днів";
+          const diff = {};
+          if (product.presence.value.ua !== targetStatus) {
+            diff.presence = targetStatus;
+            diff.export_to_marketplace = targetStatus === 'Немає в наявності' ? [] : [ { id: 1, value: 'Google Feed for Merchant Center' } ];
+          }
+          if (product.price !== target.priceUAH) {
+            diff.price = Number(target.priceUAH);
+          }
+          if (product.images.length !== target.images.length) {
+            diff.images = {
+              override: true,
+              links: [...target.images],
+            }
+          }
+          if (Object.keys(diff).length > 0) {
+            diff.article = product.article;
+            diff.parent_article = product.parent_article;
+            updatedProducts.push(diff);
+          }
+          if (updatedProducts.length >=500) {
+            const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
+            if (res.data.status === 'OK') {
+              for (const log of res.data.response.log) {
+                console.log(log)
+              }
+            } else {
+              await sendTelegramMessage(`Ошибка обновления Puig на ХОРОШОПЕ. res.data: ${res.data}`, process.env.ADMIN_CHAT_ID)
+              console.log(res.data)
+            }
+            updatedProducts.length = 0;
+          }
+        }
+      }
+      if (data.response.products.length < 500) break;
+    } catch(err) {
+      if (err.response?.data?.status === 'AUTHORIZATION_ERROR') {
+        token = await getToken();
+        continue;
+      }
+      console.log(err);
+    }
+  }
+
+  if (updatedProducts.length > 0) {
+    const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
+    if (res.data.status === 'OK') {
+      for (const log of res.data.response.log) {
+        console.log(log)
+      }
+    } else {
+      await sendTelegramMessage(`Ошибка обновления Puig на ХОРОШОПЕ. res.data: ${res.data}`, process.env.ADMIN_CHAT_ID)
+      console.log(res.data)
+    }
+    updatedProducts.length = 0;
+  }
+  console.log("Products check completed.")
+}
+
 async function checkProductsForHoroshop() {
-  const redFlag = ["Available on", "Few units in stock"];
   const articlesArray = await Articles.find({ horoshopStatus: "on" }).exec();
   const newProducts = [];
 
@@ -318,7 +414,7 @@ async function checkProductsForHoroshop() {
     
     if (data.length === 0) {
       const draft = await generateHoroshopProduct(art)
-      if (!draft.length === 0) continue;
+      if (draft.length === 0) continue;
       newProducts.push(...draft);
     }
   }
@@ -332,6 +428,7 @@ async function checkProductsForHoroshop() {
       }
     }
   }
+  checkProductsFromHoroshop();
 }
 
-module.exports = { checkProductsForHoroshop };
+module.exports = { checkProductsForHoroshop, checkProductsFromHoroshop };
