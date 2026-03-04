@@ -296,7 +296,7 @@ async function changeStatus(data, status) {
 async function checkProductsFromHoroshop() {
   let page = 0;
   const updatedProducts = [];
-  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { stock: 1, stock_prevision: 1, priceUAH: 1, images: 1 }).exec();
+  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { code: 1, colour: 1, stock: 1, stock_prevision: 1, priceUAH: 1, images: 1 }).exec();
   const articlesMap = new Map();
   for (const a of articlesArray) {
     const key = `${a.code}_${a.colour.code}`;
@@ -352,6 +352,7 @@ async function checkProductsFromHoroshop() {
             const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
             if (res.data.status === 'OK') {
               for (const log of res.data.response.log) {
+                if (log?.info[0]?.code === 0) continue;
                 console.log(log)
               }
             } else {
@@ -376,6 +377,7 @@ async function checkProductsFromHoroshop() {
     const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
     if (res.data.status === 'OK') {
       for (const log of res.data.response.log) {
+        if (log?.info[0]?.code === 0) continue;
         console.log(log)
       }
     } else {
