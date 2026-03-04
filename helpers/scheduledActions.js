@@ -23,7 +23,7 @@ const CampaignResult = require("../models/campaignResult");
 const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
-const { checkProductsForHoroshop } = require("../helpers/horoshop");
+const { checkProductsUpdates } = require("../controllers/puig");
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -981,7 +981,7 @@ cron.schedule(    // check price
   },
 );
 
-cron.schedule(    // TO DO --- Перенеси ХОРОШОП на отдельное расписание...
+cron.schedule(
   "*/30 * * * *",
   async () => {
     try {
@@ -989,7 +989,6 @@ cron.schedule(    // TO DO --- Перенеси ХОРОШОП на отдель
       await getAll();
       await axios.get(process.env.HELPER_URL);
       console.log("Called the assistant");
-      await checkProductsForHoroshop();
     } catch (err) {
       console.log("Called the assistant error: ", err?.code || err);
     }
@@ -1102,11 +1101,11 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  update google MC feed table
+cron.schedule(    //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
+    checkProductsUpdates();
   },
   {
     scheduled: true,

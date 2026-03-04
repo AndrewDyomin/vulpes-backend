@@ -10,6 +10,7 @@ router.post("/categories", PuigController.updateCategory);
 router.get("/categories/:id", PuigController.getCategoryById);
 router.get("/products-by-category/:id", PuigController.getProductsByCategory);
 router.get("/product-by-id/:id", PuigController.getProductById);
+router.get("/search-product/:phrase", PuigController.searchProduct);
 router.post("/translate", PuigController.translateString);
 router.post("/update-product", PuigController.updateProduct);
 router.get("/check-articles-updates", PuigController.checkProductsUpdates);

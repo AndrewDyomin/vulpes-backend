@@ -6,6 +6,7 @@ const Articles = require("../models/puigArticles");
 const path = require("path");
 const { fork } = require("child_process");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const { checkProductsForHoroshop } = require("../helpers/horoshop");
 const axios = require("axios");
 const isEqual = require('node:util').isDeepStrictEqual;
 
@@ -84,6 +85,31 @@ async function getProductById(req, res, next) {
   } catch (err) {
     console.log(err);
     res.status(500).send(JSON.stringify(err));
+  }
+}
+
+async function searchProduct(req, res) {
+  const { phrase } = req.params;
+  if (phrase && phrase !== '') {
+    try {
+      const arr = [];
+      const productsById = await Products.find({ 
+        $or: [ 
+          { articles: phrase }, 
+          { title: { $regex: phrase, $options: "i" } }, 
+          { titleRu: { $regex: phrase, $options: "i" } }, 
+          { titleUk: { $regex: phrase, $options: "i" } } 
+        ] 
+      }).exec();
+      if (productsById && productsById.length > 0) {
+        arr.push(...productsById.map(p => ({ id: p.id, title: p.title, titleRu: p.titleRu, titleUk: p.titleUk, images: p.images })));
+      }
+
+      res.status(200).send(JSON.stringify(arr));
+    } catch(err) {
+      console.log(err)
+      res.status(204).send(JSON.stringify({message: 'search error'}));
+    }
   }
 }
 
@@ -182,6 +208,7 @@ async function checkProductsUpdates(req, res, next) {
       sendTelegramMessage(`Проверка продуктов Puig завершена с кодом ${code}`, chatId);
       console.log(`Проверка продуктов Puig завершена с кодом ${code}`);
       isChild = false;
+      checkProductsForHoroshop();
     });
 
     child.on("error", (err) => {
@@ -275,6 +302,7 @@ module.exports = {
   getCategoryById,
   getProductsByCategory,
   getProductById,
+  searchProduct,
   translateString,
   updateProduct,
   checkProductsUpdates,
