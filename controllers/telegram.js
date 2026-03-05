@@ -1,7 +1,6 @@
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { changeTable } = require("../helpers/checkOrders");
 const { sendBatchToIndexing } = require("../helpers/indexingApi");
-const fetch = require("node-fetch");
 require("dotenv").config();
 
 const userStates = {};
