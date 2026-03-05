@@ -174,11 +174,12 @@ async function download(req, res, next) {
       if (target) {
         target.count = String(Number(target.count) + Number(item.count));
       } else {
-        resultArray.push({ article: item.article, count: String(item.count) });
+        resultArray.push({ article: item.article, count: String(item.count), barcode: item?.barcode });
       }
     }
 
     const data = resultArray.map((item) => ({
+      Barcode: item?.barcode || '',
       Article: item.article,
       Count: item.count,
     }));

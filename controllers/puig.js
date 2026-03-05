@@ -93,7 +93,7 @@ async function searchProduct(req, res) {
   if (phrase && phrase !== '') {
     try {
       const arr = [];
-      const productsById = await Products.find({ 
+      let productsById = await Products.find({ 
         $or: [ 
           { articles: phrase }, 
           { title: { $regex: phrase, $options: "i" } }, 
@@ -103,6 +103,14 @@ async function searchProduct(req, res) {
       }).exec();
       if (productsById && productsById.length > 0) {
         arr.push(...productsById.map(p => ({ id: p.id, title: p.title, titleRu: p.titleRu, titleUk: p.titleUk, images: p.images })));
+      } else {
+        if (phrase.includes("-")) {
+          const art = phrase.split("-")[0].slice(0, -1);
+          productsById = await Products.find({ articles: art });
+          if (productsById && productsById.length > 0) {
+            arr.push(...productsById.map(p => ({ id: p.id, title: p.title, titleRu: p.titleRu, titleUk: p.titleUk, images: p.images })));
+          }
+        }
       }
 
       res.status(200).send(JSON.stringify(arr));

@@ -42,6 +42,24 @@ async function getAll(req, res, next) {
   }
 }
 
+async function getAllBarcodes(req, res, next) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 500;
+
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      Product.find({}, { _id: 0, article:1, barcode: 1 }).skip(skip).limit(limit).exec(),
+      Product.countDocuments(),
+    ]);
+
+    return res.status(200).json({ products });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getByBarcode(req, res, next) {
   const barcode = req.body.barcode;
   try {
@@ -400,6 +418,7 @@ async function compareYear (req, res, next) {
 
 module.exports = {
   getAll,
+  getAllBarcodes,
   getByBarcode,
   getByArticle,
   search,
