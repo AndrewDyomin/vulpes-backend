@@ -24,6 +24,8 @@ const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
 const { checkProductsUpdates } = require("../controllers/puig");
+const { generateFeed } = require("../helpers/zakupka");
+generateFeed();
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -99,13 +101,18 @@ async function importProductsFromYML() {
     let currentTag = null;
     let currentProduct = null;
     let textBuffer = "";
+    let currentParamName = null;
+    let currentParamValue = "";
 
     let response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
     const parser = sax.createStream(true, { trim: true });
 
     parser.on("opentag", (node) => {
       if (node.name === "offer") {
-        currentProduct = {};
+        currentProduct = { picture: [], params: {} };
+      } else if (node.name === "param") {
+        currentParamName = node.attributes.name === 'Гарантія' ? 'warranty' : node.attributes.name === 'Країна-виробник товару' ? 'countryOfOrigin' : '???';
+        currentParamValue = "";
       }
       currentTag = node.name;
     });
@@ -114,10 +121,25 @@ async function importProductsFromYML() {
       if (currentProduct && currentTag) {
         textBuffer += text;
       }
+      if (currentParamName) {
+        currentParamValue += text;
+      }
+    });
+
+    parser.on("cdata", (text) => {
+      if (currentProduct && currentTag) {
+        textBuffer += text;
+      }
     });
 
     parser.on("closetag", async (tagName) => {
       if (!currentProduct) return;
+
+      if (tagName === "param") {
+        currentProduct.params[currentParamName] = currentParamValue;
+        currentParamName = null;
+        currentParamValue = '';
+      }
 
       if (tagName === "offer") {
         const article = currentProduct.article;
@@ -148,13 +170,14 @@ async function importProductsFromYML() {
           brand: currentProduct.vendor,
           article: currentProduct.article,
           category: currentProduct.categoryId,
-          description: { UA: currentProduct.description },
+          description: { UA: currentProduct.description || '' },
           quantityInStock: Number(currentProduct.quantity_in_stock),
           images: Array.isArray(currentProduct.picture)
             ? currentProduct.picture
             : currentProduct.picture
               ? [currentProduct.picture]
               : [],
+          params: currentProduct.params,
         };
 
         if (currentProduct.barcode) {
@@ -176,7 +199,7 @@ async function importProductsFromYML() {
           newProducts.push(data);
         }
 
-        currentProduct = null;
+        currentProduct = { picture: [], params: {} };
 
         if (newProducts.length >= CHUNK_SIZE) {
           await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), {
@@ -190,8 +213,13 @@ async function importProductsFromYML() {
           });
         }
       } else if (currentProduct && currentTag && textBuffer) {
-        currentProduct[currentTag] = textBuffer;
-        textBuffer = "";
+        if (currentTag !== 'picture') {
+          currentProduct[currentTag] = textBuffer;
+          textBuffer = "";
+        } else {
+          currentProduct.picture.push(textBuffer);
+          textBuffer = "";
+        }
       }
     });
 
