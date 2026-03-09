@@ -1,0 +1,948 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE yml_catalog SYSTEM "shops.dtd">
+<yml_catalog date="2026-03-09 17:34">
+  <shop>
+    <name>Vulpes Moto</name>
+    <company>Vulpes Moto</company>
+    <url>https://vulpesmoto.com.ua</url>
+    <platform>Zakupka.com</platform>
+    <agency>Zakupka.com</agency>
+    <email>support@zakupka.com</email>
+    <categories>
+      <category id="0">Корневая категория</category>
+      <category id="232703994">Подъемники мотоцикла</category>
+      <category id="232928446" parentId="232703994">Платформа для маневрирования</category>
+      <category id="232928456" parentId="232703994">Подкат для заднего и переднего колеса</category>
+      <category id="232928461" parentId="232703994">Подставка, упор</category>
+      <category id="232928486" parentId="232703994">Центральная подставка</category>
+      <category id="232928721" parentId="232703994">Домкрат. Подъемник</category>
+      <category id="232703989">Защита мотоцикла</category>
+      <category id="232928502" parentId="232703989">Крылья и брызговики</category>
+      <category id="232928741" parentId="232703989">Защита двигателя</category>
+      <category id="232928976" parentId="232703989">Защитные слайдеры</category>
+      <category id="232931566" parentId="232703989">Защитные дуги</category>
+      <category id="232615204">Багаж для мотоцикла</category>
+      <category id="232923706" parentId="232615204">Багажники и крепление для багажа</category>
+      <category id="232923701" parentId="232615204">Sissy - бары</category>
+      <category id="232928491" parentId="232615204">Рюкзак</category>
+      <category id="232928496" parentId="232615204">Сумка на хвост мотоцикла</category>
+      <category id="232928507" parentId="232615204">Сумки на бак мотоцикла</category>
+      <category id="232928511" parentId="232615204">Боковый кофры на мотоцикл</category>
+      <category id="232928691" parentId="232615204">Центральные кофры</category>
+      <category id="232928706" parentId="232615204">Сумки на защитные дуги</category>
+      <category id="232928716" parentId="232615204">Боковые сумки на мотоцикл</category>
+      <category id="232928686">Рычаги тормоза и сцеплления</category>
+      <category id="232923126">Ветровое стекло для мотоцикла</category>
+      <category id="232928441">Тенты. Брезент. Гараж для мотоцикла</category>
+      <category id="232928726">Одежда и мотоэкипировка</category>
+      <category id="232923831">Аксессуары для мотоциклов</category>
+      <category id="232928466" parentId="232923831">Инструменты для мастерской</category>
+      <category id="232923841" parentId="232923831">Электроника и освещение</category>
+      <category id="232931571" parentId="232923831">Фары и дополнительные прожекторы</category>
+      <category id="232928451" parentId="232923831">Противоугонная система. Защита от кражи</category>
+      <category id="232923131" parentId="232923831">Гарнитура, гаджеты</category>
+      <category id="232928471" parentId="232923831">Держатель номерного знака</category>
+      <category id="232923837" parentId="232923831">Подножки</category>
+      <category id="232928476" parentId="232923831">Рули и ручки</category>
+      <category id="232928746" parentId="232923831">Зеркала для мотоцикла</category>
+      <category id="232928481" parentId="232923831">Сиденье для мотоцикла</category>
+      <category id="232928516" parentId="232923831">Выхлопная система</category>
+      <category id="232928681" parentId="232923831">Подставки для мотоцикла</category>
+      <category id="232928711" parentId="232923831">Спойлеры</category>
+      <category id="232928971" parentId="232923831">Накладки и наклейки</category>
+      <category id="232928988" parentId="232923831">Радиаторы для мотоцикла</category>
+      <category id="232935431" parentId="232923831">Бак для мотоцикла</category>
+      <category id="232935441" parentId="232923831">Амортизаторы и подвеска</category>
+    </categories>
+    <offers>
+      <offer id="A672614" available="true">
+        <price>1455</price>
+        <oldprice>1717</oldprice>
+        <quantity_in_stock>1</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928746</categoryId>
+        <picture>https://vulpes.com.ua/content/images/37/46700208721707_+69d673e132.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/62649635276937_+c25815243b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/88115359136633_+753d954f77.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Дзеркало заднього виду Legacy сумісне з APRILIA TUAREG 660 22'-25' Black Puig 22055n</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul> <li>Дзеркало заднього виду Legacy, що складається з високоякісного закругленого пластикового корпусу та металевого опорного кронштейна, відрізняється складною конструкцією. Це дозволяє захистити дзеркало від можливих ударів гілками, камінням та іншими предметами, які можуть виникнути при їзді бездоріжжям, а також від можливих падінь. </li> <li>Ефективна система кріплення дозволяє проводити ручне регулювання, забезпечує ідеальну фіксацію та запобігає дратівливим вібраціям. Крім того, дзеркало можна швидко та без інструментів захистити, якщо це необхідно, так що за необхідності можна відновити його початкове положення. </li> <li>Дзеркало заднього виду Legacy, розроблене та виготовлене на заводі Puig у Барселоні, сертифіковане та поставляється з власником для встановлення безпосередньо на кермо. Його також можна встановити на оригінальний тримач мотоцикла з різьбленням M10/125 та M8/125, як праворуч, так і зліва. </li> </ul>]]></description_ua>
+        <vendor>Puig</vendor>
+        <vendorCode>A672614</vendorCode>
+        <country_of_origin>Іспанія</country_of_origin>
+      </offer>
+      <offer id="A672475" available="true">
+        <price>5965</price>
+        <oldprice>7039</oldprice>
+        <quantity_in_stock>1</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232923126</categoryId>
+        <picture>https://vulpes.com.ua/content/images/1/21111125315921_+b727538730.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/99425540356813_+911565b89c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/96573395089015_+145b81f2c6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/66366491332309_+c6ccf90cac.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Вітрове скло Touring для HONDA NX500 24'-25', димчасте Puig 22021h</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul> <li>Екран Puig touring для покращення аеродинаміки та захисту від вітру</li> <li>Екран Touring довший за вітрове скло OEM (залежно від моделі на 5–20 см), а його форма оптимізована з точки зору аеродинаміки</li> <li>Помітно найкращий захист від вітру та полегшення верхньої частини тіла та шолома для більш розслабленої їзди, навіть у тривалих турах</li> <li>Лобове скло виготовлене з акрилу товщиною 3 мм, не піддається деформації, стійке до ударів і стійке до ультрафіолетового випромінювання.</li> <li>Краї туристичного вітрового скла закруглені до 2 мм, тому відповідно до норм TÜV додатковий захист країв не потрібний.</li> <li>З ABE реєстрація не потрібна для законного використання на дорогах загального користування</li> </ul>]]></description_ua>
+        <vendor>Puig</vendor>
+        <vendorCode>A672475</vendorCode>
+        <country_of_origin>Іспанія</country_of_origin>
+      </offer>
+      <offer id="A668133" available="true">
+        <price>9157</price>
+        <oldprice>10805</oldprice>
+        <quantity_in_stock>2</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232923706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/45/39533645347020_+90a49d33c0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/19008723704034_+331a98388f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/64509355606527_+4d5fb30fb1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/66942462713361_+da4dc35ec7.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/36767001559593_+987c290e2a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/83382905043901_+1b57bbf556.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/95547096316511_+8357c18f2d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/45/12865100499865_+a1165bf996.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Тримач для бічних кофрів Bagtecs SC53 для Honda CB 500 X 13-23</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+<li>Бічний багажник для м'якого багажу на мотоцикл Bagtecs</li>
+<li>Ідеально підходить для кріплення та як проставка для бічних та сідельних сумок</li>
+<li>Міцна конструкція та точне виготовлення для відповідної моделі</li>
+<li>М'який багажник ідеально вписується у лінії мотоцикла</li> <li>Комплект поставки: бічні тримачі сумок для правої та лівої сторони, монтажний матеріал</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A668133</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A668125" available="true">
+        <price>8167</price>
+        <oldprice>9637</oldprice>
+        <quantity_in_stock>1</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232923706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/48/46330809917481_+7dde1d4acf.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/43496436692141_+1f649308cd.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/32881162242182_+aff636049b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/75689314780658_+a794e0289d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/33036177294299_+bde48fb5a7.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/45333275967764_+b4e68a759f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/22926058158219_+f330dd948f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/48/56529579318106_+a08c42929a.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Бічні напрямні для багажу підходять для BMW F 900 GS 24-25, підтримка бічних сумок Bagtecs SC57</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+<li>Бічний багажник для м'якого багажу на мотоцикл Bagtecs</li>
+<li>Ідеально підходить для кріплення та як проставка для бічних та сідельних сумок</li>
+<li>Міцна конструкція та точне виготовлення для відповідної моделі</li>
+<li>М'який багажник ідеально вписується у лінії мотоцикла</li>
+<li>Комплект поставки: бічні тримачі сумок для правої та лівої сторони, монтажний матеріал</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A668125</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A668119" available="true">
+        <price>9215</price>
+        <oldprice>10874</oldprice>
+        <quantity_in_stock>2</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232923706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/1/91626555710226_+78a1568a6e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/43530435568730_+6f9fbb6e78.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/32019014502097_+b2c2c1aa87.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/50051078377959_+44e33d8048.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/98875790920929_+580576a5e5.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/65986046061955_+4fc2a2977d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/16850648899667_+77ab5343ee.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/1/65397304052028_+b98322e7ab.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Бічні напрямні для багажу підходять для Honda NX 500 24-25, Bagtecs SC53</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+<li>Бічний багажник для м'якого багажу на мотоцикл Bagtecs</li>
+<li>Ідеально підходить для кріплення та як проставка для бічних та сідельних сумок</li>
+<li>Міцна конструкція та точне виготовлення для відповідної моделі</li>
+<li>М'який багажник ідеально вписується у лінії мотоцикла</li>
+<li>Комплект поставки: бічні тримачі сумок для правої та лівої сторони, монтажний матеріал</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A668119</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A663871" available="true">
+        <price>4365</price>
+        <oldprice>5151</oldprice>
+        <quantity_in_stock>1</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232923706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/2/18144415026266_+134b03e4d8.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/2/84587408924578_+f5b08af911.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/2/61632231921757_+a297e3acca.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/2/41963281807902_+5227f3f3f6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/2/86960036919142_+e0595c8ae4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/2/42582711027106_+a840aebfae.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Задній багажник, сумісний з KTM 1050/1090/1190 Adventure/R 15-19 Bagtecs GB1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+<li>Багажний багажник Bagtecs для розширення існуючої опорної поверхні</li>
+<li>Корисна площа задньої частини мотоцикла збільшена майже вдвічі</li>
+<li>Подвійна функція багажного мосту:</li>
+<li>Для кріплення багажних рулонів або інших сумок численні заглиблення та прорізи забезпечують оптимальні варіанти кріплення натяжних ременів.</li>
+<li>В якості базової пластини для кріплення верхнього кофра (комплект для кріплення верхнього кофра не входить до комплекту)</li>
+<li>Виготовлений із міцного алюмінію товщиною 4 мм</li>
+<li>Постачає повністю готове до встановлення, включаючи монтажні матеріали</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A663871</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A663686" available="true">
+        <price>4607</price>
+        <oldprice>5436</oldprice>
+        <quantity_in_stock>1</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928481</categoryId>
+        <picture>https://vulpes.com.ua/content/images/47/76597499823178_+e9e99f3ca5.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/47/85736723738288_+127a9c0f2b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/47/41596611251666_+11d5d647f7.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/47/80115955049550_+be5e4c1e23.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пасажирське сидіння для BMW S 1000 RR 09-18 SO15 Zaddox чорне</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+<li>Сидіння пасажира як ідеальна заміна зношеним або пошкодженим оригінальним сидінням</li>
+<li>За формою та розмірами повністю відповідає оригінальному пасажирському сидінню</li>
+<li>Високоякісний чохол для сидіння, міцний та стійкий до ультрафіолетового випромінювання</li>
+<li>Проста установка пасажирського сидіння завдяки високій точності припасування</li>
+<li>Постачає готовий до встановлення</li>
+</ul>]]></description_ua>
+        <vendor>Zaddox</vendor>
+        <vendorCode>A663686</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654910" available="true">
+        <price>5197</price>
+        <oldprice>6132</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/37/32213068856655_+3e54533e5c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/zadnia-sumka-sumisna-z-honda-nc-750-700-x-s-bagtecs-sx70-70ltr-chorna-dpli1-26815365748193_+35882a3321.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/95779581984586_+b3e25a90f5.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/50470619953679_+fb2b199159.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/87314046457882_+3a101a1b6e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/85956803700617_+151062892c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/42011364458902_+4b2619be22.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/51366069815644_+011ef511f3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/75704614136544_+eda50ca47d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/89297703012073_+c3610f34f0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/37/82278661151061_+e5bdb4edf1.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Задня сумка сумісна з Honda NC 750/700/X/S Bagtecs SX70 70Ltr чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654910</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654909" available="true">
+        <price>5092</price>
+        <oldprice>6009</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/36/13842337074362_+8c083de97c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/zadnia-sumka-sumisna-z-bmw-r-ninet-pure-racer-bagtecs-sx70-70-l-chorna-dpli1-16309854034651_+71726348b6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/81194625256112_+c603ebb238.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/70233268764864_+fd08179fcb.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/14124865121724_+31a1d5926e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/18497568623793_+8707c29da3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/83418550447121_+1194d994e4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/39646196022831_+287a3eed5e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/64650094089204_+1f298f37f6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/79805012648931_+013fc3ccb9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/36/84135399720538_+3ec6bba36b.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Задня сумка сумісна з BMW R NineT/Pure/Racer Bagtecs SX70 70 л чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654909</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654908" available="true">
+        <price>5092</price>
+        <oldprice>6009</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/34/31531138372993_+b546969c6f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/sumka-sumka-sumisna-z-bmw-f-900-r-xr-bagtecs-sx70-70-l-chorna-dpli1-51486263825144_+31209819e7.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/71030132586897_+72514bc552.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/13188429274242_+57b85553dd.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/12235845205643_+a5a3777da8.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/28696914277430_+8eb37f88f9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/98323017234202_+97628cdbb0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/54006557077389_+209c259dcc.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/15917951284848_+c0b2312191.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/76342767735308_+cd7dc54512.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/34/28492233793165_+93e491781e.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Сумка сумка сумісна з BMW F 900 R/XR Bagtecs SX70 70 л чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654908</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654907" available="true">
+        <price>5197</price>
+        <oldprice>6132</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/41/27052519075060_+50fb8f133e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/sumka-na-zadniu-chastynu-sumisna-iz-yamaha-tenere-700-bagtecs-sx70-70ltr-chorna-dpli1-36929181975988_+d6bdfd0621.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/19159609243235_+e34728f1ac.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/50168469064211_+e771555ec3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/39682504247341_+99d3b96ce1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/76993620789579_+886de13a84.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/64353485198461_+604974781d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/97915076043318_+d10974ecff.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/62999897859593_+f73389a79f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/33518441763068_+3c603a2b78.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/41/98724605829236_+d1b2da119b.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Сумка на задню частину сумісна із Yamaha Tenere 700 Bagtecs SX70 70Ltr чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654907</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654906" available="true">
+        <price>5197</price>
+        <oldprice>6132</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/35/41490534946893_+004b26e76e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/zadnia-sumka-sumisna-z-bmw-r-1200-gs-adventure-bagtecs-sx70-70-l-chorna-dpli1-28896857454636_+023a988277.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/35199816851550_+45e49aabe9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/26161616559699_+7c6fe41270.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/84104796521792_+e8938715f1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/97514612417072_+32a23b6c6c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/50108117152399_+5400f7228a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/83104232383047_+47b385d717.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/41083209646065_+dacf131999.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/21781527822928_+48d60ac21b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/35/76419566266471_+4c0b753c72.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Задня сумка сумісна з BMW R 1200 GS/Adventure Bagtecs SX70 70 л, чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654906</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654905" available="true">
+        <price>5197</price>
+        <oldprice>6132</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/40/23073744967756_+71e4236ad8.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/sumka-na-zadniu-chastynu-sumisna-z-yamaha-mt-09-tracer-900-bagtecs-sx70-70ltr-chorna-dpli1-87084990150794_+dd1745d483.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/14370000503790_+8167619c11.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/68601544040952_+20ded544b0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/83003721346694_+646d825522.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/23213610337961_+fa4f6077f0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/11714926199807_+ef72882c35.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/61380552442939_+139fd613af.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/80125162195960_+19201ec0e9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/59373925630997_+c4b8bbbcaf.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/40/75734821208496_+6be0d1405d.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Сумка на задню частину сумісна з Yamaha MT-09/Tracer 900 Bagtecs SX70 70Ltr чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654905</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654904" available="true">
+        <price>5197</price>
+        <oldprice>6132</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/38/20496010839580_+495b2e920c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/zadnia-sumka-kawasaki-z-900-rs-cafe-bagtecs-sx70-70ltr-chorna-dpli1-89897940401571_+39adbda7a2.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/78059797770471_+a57fa5def3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/17849538164245_+b7fd27da8f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/16446349124149_+9645fe97fa.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/94522858407505_+1209fbe43b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/55132711395414_+01f9387b3d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/85218863499775_+7cbfda2fa6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/97314872364022_+c8b14b01ce.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/99433797752346_+bd080b41bd.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/38/33496253801777_+f637b0fc40.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Задня сумка Kawasaki Z 900 / RS / Cafe Bagtecs SX70 70Ltr чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654904</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A654903" available="true">
+        <price>5197</price>
+        <oldprice>6132</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/39/95209495454970_+e5d9e31b9e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/sumka-na-zadniu-chastynu-sumisna-z-yamaha-mt-07-tracer-700-bagtecs-sx70-70ltr-chorna-dpli1-48477896797058_+d31a88d939.jpeg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/99918366224451_+902142a8b6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/34063558888568_+1f442669d3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/96605239305440_+209993e20f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/87940172152042_+12c0e182da.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/72654389533676_+d56841c559.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/71496751217972_+584547b084.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/19425081940845_+94020a9299.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/48951609879899_+f13678f68c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/39/66144327134099_+0f9c932a17.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Сумка на задню частину сумісна з Yamaha MT-07/Tracer 700 Bagtecs SX70 70Ltr чорна DPLI1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Задня сумка для мотоцикла для пасажирського сидіння або багажника об&#39;ємом 70 літрів</li>
+	<li>Виготовлена ​​з міцного ПВХ-брезента, повністю водонепроникна</li>
+	<li>Тканина-перенесення з поліестеру 500D постійна і герметизована в очищенні</li>
+	<li>Всі шви запаяні для максимального захисту від вологи</li>
+	<li>Застібка-ролл-топ надійно запобігає попаданню води навіть при тривалих поїздках під сильним дощем</li>
+	<li>Сумка для мотоцикла відкривається по всій ширині, що забезпечує зручне завантаження мотоциклів</li>
+	<li>Сумка кріпиться за допомогою 4 натяжних ременів з петлями, які кріпляться до сумки за допомогою застібок-кліпс</li>
+	<li>Надійне та просте кріплення задньої сумки без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкої прикріплювати додаткові сумки Bagtecs для збільшення об&#39;єму</li>
+	<li>Розміри: Ширина 70 см, Висота 37,5 см, Глибина 32 см</li>
+	<li>Комплект поставки: Задня сумка, 4 лямки з кріпленням-кліпсою</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A654903</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650668" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/20/60714177699443_+d2be0032ad.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/12935406572660_+71292bfd58.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/97156030536208_+78da4a917c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/45336162371270_+0b0d5b7556.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/91324700094922_+c10097cf30.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/41411172130384_+6375bc5756.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/63988590927262_+e3bc4496ae.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/54863407058543_+2dffc290d4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/20867080563489_+a0fda9900c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/20/75706889719929_+bbb80d35ff.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Royal Enfield Himalayan Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650668</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650642" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/23/40313089231840_+81b6adcc1c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/53166046804899_+f83c5ae50f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/44621799854773_+8438b03ec6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/53035991403028_+0904d73fd4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/41961678645521_+69d6ba6210.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/44872846203949_+695fe6a016.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/71255084178097_+285ea0fed4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/19068440377224_+50c547bcec.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/47914738918251_+a89b64554d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/23/25575745092552_+c16247315f.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Yamaha Tenere 700 Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650642</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650641" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/22/77762732013915_+30437fd9fa.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/28543943180651_+a44b067ee4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/65241951631134_+8870f10e4f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/99291313859713_+42a14039a4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/50123588068577_+f027b08f16.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/97942162291008_+44fe035a5c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/86629478064594_+1a96255061.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/65858792357142_+68d421eda0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/47242617503740_+f693a369a9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/22/43218846906936_+50e8ab94f2.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Suzuki V-Strom 650/XT Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650641</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650640" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/21/95882063131537_+dad1a9a8af.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/73696680206783_+1156e6e2cf.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/55222485858034_+9774950167.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/38498258345725_+1e3bc9039b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/28322592648424_+af3a28628b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/52417180732529_+f53f31718b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/40807448482406_+4ed94d539e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/32537227587160_+e56a93169f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/65332991757821_+72e08b6332.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/21/70329350685703_+2112a6e7b4.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Suzuki V-Strom 1050/XT Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650640</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650639" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/19/89141077737706_+f37ba232b1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/58729640927443_+383c29ed3f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/34908269609311_+091032f52a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/67999677994757_+2b2116ee21.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/47880644149029_+165dbfbf6d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/82661725687933_+aa22e2740a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/16939664249318_+68c43449de.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/51398593581446_+056b415bf0.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/29664013668348_+2ce069a554.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/19/16326309585086_+3dc3abf032.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг KTM 1290 Super Adventure / R / S / T Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650639</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650638" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/18/68879023352558_+c87fa97715.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/85138189759870_+a6df6c4c08.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/56502477821417_+7651f4af92.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/73947888558427_+28ef6dbfc8.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/54873879267485_+3dcbaef7f8.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/34112643807347_+d9b421f7f1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/21714983920355_+5e7ecd8c47.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/47762310915218_+47ca278103.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/80079865140540_+1dfb4d726c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/18/85822114473820_+63d6785d20.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Honda Transalp XL 700/650/600 V Bagtecs K3 6Ltr чорний DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650638</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650637" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/16/35682673518119_+71fa13b104.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/86564095416151_+c4ae08fcd9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/30131978680092_+0964915d6b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/22632447720585_+634ca339bb.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/44350029174397_+ecd51f2fff.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/21886724875515_+39f4247144.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/83519720383977_+3969ebf552.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/52459862493693_+540ccdeddd.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/90678043700343_+954a6d792d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/16/30636524495900_+8c8ccc8917.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Honda Africa Twin Adventure Sports / 1100 Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650637</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650636" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/17/31473693249231_+0e3c12dfa1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/51500900401575_+06caf0368a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/23572150785473_+fec98f6e8f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/42393467868889_+f149ace6ce.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/77822547962709_+44e00be391.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/24893295321440_+29a91f2f10.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/64482436224996_+d7919f3269.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/99655849376423_+758f7f2e9c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/69751951231527_+12cb111ac6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/17/62712179771789_+3f1019e043.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг Honda Africa Twin CRF 1000 L Bagtecs K3 6Ltr чорного кольору DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650636</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650635" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/15/91615819290665_+678c0c595d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/54028270615452_+c89e37fb65.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/31333329607406_+75ae0f8c61.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/20071355738921_+56d052eb71.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/83095971220946_+d882ecf99b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/44500859236694_+1674f1f964.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/12142587719823_+3f3cf29a3d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/98274022855630_+8c4def18cc.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/17898173004065_+b10962fe1a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/15/35142219142116_+b645297bc7.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг BMW R 1250 GS/Adventure Bagtecs K3 6 л чорний DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650635</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650634" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/14/62370622485141_+a3b452ce2c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/91000005600533_+a453cdf8b2.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/14158921645132_+aaebf03b06.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/32643094261626_+4975dbaea2.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/54783358692800_+31facc934e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/86586763557891_+d807341ab9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/20468111286448_+e88126ee2e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/46707103717309_+f7d1db2834.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/56877317868678_+fdeaad8f6f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/14/12530099341324_+f49ba319d3.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг BMW R 1200 GS/Adventure Bagtecs K3 6 л чорний DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650634</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650633" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/13/52637336276542_+4b6312a8db.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/48307501822942_+8f6869b6d9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/96744191462359_+2451e73e72.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/93871561117080_+c87db02796.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/73995858564191_+37dcd21052.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/62569358299754_+f041a5e3f9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/62313459607311_+51baac6706.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/15203611292915_+7a583c6fa9.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/81610339083168_+be218ecd9d.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/13/99238508255345_+2be75bc41c.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг BMW F 850GS / Adventure Bagtecs K3 6 л чорний DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650633</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A650631" available="true">
+        <price>5692</price>
+        <oldprice>6717</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/12/16847611346430_+6f2fb21d10.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/74761275796894_+0c951bf439.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/88184692643342_+e5fff986b7.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/42595315226620_+cfe128bb8b.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/78435379013788_+08c4bc1f6a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/67455573566262_+281734fd3e.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/42638745957342_+fb074f4d1a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/74629286169079_+cb642bb85c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/80396458924764_+4002d9dd41.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/12/70973901442341_+c1d0c10b28.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Пара сумок для захисних дуг BMW F 800 GS/Adventure Bagtecs K3 6 л чорний DPLM1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul><li>Увага: При покупці товару зверніть увагу на зазначені розміри. В залежності від моделі співвідношення розмірів мотоцикла і сумки може значно відрізнятися після кріплення до дуги безпеки. засувкою</li><li>Зручний, з легким доступом до дрібних деталей та цінних речей</li><li>Виготовлений з поліуретанової тканини 500D з покриттям з ПВХ</li><li>Просте кріплення завдяки практичній системі пряжок</li><li>Об'єм: 6 літрів у сумці</0><li см, глибина 11 см</li><li>Комплект поставки: 2 сумки для захисту Bagtecs K3 для правої та лівої сторони (пара)</li></ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A650631</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A646448" available="true">
+        <price>7672</price>
+        <oldprice>9053</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/11/53338511154895_+1686876ee1.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/komplekt-sumok-na-zadnie-sydinnia-mototsykla-bagtecs-sx70-xb50-vodonepronykna-dorozhnia-sumka-na-zadnie-sydinnia-120-l-dpl2-36256429310743_+d225a90502.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/44128285776794_+74016299c3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/72810281401654_+7d69936a53.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/22993276508347_+f41de2b75c.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/13449395619388_+f299ce6107.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/94931132379965_+518b135db3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/49798153165086_+25f209d939.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/90049656086772_+03fcdb3cc3.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/58889568192228_+0666ff093a.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/11/60359487959618_+0c59d67aa8.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Комплект сумок на заднє сидіння мотоцикла Bagtecs SX70 + XB50 Водонепроникна дорожня сумка на заднє сидіння 120 л DPL2</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Набір з двох окремих сумок Drybag об&#39;ємом 70 л і 50 л (загальний об&#39;єм 120 л)</li>
+	<li>Кріпиться практично до всіх мотоциклів на пасажирському сидінні або на багажнику</li>
+	<li>Сумки Drybag можна використовувати окремо або міцно і надійно з&#39;єднати</li>
+	<li>Виготовлені з міцного ПВХ-брезента, абсолютно водонепроникні</li>
+	<li>Несуча тканина з поліестеру 500D покрита і герметизована ПВХ, що робить сумку постійно стійкою до УФ-випромінювання і легкою в очищенні від</li>
+	<li>Всі шви</li>
+	<li>Застібка-рол-топ надійно запобігає попаданню води навіть під час тривалих поїздок під сильним дощем</li>
+	<li>Сумки для мотоцикла відкриваються по всій ширині, що забезпечує зручне завантаження зверху</li>
+	<li>Сумки кріпляться за допомогою 4 натяжних ременів з петлі</li>
+	<li>Надійне та просте кріплення сумок для хвоста без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкого транспортування поза мотоциклом</li>
+	<li>Всі сумки серії Bagtecs Waterproof можуть бути з&#39;єднані один з одним за допомогою застібок-x7<!--0--> см, висота 37,5 см, глибина 32 см, об&#39;єм 70 літрів</li>
+	<li>Розміри XB50: ширина 59 см, висота 33 см, глибина 33 см, об&#39;єм 50 літрів</li>
+	<li>Комплект поставки: 1x сумка для хвоста XX50, 1 ременями кріплення, плечовий ремінь</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A646448</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A646447" available="true">
+        <price>7672</price>
+        <oldprice>9053</oldprice>
+        <quantity_in_stock>3</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232928496</categoryId>
+        <picture>https://vulpes.com.ua/content/images/10/72033802724450_+cea01eff35.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/komplekt-sumok-na-zadnie-sydinnia-mototsykla-bagtecs-sx70xb50-vodonepronykna-dorozhnia-sumka-na-zadnie-sydinnia-120-l-dpl1-13085718259865_+ab2d6b9ff8.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/71272788070813_+0157218590.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/86502816567894_+93513dc167.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/69082517488137_+7099268306.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/96885925571060_+ac5e7decf4.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/67567169248881_+7342354475.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/58154632678066_+f8619e1140.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/24407216747171_+0ce7e7fdbc.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/76326204366183_+20f2dab17f.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/10/43908940448340_+7bb4b14378.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Комплект сумок на заднє сидіння мотоцикла Bagtecs SX70+XB50 Водонепроникна дорожня сумка на заднє сидіння 120 л DPL1</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+	<li>Набір з двох окремих сумок Drybag об&#39;ємом 70 л і 50 л (загальний об&#39;єм 120 л)</li>
+	<li>Кріпиться практично до всіх мотоциклів на пасажирському сидінні або на багажнику</li>
+	<li>Сумки Drybag можна використовувати окремо або міцно і надійно з&#39;єднати</li>
+	<li>Виготовлені з міцного ПВХ-брезента, абсолютно водонепроникні</li>
+	<li>Несуча тканина з поліестеру 500D покрита і герметизована ПВХ, що робить сумку постійно стійкою до УФ-випромінювання і легкою в очищенні від</li>
+	<li>Всі шви</li>
+	<li>Застібка-рол-топ надійно запобігає попаданню води навіть під час тривалих поїздок під сильним дощем</li>
+	<li>Сумки для мотоцикла відкриваються по всій ширині, що забезпечує зручне завантаження зверху</li>
+	<li>Сумки кріпляться за допомогою 4 натяжних ременів з петлі</li>
+	<li>Надійне та просте кріплення сумок для хвоста без вільних гумок або ременів</li>
+	<li>Бічні ручки для перенесення для легкого транспортування поза мотоциклом</li>
+	<li>Всі сумки серії Bagtecs Waterproof можуть бути з&#39;єднані один з одним за допомогою застібок-x7<!--0--> см, висота 37,5 см, глибина 32 см, об&#39;єм 70 літрів</li>
+	<li>Розміри XB50: ширина 59 см, висота 33 см, глибина 33 см, об&#39;єм 50 літрів</li>
+	<li>Комплект поставки: 1x сумка для хвоста XX50, 1 ременями кріплення, плечовий ремінь</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A646447</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+      <offer id="A646428" available="true">
+        <price>8910</price>
+        <oldprice>10514</oldprice>
+        <quantity_in_stock>2</quantity_in_stock>
+        <currencyId>UAH</currencyId>
+        <categoryId>232923706</categoryId>
+        <picture>https://vulpes.com.ua/content/images/50/99996586888670_+c9787e7de6.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/50/97261484975422_+fc0338a207.jpg</picture>
+        <picture>https://vulpes.com.ua/content/images/50/29481200925261_+aa0d694fd0.jpg</picture>
+        <delivery>true</delivery>
+        <name/>
+        <name_ua>Задній багажник сумісний з Yamaha Tenere 700 World Raid 22-24 Top Case rack Bagtecs SLP</name_ua>
+        <description/>
+        <description_ua><![CDATA[<ul>
+<li>Багажна стійка Bagtecs для встановлення верхнього кофра або для кріплення м'якого багажу</li>
+<li>Виконує функцію тримача верхнього кофра для надійного прикручування пластикових або алюмінієвих верхніх кофрів або їх нижніх пластин</li>
+<li>Велика опорна поверхня та безліч варіантів кріплення дозволяють надійно закріпити навіть великі сумки</li>
+<li>Виготовлений із міцної сталі товщиною 3 мм</li>
+<li>Постачає повністю готове до встановлення, включаючи монтажний комплект</li>
+<li>Комплект постачання: багажник, багажник, монтажний комплект</li>
+</ul>]]></description_ua>
+        <vendor>Bagtecs</vendor>
+        <vendorCode>A646428</vendorCode>
+        <country_of_origin>Китай</country_of_origin>
+      </offer>
+    </offers>
+  </shop>
+</yml_catalog>
