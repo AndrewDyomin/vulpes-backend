@@ -205,6 +205,16 @@ const itemSchema = new mongoose.Schema({
     type: Array,
     default: [null],
   },
+  params: {
+    countryOfOrigin: {
+      type: String,
+      default: '',
+    },
+    warranty: {
+      type: String,
+      default: '',
+    }
+  },
 });
 
 module.exports = mongoose.model("Item", itemSchema);
