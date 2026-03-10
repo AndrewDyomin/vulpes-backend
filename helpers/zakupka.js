@@ -181,9 +181,10 @@ const zCategories = [
 ];
 
 async function generateFeed() {
+  console.log("Zakupka feed update started.");
 
   let count = 0;
-  const products = await Product.find({ quantityInStock: { $gte: 1 } }).lean();
+  const products = await Product.find({ quantityInStock: { $gte: 1 } }).limit(30).lean()
   const now = new Date();
   const year = now.getFullYear()
   const month = format(now.getMonth() + 1)
@@ -218,9 +219,9 @@ async function generateFeed() {
   const offersNode = shop.ele("offers");
 
   for (const product of products) {
+    if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
     count ++;
-    if (count > 30) break;
-    if (!categoriesMap[product?.category]?.zid) continue;
+    // if (count > 30) break;
     const offer = offersNode.ele("offer", { id: product.article, available: true });
       offer.ele("price").txt(product.price.UAH).up()
       offer.ele("oldprice").txt(Math.round(product.price.UAH * 1.18)).up()
@@ -240,6 +241,15 @@ async function generateFeed() {
       offer.ele("vendor").txt(product.brand).up()
       offer.ele("vendorCode").txt(product.article).up()
       offer.ele("country_of_origin").txt(product.params.countryOfOrigin).up()
+      offer.ele("param", { name: 'Состояние' }).txt("новый").up()
+      // <param name="Назначение">для мотоцикла</param>
+      // <param name="Состояние">новый</param>
+      // <param name="Цвет">дымчатый</param>
+      // <param name="Вид">аксесуари</param>
+      if (product?.params?.color && product?.params?.color !== '') {
+        offer.ele("param", { name: 'Цвет' }).txt(product?.params?.color).up()
+      }
+      
       offer.up();
   }
 
