@@ -25,7 +25,6 @@ const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
 const { checkProductsUpdates } = require("../controllers/puig");
 const { generateFeed } = require("../helpers/zakupka");
-generateFeed();
 
 const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -261,6 +260,8 @@ async function importProductsFromYML() {
       chatId,
     );
   }
+  
+  generateFeed();
 }
 
 async function sendToSheets() {
