@@ -215,6 +215,20 @@ const itemSchema = new mongoose.Schema({
       default: '',
     }
   },
+  marketplaces: {
+    horoshop: {
+      type: Boolean,
+      default: true,
+    },
+    zakupka: {
+      type: Boolean,
+      default: false,
+    },
+    prom: {
+      type: Boolean,
+      default: true,
+    },
+  },
 });
 
 module.exports = mongoose.model("Item", itemSchema);

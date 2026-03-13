@@ -12,6 +12,7 @@ router.post("/byarticle", ProductsController.getByArticle);
 router.post("/search", ProductsController.search);
 router.post("/availability", isAuth, ProductsController.sendAvailabilityTable);
 router.post("/update-prom-base", isAuth, ProductsController.updatePromBase);
+router.post("/update", isAuth, ProductsController.updateProduct);
 // router.post("/delete", ProductsController.deleteProduct);
 
 module.exports = router;

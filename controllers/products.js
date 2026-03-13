@@ -154,7 +154,7 @@ async function sendAvailabilityTable(req, res, next) {
     const totalBatches = Math.ceil(total / BATCH_SIZE);
 
     for (let i = 0; i < totalBatches; i++) {
-      const products = await Product.find({})
+      const products = await Product.find({}, {article: 1, availabilityInMotea: 1, quantityInStock: 1})
         .skip(i * BATCH_SIZE)
         .limit(BATCH_SIZE)
         .lean()
@@ -416,6 +416,20 @@ async function compareYear (req, res, next) {
 }
 }
 
+async function updateProduct (req, res) {
+  const { _id, ...updateFields } = req.body.data;
+  try {
+    console.log(updateFields)
+
+    const update = await Product.findByIdAndUpdate( _id, { $set: updateFields }, { new: true } ).exec();
+    console.log(update)
+    res.status(200).json({ message: 'product updated' });
+  } catch(err) {
+    console.log(err)
+    res.status(500).json({ message: err });
+  }
+}
+
 module.exports = {
   getAll,
   getAllBarcodes,
@@ -425,4 +439,5 @@ module.exports = {
   sendAvailabilityTable,
   updatePromBase,
   compareYear,
+  updateProduct,
 };
