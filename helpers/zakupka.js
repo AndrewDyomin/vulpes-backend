@@ -242,8 +242,10 @@ async function generateFeed() {
       offer.ele("vendorCode").txt(product.article).up()
       offer.ele("country_of_origin").txt(product.params.countryOfOrigin).up()
       offer.ele("param", { name: 'Состояние' }).txt("новый").up()
-      // <param name="Назначение">для мотоцикла || для квадроцикла</param>
       // <param name="Вид">аксесуари</param>
+      if (product?.params?.destination) {
+        offer.ele("param", { name: 'Назначение' }).txt(product.params.destination).up()
+      }
       if (product?.color && product.color !== '') {
         offer.ele("param", { name: 'Цвет' }).txt(product?.color).up()
       }

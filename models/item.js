@@ -213,7 +213,11 @@ const itemSchema = new mongoose.Schema({
     warranty: {
       type: String,
       default: '',
-    }
+    },
+    destination: {
+      type: String,
+      default: 'для мотоцикла',
+    },
   },
   marketplaces: {
     horoshop: {

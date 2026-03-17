@@ -1,7 +1,9 @@
-// const axios = require('axios');
+const axios = require('axios');
 // const xml2js = require('xml2js');
 const ExcelJS = require("exceljs");
 const Product = require("../models/item");
+const MoteaProduct = require("../models/moteaItem");
+const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
 const mongoose = require("mongoose");
 const fs = require("fs");
@@ -10,20 +12,43 @@ const { google } = require("googleapis");
 const sendTelegramFile = require("../helpers/sendTelegramFile");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const updateSheets = require("../helpers/updateSheets");
+const { translateService } = require('./puig');
 const chatId = process.env.ADMIN_CHAT_ID;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const MAIN_DB_URI = process.env.DB_URI;
+
+async function getToken() {
+  const user = await User.findOne({ name: "horoshop" }).exec();
+  const { email, chatId, token, _id } = user;
+  const now = new Date();
+  let result;
+  const diff = now - token[0];
+
+  if (diff < 500000) {
+    result = token[1];
+  } else {
+    const { data } = await axios.post("https://vulpes.com.ua/api/auth/", {
+      login: email,
+      password: chatId,
+    });
+    await User.findByIdAndUpdate(_id, { token: [now, data.response.token] });
+    result = data.response.token;
+  }
+
+  return result;
+}
 
 async function getAll(req, res, next) {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
+    const inStockFilter = req?.query?.stockfilter === 'true' ? { quantityInStock: { $gte: 1 } } : {};
 
     const skip = (page - 1) * limit;
 
     const [products, total] = await Promise.all([
-      Product.find().skip(skip).limit(limit).exec(),
-      Product.countDocuments(),
+      Product.find(inStockFilter).skip(skip).limit(limit).exec(),
+      Product.countDocuments(inStockFilter),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -83,23 +108,26 @@ async function getByArticle(req, res, next) {
 
 async function search(req, res, next) {
   try {
-    const value = req.body.value?.trim() || "";
+    const escapeRegex = (text) =>
+      text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const value = escapeRegex(req.body.value?.trim() || "");
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
+    const inStockFilter = req?.body?.filter?.inStock ? { quantityInStock: { $gte: 1 } } : {};
     const skip = (page - 1) * limit;
 
-    let query = { article: { $regex: value, $options: "i" } };
+    let query = { article: { $regex: value, $options: "i" }, ...inStockFilter };
 
     let [products, total] = await Promise.all([
-      Product.find(query).skip(skip).limit(limit).exec(),
+      Product.find(query).skip(skip).limit(limit).lean(),
       Product.countDocuments(query),
     ]);
 
     if (products?.length < 1) {
-      query = { "name.UA": { $regex: value, $options: "i" } };
+      query = { "name.UA": { $regex: value, $options: "i" }, ...inStockFilter };
 
       [products, total] = await Promise.all([
-        Product.find(query).skip(skip).limit(limit).exec(),
+        Product.find(query).skip(skip).limit(limit).lean(),
         Product.countDocuments(query),
       ]);
     }
@@ -419,11 +447,102 @@ async function compareYear (req, res, next) {
 async function updateProduct (req, res) {
   const { _id, ...updateFields } = req.body.data;
   try {
-    console.log(updateFields)
-
     const update = await Product.findByIdAndUpdate( _id, { $set: updateFields }, { new: true } ).exec();
-    console.log(update)
-    res.status(200).json({ message: 'product updated' });
+    res.status(200).send({ message: 'product updated', update });
+  } catch(err) {
+    console.log(err)
+    res.status(500).json({ message: err });
+  }
+}
+
+async function getProductFromSheets (article, spreadsheetId) {
+  const client = new google.auth.JWT(
+    process.env.GOOGLE_CLIENT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+  );
+  await client.authorize();
+
+  const sheets = google.sheets({ version: "v4", auth: client });
+  const range = `old base!A1:BE`;
+
+  const { data } = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range,
+  });
+
+  const targetRow = data.values.find(row => row[0] === article)
+  
+  if (targetRow) {
+    return { name: { RU: targetRow[1], UA: targetRow[2] }, description: { RU: targetRow[5], UA: targetRow[6] } };
+  } else {
+    return undefined;
+  }
+}
+
+async function getProductTranslate (req, res) {
+  const body = req.body;
+  const token = await getToken();
+  const name = { RU: body.name?.RU || '', UA: body.name?.UA || '' };
+  const description = { RU: body.description?.RU || '', UA: body.description?.UA || '' };
+
+  try {
+    const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
+      {
+        expr: {
+          article: [body.article],
+        },
+        includedParams: ["title", "description"],
+        token: token,
+      },
+    );
+
+    const products = data.response.products;
+
+    if (products.length > 0 && products[0].article === body.article) {
+      if (name.RU === '' && products[0].title.ru !== '') {
+        name.RU = products[0].title.ru;
+      }
+      if (name.UA === '' && products[0].title.ua !== '') {
+        name.UA = products[0].title.ua;
+      }
+      if (description.RU === '' && products[0].description.ru !== '') {
+        description.RU = products[0].description.ru;
+      }
+      if (description.UA === '' && products[0].description.ua !== '') {
+        description.UA = products[0].description.ua;
+      }
+    }
+
+    if (name.RU === '' || name.UA === '' || description.RU === '' || description.UA) {
+      const target = await getProductFromSheets(body.article, '1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU');
+      if (target) {
+        if (name.RU === '' && target.name.RU !== '') {
+          name.RU = target.name.RU;
+        }
+        if (name.UA === '' && target.name.UA !== '') {
+          name.UA = target.name.UA;
+        }
+        if (description.RU === '' && target.description.RU !== '') {
+          description.RU = target.description.RU;
+        }
+        if (description.UA === '' && target.description.UA !== '') {
+          description.UA = target.description.UA;
+        }
+      }
+    }
+
+    if (name.RU === '' || name.UA === '') {
+      const moteaTarget = await MoteaProduct.findOne({ article: { $regex: body.article, $options: "i" } }).lean();
+      if (moteaTarget) {
+        const arr = await translateService(moteaTarget.name);
+        name.RU = arr[0];
+        name.UA = arr[1];
+      }
+    }
+
+    res.status(200).send({ message: 'product translated', product: { name, description } });
   } catch(err) {
     console.log(err)
     res.status(500).json({ message: err });
@@ -440,4 +559,5 @@ module.exports = {
   updatePromBase,
   compareYear,
   updateProduct,
+  getProductTranslate,
 };

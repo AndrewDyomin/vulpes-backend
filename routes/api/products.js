@@ -13,6 +13,7 @@ router.post("/search", ProductsController.search);
 router.post("/availability", isAuth, ProductsController.sendAvailabilityTable);
 router.post("/update-prom-base", isAuth, ProductsController.updatePromBase);
 router.post("/update", isAuth, ProductsController.updateProduct);
+router.post("/get-translate", isAuth, ProductsController.getProductTranslate)
 // router.post("/delete", ProductsController.deleteProduct);
 
 module.exports = router;

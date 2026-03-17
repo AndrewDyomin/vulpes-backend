@@ -121,18 +121,16 @@ async function searchProduct(req, res) {
   }
 }
 
-async function translateString(req, res, next) {
-  const { string } = req.body;
-  const client = new google.auth.JWT(
-    process.env.GOOGLE_CLIENT_EMAIL,
-    null,
-    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    ["https://www.googleapis.com/auth/spreadsheets"]
-  );
-  let retry = true;
-  let result;
-  
+async function translateService(string) {
   try {
+    const client = new google.auth.JWT(
+      process.env.GOOGLE_CLIENT_EMAIL,
+      null,
+      process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      ["https://www.googleapis.com/auth/spreadsheets"]
+    );
+    let retry = true;
+    let result;
     await client.authorize();
     const sheets = google.sheets({ version: "v4", auth: client });
     const spreadsheetId = "16kaSBC3xnJQON80jYzUE5ok7N37R_vXGUmpJHX4A6Uw";
@@ -148,6 +146,17 @@ async function translateString(req, res, next) {
         retry = false;
       }
     }
+    return result;
+  } catch (err) {
+    console.log(err)
+    return ['', ''];
+  }
+}
+
+async function translateString(req, res, next) {
+  const { string } = req.body;
+  try {  
+    const result = await translateService(string);
     
     res.status(200).send(JSON.stringify(result));
   } catch (err) {
@@ -312,6 +321,7 @@ module.exports = {
   getProductById,
   searchProduct,
   translateString,
+  translateService,
   updateProduct,
   checkProductsUpdates,
   changeHoroshopStatus,
