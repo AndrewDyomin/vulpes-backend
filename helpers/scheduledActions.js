@@ -169,7 +169,7 @@ async function importProductsFromYML() {
           brand: currentProduct.vendor,
           article: currentProduct.article,
           category: currentProduct.categoryId,
-          description: { UA: currentProduct.description || '' },
+          description: { UA: currentProduct.description || '', DE: target?.description?.DE, RU: target?.description?.RU, },
           quantityInStock: Number(currentProduct.quantity_in_stock),
           images: Array.isArray(currentProduct.picture)
             ? currentProduct.picture
