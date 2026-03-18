@@ -184,7 +184,7 @@ async function generateFeed() {
   console.log("Zakupka feed update started.");
 
   let count = 0;
-  const products = await Product.find({ quantityInStock: { $gte: 1 } }).limit(300).lean()
+  const products = await Product.find({ quantityInStock: { $gte: 1 } }).limit(3000).lean()
   const now = new Date();
   const year = now.getFullYear()
   const month = format(now.getMonth() + 1)
@@ -221,7 +221,7 @@ async function generateFeed() {
   for (const product of products) {
     if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
     count ++;
-    if (count > 100) break;
+    if (count > 1000) break;
     const offer = offersNode.ele("offer", { id: product.article, available: true });
       offer.ele("price").txt(product.price.UAH).up()
       offer.ele("oldprice").txt(Math.round(product.price.UAH * 1.18)).up()
