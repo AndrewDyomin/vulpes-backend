@@ -119,7 +119,7 @@ async function search(req, res, next) {
     let query = { article: { $regex: value, $options: "i" }, ...inStockFilter };
 
     let [products, total] = await Promise.all([
-      Product.find(query).skip(skip).limit(limit).lean(),
+      Product.find(query).skip(skip).limit(limit),
       Product.countDocuments(query),
     ]);
 
@@ -127,7 +127,7 @@ async function search(req, res, next) {
       query = { "name.UA": { $regex: value, $options: "i" }, ...inStockFilter };
 
       [products, total] = await Promise.all([
-        Product.find(query).skip(skip).limit(limit).lean(),
+        Product.find(query).skip(skip).limit(limit),
         Product.countDocuments(query),
       ]);
     }
