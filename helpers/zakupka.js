@@ -184,7 +184,7 @@ async function generateFeed() {
   console.log("Zakupka feed update started.");
 
   let count = 0;
-  const products = await Product.find({ quantityInStock: { $gte: 1 } }).limit(5000).lean()
+  const products = Product.find({ quantityInStock: { $gte: 1 } }).cursor();
   const now = new Date();
   const year = now.getFullYear()
   const month = format(now.getMonth() + 1)
@@ -218,7 +218,7 @@ async function generateFeed() {
 
   const offersNode = shop.ele("offers");
 
-  for (const product of products) {
+  for await (const product of products) {
     if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
     if (!product?.marketplaces?.zakupka) continue;
     count ++;
