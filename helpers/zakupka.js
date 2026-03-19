@@ -220,7 +220,7 @@ async function generateFeed() {
 
   for (const product of products) {
     if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
-    if (!product.marketplaces.zakupka) continue;
+    if (!product?.marketplaces?.zakupka) continue;
     count ++;
     if (count > 1000) break;
     const offer = offersNode.ele("offer", { id: product.article, available: true });
