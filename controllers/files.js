@@ -1,7 +1,9 @@
 const fs = require("fs/promises");
+const path = require("path");
 const parseMyPdf = require("../helpers/parseInvoice");
 const XLSX = require("xlsx");
 const Product = require("../models/item");
+const { generateFeed } = require("../helpers/zakupka");
 
 async function uploadInvoice(req, res, next) {
   const filePath = req.file.path;
@@ -82,4 +84,21 @@ async function downloadBrokerTable(req, res, next) {
   }
 }
 
-module.exports = { uploadInvoice, downloadBrokerTable };
+async function getXmlToZakupka(req, res) {
+  try {
+    const filePath = path.join(__dirname, "../", "public", "xml", "zakupka.xml");
+
+    try {
+      await fs.access(filePath);
+    } catch {
+      await generateFeed();
+    }
+
+    res.status(200).sendFile(filePath);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: err.message });
+  }
+}
+
+module.exports = { uploadInvoice, downloadBrokerTable, getXmlToZakupka };
