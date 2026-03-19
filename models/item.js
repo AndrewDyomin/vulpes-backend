@@ -4,6 +4,8 @@ const itemSchema = new mongoose.Schema({
   article: {
     type: String,
     required: [true, "Article is required"],
+    unique: true,
+    index: true,
   },
   quantityInStock: {
     type: Number,

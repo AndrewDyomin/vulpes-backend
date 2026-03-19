@@ -184,7 +184,7 @@ async function generateFeed() {
   console.log("Zakupka feed update started.");
 
   let count = 0;
-  const products = Product.find({ quantityInStock: { $gte: 1 } }).cursor();
+  const products = Product.find({ quantityInStock: { $gte: 1 } }).sort({ quantityInStock: -1 }).cursor();
   const now = new Date();
   const year = now.getFullYear()
   const month = format(now.getMonth() + 1)

@@ -2,7 +2,6 @@ const cron = require("node-cron");
 const axios = require("axios");
 const sax = require("sax");
 const csv = require("csv-parser");
-// const mongoose = require("mongoose");
 const { fork } = require("child_process");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
@@ -26,19 +25,11 @@ const { getAll } = require("../controllers/orders");
 const { checkProductsUpdates } = require("../controllers/puig");
 const { generateFeed } = require("../helpers/zakupka");
 
-const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
-// const MAIN_DB_URI = process.env.DB_URI;
-// const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 let isChild = false;
 
 const fetchAvailability = async (array) => {
-  // await mongoose.disconnect();
-  // console.log("Disconnected from main DB");
-  // await mongoose.connect(DB_MOTEA_FEED_URI);
-  // console.log("Connected to Motea feed info DB");
-
   const articles = array.map((p) => p.article);
   const variantArticles = array.map((p) => `${p.article}-0`);
 
@@ -73,196 +64,8 @@ const fetchAvailability = async (array) => {
 
   availabilityMap.clear();
   linkMap.clear();
-  // await mongoose.disconnect();
-  // console.log("Disconnected from Motea feed info DB");
-  // await mongoose.connect(MAIN_DB_URI);
-  // console.log("Connected to main DB");
-
   return arrayCopy;
 };
-
-async function importProductsFromYML() {
-  if (!PRODUCTS_URI) throw new Error("PRODUCTS_URI не указана в .env");
-
-  try {
-    console.log("Импорт начат...");
-
-    const existingArticlesMap = new Map();
-
-    let cursor = Product.find({}, "article _id name").lean().cursor();
-    for await (const doc of cursor) {
-      existingArticlesMap.set(doc.article, doc);
-    }
-
-    let newProducts = [];
-    let productsToUpdate = [];
-
-    let currentTag = null;
-    let currentProduct = null;
-    let textBuffer = "";
-    let currentParamName = null;
-    let currentParamValue = "";
-
-    let response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
-    const parser = sax.createStream(true, { trim: true });
-
-    parser.on("opentag", (node) => {
-      if (node.name === "offer") {
-        currentProduct = { picture: [], params: {} };
-      } else if (node.name === "param") {
-        currentParamName = node.attributes.name === 'Гарантія' ? 'warranty' : node.attributes.name === 'Країна-виробник товару' ? 'countryOfOrigin' : '???';
-        currentParamValue = "";
-      }
-      currentTag = node.name;
-    });
-
-    parser.on("text", (text) => {
-      if (currentProduct && currentTag) {
-        textBuffer += text;
-      }
-      if (currentParamName) {
-        currentParamValue += text;
-      }
-    });
-
-    parser.on("cdata", (text) => {
-      if (currentProduct && currentTag) {
-        textBuffer += text;
-      }
-    });
-
-    parser.on("closetag", async (tagName) => {
-      if (!currentProduct) return;
-
-      if (tagName === "param") {
-        currentProduct.params[currentParamName] = currentParamValue;
-        currentParamName = null;
-        currentParamValue = '';
-      }
-
-      if (tagName === "offer") {
-        const article = currentProduct.article;
-        if (!article) return;
-        const target = existingArticlesMap.get(article);
-        const oldPrice = Number(currentProduct?.oldprice) || null;
-        const price = Number(currentProduct?.price) || null;
-        let targetPrice = null;
-
-        if (oldPrice && oldPrice > price) {
-          targetPrice = oldPrice;
-        } else {
-          targetPrice = price;
-        }
-
-        const data = {
-          price:
-            currentProduct.currencyId === "UAH"
-              ? {
-                  UAH: targetPrice,
-                }
-              : {},
-          name: {
-            UA: currentProduct.name,
-            DE: target?.name?.DE,
-            RU: target?.name?.RU,
-          },
-          brand: currentProduct.vendor,
-          article: currentProduct.article,
-          category: currentProduct.categoryId,
-          description: { UA: currentProduct.description || '', DE: target?.description?.DE, RU: target?.description?.RU, },
-          quantityInStock: Number(currentProduct.quantity_in_stock),
-          images: Array.isArray(currentProduct.picture)
-            ? currentProduct.picture
-            : currentProduct.picture
-              ? [currentProduct.picture]
-              : [],
-          params: currentProduct.params,
-        };
-
-        if (currentProduct.barcode) {
-          data.barcode = currentProduct.barcode;
-        }
-
-        if (currentProduct?.vendorprice && currentProduct?.vendorprice !== '0') {
-          data.vendorprice = Number(currentProduct.vendorprice);
-        }
-
-        if (target) {
-          productsToUpdate.push({
-            updateOne: {
-              filter: { _id: target._id },
-              update: data,
-            },
-          });
-        } else {
-          newProducts.push(data);
-        }
-
-        currentProduct = { picture: [], params: {} };
-
-        if (newProducts.length >= CHUNK_SIZE) {
-          await Product.insertMany(newProducts.splice(0, CHUNK_SIZE), {
-            ordered: false,
-          });
-        }
-
-        if (productsToUpdate.length >= CHUNK_SIZE) {
-          await Product.bulkWrite(productsToUpdate.splice(0, CHUNK_SIZE), {
-            ordered: false,
-          });
-        }
-      } else if (currentProduct && currentTag && textBuffer) {
-        if (currentTag !== 'picture') {
-          currentProduct[currentTag] = textBuffer;
-          textBuffer = "";
-        } else {
-          currentProduct.picture.push(textBuffer);
-          textBuffer = "";
-        }
-      }
-    });
-
-    parser.on("end", async () => {
-      if (newProducts.length > 0) {
-        await Product.insertMany(newProducts, { ordered: false });
-      }
-
-      if (productsToUpdate.length > 0) {
-        await Product.bulkWrite(productsToUpdate, { ordered: false });
-      }
-
-      existingArticlesMap.clear();
-      parser.removeAllListeners();
-      console.log(`[${new Date().toISOString()}] Импорт завершён`);
-      sendTelegramMessage("База данных товаров успешно обновлена.", chatId);
-    });
-
-    parser.on("error", (err) => {
-      existingArticlesMap.clear();
-      parser.removeAllListeners();
-      response.data.destroy();
-      console.error("Ошибка парсинга:", err.message);
-      sendTelegramMessage(
-        `Во время обновления товаров возникла ошибка парсинга: ${err.message}`,
-        chatId,
-      );
-    });
-
-    await response.data.pipe(parser);
-    response = null;
-    cursor = null;
-    newProducts = [];
-    productsToUpdate = [];
-  } catch (err) {
-    console.error(`Ошибка импорта: ${err.message}`);
-    sendTelegramMessage(
-      `Ошибка импорта обновлённых товаров: ${err.message}`,
-      chatId,
-    );
-  }
-  
-  generateFeed();
-}
 
 async function sendToSheets() {
   const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
@@ -895,13 +698,19 @@ async function sendPriceDifference() {
   if (lowerPrice.length > 0) {
     const limit = 50;
 
-    const text = `Вот список артикулов: ${
-      lowerPrice.slice(0, limit).join(', ')
-    }${
-      lowerPrice.length > limit ? ' ...и ещё ' + (lowerPrice.length - limit) + ' шт.' : ''
+    const text = `Вот список артикулов: ${lowerPrice
+      .slice(0, limit)
+      .join(", ")}${
+      lowerPrice.length > limit
+        ? " ...и ещё " + (lowerPrice.length - limit) + " шт."
+        : ""
     }`;
 
-    await sendTelegramFile(filePath, `Для ${lowerPrice.length} артикулов цена была автоматически поднята (т.к. прибыль < 100%).`, chatId);
+    await sendTelegramFile(
+      filePath,
+      `Для ${lowerPrice.length} артикулов цена была автоматически поднята (т.к. прибыль < 100%).`,
+      chatId,
+    );
     await sendTelegramMessage(text, chatId);
   } else {
     await sendTelegramFile(filePath, "", chatId);
@@ -911,17 +720,26 @@ async function sendPriceDifference() {
 }
 
 cron.schedule(    // import products
-  "30 */6 * * *",
+  "*/5 * * * *",
   () => {
-    try {
-      importProductsFromYML();
-    } catch (error) {
-      console.error("Ошибка при выполнении cron-задачи:", error);
+    const importProductsFromYML = path.join(__dirname, "insertSDProducts.js");
+    console.log("Время проверить товары в СД");
+
+    const child = fork(importProductsFromYML, [], {
+      execArgv: ["--max-old-space-size=50"],
+    });
+
+    child.on("exit", (code) => {
+      console.log(`Проверка товаров в СД завершена с кодом ${code}`);
+    });
+
+    child.on("error", (err) => {
+      console.error("Ошибка проверки товаров в СД:", err);
       sendTelegramMessage(
-        `Ошибка при выполнении cron-задачи: ${error}`,
+        `Ошибка при выполнении проверки товаров в СД: ${err}`,
         chatId,
       );
-    }
+    });
   },
   {
     scheduled: true,
@@ -929,7 +747,8 @@ cron.schedule(    // import products
   },
 );
 
-cron.schedule(    //  update prom base at 15:30
+cron.schedule(
+  //  update prom base at 15:30
   "20 */3 * * *",
   () => {
     updatePromBase();
@@ -959,7 +778,8 @@ cron.schedule(
   },
 );
 
-cron.schedule(    //  update availability
+cron.schedule(
+  //  update availability
   "25 */11 * * *",
   () => {
     try {
@@ -978,7 +798,8 @@ cron.schedule(    //  update availability
   },
 );
 
-cron.schedule(    // check price
+cron.schedule(
+  // check price
   "1 */3 * * *",
   () => {
     if (!isChild) {
@@ -1087,7 +908,8 @@ cron.schedule(
   },
 );
 
-cron.schedule(    //  check not availability orders
+cron.schedule(
+  //  check not availability orders
   "0 10 * * 1-5",
   async () => {
     console.log(
@@ -1130,7 +952,8 @@ cron.schedule(
   },
 );
 
-cron.schedule(    //  update google MC feed table
+cron.schedule(
+  //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
