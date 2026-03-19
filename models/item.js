@@ -226,7 +226,7 @@ const itemSchema = new mongoose.Schema({
     },
     zakupka: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     prom: {
       type: Boolean,
