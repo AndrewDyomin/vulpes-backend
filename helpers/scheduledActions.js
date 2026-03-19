@@ -720,7 +720,7 @@ async function sendPriceDifference() {
 }
 
 cron.schedule(    // import products
-  "*/5 * * * *",
+  "30 */6 * * *",
   () => {
     const importProductsFromYML = path.join(__dirname, "insertSDProducts.js");
     console.log("Время проверить товары в СД");
