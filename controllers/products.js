@@ -47,7 +47,7 @@ async function getAll(req, res, next) {
     const skip = (page - 1) * limit;
 
     const [products, total] = await Promise.all([
-      Product.find(inStockFilter).skip(skip).limit(limit).exec(),
+      Product.find(inStockFilter).sort({ quantityInStock: -1 }).skip(skip).limit(limit).exec(),
       Product.countDocuments(inStockFilter),
     ]);
 
@@ -119,7 +119,7 @@ async function search(req, res, next) {
     let query = { article: { $regex: value, $options: "i" }, ...inStockFilter };
 
     let [products, total] = await Promise.all([
-      Product.find(query).skip(skip).limit(limit),
+      Product.find(query).sort({ quantityInStock: -1 }).skip(skip).limit(limit),
       Product.countDocuments(query),
     ]);
 
@@ -127,7 +127,7 @@ async function search(req, res, next) {
       query = { "name.UA": { $regex: value, $options: "i" }, ...inStockFilter };
 
       [products, total] = await Promise.all([
-        Product.find(query).skip(skip).limit(limit),
+        Product.find(query).sort({ quantityInStock: -1 }).skip(skip).limit(limit),
         Product.countDocuments(query),
       ]);
     }
