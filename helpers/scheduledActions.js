@@ -729,8 +729,9 @@ cron.schedule(    // import products
       execArgv: ["--max-old-space-size=50"],
     });
 
-    child.on("exit", (code) => {
+    child.on("exit", async(code) => {
       console.log(`Проверка товаров в СД завершена с кодом ${code}`);
+      await generateFeed();
     });
 
     child.on("error", (err) => {
