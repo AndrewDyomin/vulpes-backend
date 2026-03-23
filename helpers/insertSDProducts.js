@@ -22,7 +22,7 @@ async function importProductsFromYML() {
     let newProducts = [];
     let productsToUpdate = [];
     let activeTasks = 0;
-    const MAX_ACTIVE = 5;
+    const MAX_ACTIVE = 3;
     let flushing = false;
 
     async function flush() {

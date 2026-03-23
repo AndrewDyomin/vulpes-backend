@@ -43,11 +43,12 @@ async function getAll(req, res, next) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const inStockFilter = req?.query?.stockfilter === 'true' ? { quantityInStock: { $gte: 1 } } : {};
+    const sort = req?.query?.sort === 'availability' ? { quantityInStock: -1 } : {};
 
     const skip = (page - 1) * limit;
 
     const [products, total] = await Promise.all([
-      Product.find(inStockFilter).sort({ quantityInStock: -1 }).skip(skip).limit(limit).exec(),
+      Product.find(inStockFilter).sort(sort).skip(skip).limit(limit).exec(),
       Product.countDocuments(inStockFilter),
     ]);
 
@@ -115,11 +116,12 @@ async function search(req, res, next) {
     const limit = parseInt(req.query.limit) || 20;
     const inStockFilter = req?.body?.filter?.inStock ? { quantityInStock: { $gte: 1 } } : {};
     const skip = (page - 1) * limit;
+    const sort = req?.body?.sort === 'availability' ? { quantityInStock: -1 } : {};
 
     let query = { article: { $regex: value, $options: "i" }, ...inStockFilter };
 
     let [products, total] = await Promise.all([
-      Product.find(query).sort({ quantityInStock: -1 }).skip(skip).limit(limit),
+      Product.find(query).sort(sort).skip(skip).limit(limit),
       Product.countDocuments(query),
     ]);
 
@@ -127,7 +129,7 @@ async function search(req, res, next) {
       query = { "name.UA": { $regex: value, $options: "i" }, ...inStockFilter };
 
       [products, total] = await Promise.all([
-        Product.find(query).sort({ quantityInStock: -1 }).skip(skip).limit(limit),
+        Product.find(query).sort(sort).skip(skip).limit(limit),
         Product.countDocuments(query),
       ]);
     }
@@ -455,31 +457,31 @@ async function updateProduct (req, res) {
   }
 }
 
-async function getProductFromSheets (article, spreadsheetId) {
-  const client = new google.auth.JWT(
-    process.env.GOOGLE_CLIENT_EMAIL,
-    null,
-    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    ["https://www.googleapis.com/auth/spreadsheets"]
-  );
-  await client.authorize();
+// async function getProductFromSheets (article, spreadsheetId) {
+//   const client = new google.auth.JWT(
+//     process.env.GOOGLE_CLIENT_EMAIL,
+//     null,
+//     process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+//     ["https://www.googleapis.com/auth/spreadsheets"]
+//   );
+//   await client.authorize();
 
-  const sheets = google.sheets({ version: "v4", auth: client });
-  const range = `old base!A1:BE`;
+//   const sheets = google.sheets({ version: "v4", auth: client });
+//   const range = `old base!A1:BE`;
 
-  const { data } = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range,
-  });
+//   const { data } = await sheets.spreadsheets.values.get({
+//     spreadsheetId,
+//     range,
+//   });
 
-  const targetRow = data.values.find(row => row[0] === article)
+//   const targetRow = data.values.find(row => row[0] === article)
   
-  if (targetRow) {
-    return { name: { RU: targetRow[1], UA: targetRow[2] }, description: { RU: targetRow[5], UA: targetRow[6] } };
-  } else {
-    return undefined;
-  }
-}
+//   if (targetRow) {
+//     return { name: { RU: targetRow[1], UA: targetRow[2] }, description: { RU: targetRow[5], UA: targetRow[6] } };
+//   } else {
+//     return undefined;
+//   }
+// }
 
 async function getProductTranslate (req, res) {
   const body = req.body;
@@ -515,23 +517,23 @@ async function getProductTranslate (req, res) {
       }
     }
 
-    if (name.RU === '' || name.UA === '' || description.RU === '' || description.UA) {
-      const target = await getProductFromSheets(body.article, '1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU');
-      if (target) {
-        if (name.RU === '' && target.name.RU !== '') {
-          name.RU = target.name.RU;
-        }
-        if (name.UA === '' && target.name.UA !== '') {
-          name.UA = target.name.UA;
-        }
-        if (description.RU === '' && target.description.RU !== '') {
-          description.RU = target.description.RU;
-        }
-        if (description.UA === '' && target.description.UA !== '') {
-          description.UA = target.description.UA;
-        }
-      }
-    }
+    // if (name.RU === '' || name.UA === '' || description.RU === '' || description.UA) {
+    //   const target = await getProductFromSheets(body.article, '1yAU2eYr4CUg7V8Y7EJ6nYB7nOvoJyMd3adZTZHWAKVU');
+    //   if (target) {
+    //     if (name.RU === '' && target.name.RU !== '') {
+    //       name.RU = target.name.RU;
+    //     }
+    //     if (name.UA === '' && target.name.UA !== '') {
+    //       name.UA = target.name.UA;
+    //     }
+    //     if (description.RU === '' && target.description.RU !== '') {
+    //       description.RU = target.description.RU;
+    //     }
+    //     if (description.UA === '' && target.description.UA !== '') {
+    //       description.UA = target.description.UA;
+    //     }
+    //   }
+    // }
 
     if (name.RU === '' || name.UA === '') {
       const moteaTarget = await MoteaProduct.findOne({ article: { $regex: body.article, $options: "i" } }).lean();

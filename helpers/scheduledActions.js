@@ -748,8 +748,7 @@ cron.schedule(    // import products
   },
 );
 
-cron.schedule(
-  //  update prom base at 15:30
+cron.schedule(    //  update prom base 1 per 3 hours
   "20 */3 * * *",
   () => {
     updatePromBase();
@@ -760,7 +759,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
+cron.schedule(    // save Motea feed at 01:10
   "10 1 * * *",
   () => {
     try {
@@ -779,8 +778,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  update availability
+cron.schedule(    //  update availability
   "25 */11 * * *",
   () => {
     try {
@@ -799,8 +797,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  // check price
+cron.schedule(    // check price 1 per 3 hours
   "1 */3 * * *",
   () => {
     if (!isChild) {
@@ -832,7 +829,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
+cron.schedule(    // orders copy
   "*/30 * * * *",
   async () => {
     try {
@@ -850,8 +847,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  check ad spend
+cron.schedule(    //  check ad spend
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -893,8 +889,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  check orders
+cron.schedule(    //  check orders
   "5 10 * * 3",
   async () => {
     console.log('Запуск задачи по проверке заказов в статусе "Заказать"...');
@@ -909,8 +904,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  check not availability orders
+cron.schedule(    //  check not availability orders
   "0 10 * * 1-5",
   async () => {
     console.log(
@@ -929,8 +923,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  weekly report to owner
+cron.schedule(    //  weekly report to owner
   "59 17 * * 5",
   () => {
     reportToOwner();
@@ -941,8 +934,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  update available rows base
+cron.schedule(    //  update rows in db to google feed "available"
   "49 19 * * *",
   () => {
     importYMLtoGoogleFeed();
@@ -953,8 +945,7 @@ cron.schedule(
   },
 );
 
-cron.schedule(
-  //  update google MC feed table
+cron.schedule(    //  update google MC feed table
   "55 19 * * *",
   () => {
     sendToSheets();
