@@ -92,6 +92,7 @@ async function importProductsFromYML() {
       }
 
       if (currentProduct?.vendorprice && currentProduct.vendorprice !== '0') {
+        // TO DO --------> VENDORPRICE IN UAH OR EURO???
         data.vendorprice = Number(currentProduct.vendorprice);
       }
 
