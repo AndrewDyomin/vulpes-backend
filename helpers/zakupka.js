@@ -1,4 +1,4 @@
-const { create } = require("xmlbuilder2");
+// const { create } = require("xmlbuilder2");
 const fs = require("fs");
 const Product = require("../models/item");
 
@@ -180,83 +180,214 @@ const zCategories = [
 {id: "232935441", parentId: "232923831", title: "Амортизаторы и подвеска"},
 ];
 
+// async function generateFeed() {
+//   console.log("Zakupka feed update started.");
+
+//   let count = 0;
+//   const products = Product.find({ quantityInStock: { $gte: 1 } }).sort({ quantityInStock: -1 }).cursor();
+//   const now = new Date();
+//   const year = now.getFullYear()
+//   const month = format(now.getMonth() + 1)
+//   const day = format(now.getDate())
+//   const hour = format(now.getHours())
+//   const minutes = format(now.getMinutes())
+
+//   const root = create({ version: "1.0", encoding: "UTF-8" })
+//   .dtd({ name: "yml_catalog", sysID: "shops.dtd" })
+//   .ele("yml_catalog", {
+//     date: `${year}-${month}-${day} ${hour}:${minutes}`
+//   });
+
+//   const shop = root.ele("shop");
+
+//   shop.ele("name").txt("Vulpes Moto");
+//   shop.ele("company").txt("Vulpes Moto");
+//   shop.ele("url").txt("https://vulpesmoto.com.ua");
+//   shop.ele("platform").txt("Zakupka.com");
+//   shop.ele("agency").txt("Zakupka.com");
+//   shop.ele("email").txt("support@zakupka.com");
+
+//   const categoriesNode = shop.ele("categories");
+
+//   zCategories.forEach(cat => {
+//     categoriesNode
+//       .ele("category", { id: cat.id, parentId: cat.parentId })
+//       .txt(cat.title)
+//       .up();
+//   });
+
+//   const offersNode = shop.ele("offers");
+
+//   for await (const product of products) {
+//     if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
+//     if (!product?.marketplaces?.zakupka) continue;
+//     count ++;
+//     if (count > 4000) break;
+//     const offer = offersNode.ele("offer", { id: product.article, available: true });
+//       offer.ele("price").txt(product.price.UAH).up()
+//       offer.ele("oldprice").txt(Math.round(product.price.UAH * 1.18)).up()
+//       offer.ele("quantity_in_stock").txt(product.quantityInStock).up()
+//       offer.ele("currencyId").txt('UAH').up()
+//       offer.ele("categoryId").txt(categoriesMap[product.category].zid).up()
+
+//       product.images.forEach(photo => {
+//         offer.ele("picture").txt(photo).up();
+//       });
+
+//       offer.ele("delivery").txt('true').up()
+//       offer.ele("name").txt(product.name.RU).up()
+//       offer.ele("name_ua").txt(product.name.UA).up()
+//       offer.ele("description").dat(product.description.RU || '').up()
+//       offer.ele("description_ua").dat(product.description.UA || '').up()
+//       offer.ele("vendor").txt(product.brand).up()
+//       offer.ele("vendorCode").txt(product.article).up()
+//       offer.ele("country_of_origin").txt(product.params.countryOfOrigin).up()
+//       offer.ele("param", { name: 'Состояние' }).txt("новый").up()
+//       // <param name="Вид">аксесуари</param>
+//       if (product?.params?.destination) {
+//         offer.ele("param", { name: 'Назначение' }).txt(product.params.destination).up()
+//       }
+//       if (product?.color && product.color !== '') {
+//         offer.ele("param", { name: 'Цвет' }).txt(product?.color).up()
+//       }
+      
+//       offer.up();
+//   }
+
+//   const xml = root.end({ prettyPrint: true });
+
+//   fs.writeFileSync("./public/xml/zakupka.xml.tmp", xml);
+//   fs.renameSync("./public/xml/zakupka.xml.tmp", "./public/xml/zakupka.xml");
+
+//   console.log("Feed updated");
+// }
+
+const BATCH_SIZE = 500;
+
+function escapeXml(str = "") {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+async function write(stream, chunk) {
+  if (!stream.write(chunk)) {
+    await new Promise(resolve => stream.once("drain", resolve));
+  }
+}
+
+async function writeBatch(products, stream) {
+  let xml = "";
+
+  for (const product of products) {
+    xml += `<offer id="${product.article}" available="true">\n`;
+    xml += `<price>${product.price.UAH}</price>\n`;
+    xml += `<oldprice>${Math.round(product.price.UAH * 1.18)}</oldprice>\n`;
+    xml += `<quantity_in_stock>${product.quantityInStock}</quantity_in_stock>\n`;
+    xml += `<currencyId>UAH</currencyId>\n`;
+    xml += `<categoryId>${categoriesMap[product.category].zid}</categoryId>\n`;
+
+    for (const photo of product.images || []) {
+      xml += `<picture>${photo}</picture>\n`;
+    }
+
+    xml += `<delivery>true</delivery>\n`;
+    xml += `<name>${escapeXml(product.name.RU)}</name>\n`;
+    xml += `<name_ua>${escapeXml(product.name.UA)}</name_ua>\n`;
+
+    xml += `<description><![CDATA[${product.description.RU || ""}]]></description>\n`;
+    xml += `<description_ua><![CDATA[${product.description.UA || ""}]]></description_ua>\n`;
+
+    xml += `<vendor>${escapeXml(product.brand)}</vendor>\n`;
+    xml += `<vendorCode>${product.article}</vendorCode>\n`;
+    xml += `<country_of_origin>${escapeXml(product.params?.countryOfOrigin || "")}</country_of_origin>\n`;
+
+    xml += `<param name="Состояние">новый</param>\n`;
+
+    // if (product?.params?.destination) {
+    //   xml += `<param name="Назначение">${escapeXml(product.params.destination)}</param>\n`;
+    // }
+
+    if (product?.color) {
+      xml += `<param name="Цвет">${escapeXml(product.color)}</param>\n`;
+    }
+
+    xml += `</offer>\n`;
+  }
+
+  await write(stream, xml);
+}
+
 async function generateFeed() {
   console.log("Zakupka feed update started.");
 
-  let count = 0;
-  const products = Product.find({ quantityInStock: { $gte: 1 } }).sort({ quantityInStock: -1 }).cursor();
+  const stream = fs.createWriteStream("./public/xml/zakupka.xml.tmp");
+
+
   const now = new Date();
-  const year = now.getFullYear()
-  const month = format(now.getMonth() + 1)
-  const day = format(now.getDate())
-  const hour = format(now.getHours())
-  const minutes = format(now.getMinutes())
+  const date = `${now.getFullYear()}-${format(now.getMonth() + 1)}-${format(now.getDate())} ${format(now.getHours())}:${format(now.getMinutes())}`;
 
-  const root = create({ version: "1.0", encoding: "UTF-8" })
-  .dtd({ name: "yml_catalog", sysID: "shops.dtd" })
-  .ele("yml_catalog", {
-    date: `${year}-${month}-${day} ${hour}:${minutes}`
-  });
+  // 🔹 header
+  await write(stream, `<?xml version="1.0" encoding="UTF-8"?>\n`);
+  await write(stream, `<!DOCTYPE yml_catalog SYSTEM "shops.dtd">\n`);
+  await write(stream, `<yml_catalog date="${date}">\n<shop>\n`);
 
-  const shop = root.ele("shop");
+  await write(stream, `<name>Vulpes Moto</name>\n`);
+  await write(stream, `<company>Vulpes Moto</company>\n`);
+  await write(stream, `<url>https://vulpesmoto.com.ua</url>\n`);
+  await write(stream, `<platform>Zakupka.com</platform>\n`);
+  await write(stream, `<agency>Zakupka.com</agency>\n`);
+  await write(stream, `<email>support@zakupka.com</email>\n`);
 
-  shop.ele("name").txt("Vulpes Moto");
-  shop.ele("company").txt("Vulpes Moto");
-  shop.ele("url").txt("https://vulpesmoto.com.ua");
-  shop.ele("platform").txt("Zakupka.com");
-  shop.ele("agency").txt("Zakupka.com");
-  shop.ele("email").txt("support@zakupka.com");
+  // 🔹 категории
+  await write(stream, `<categories>\n`);
+  for (const cat of zCategories) {
+    await write(
+      stream,
+      `<category id="${cat.id}"${cat.parentId ? ` parentId="${cat.parentId}"` : ""}>${escapeXml(cat.title)}</category>\n`
+    );
+  }
+  await write(stream, `</categories>\n<offers>\n`);
 
-  const categoriesNode = shop.ele("categories");
-
-  zCategories.forEach(cat => {
-    categoriesNode
-      .ele("category", { id: cat.id, parentId: cat.parentId })
-      .txt(cat.title)
-      .up();
-  });
-
-  const offersNode = shop.ele("offers");
+  let batch = [];
+  let count = 0;
+  const products = Product
+    .find({ quantityInStock: { $gte: 1 } })
+    .sort({ quantityInStock: -1 })
+    .cursor();
 
   for await (const product of products) {
-    if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
+    if (!categoriesMap[product?.category]?.zid) continue;
     if (!product?.marketplaces?.zakupka) continue;
-    count ++;
-    if (count > 4000) break;
-    const offer = offersNode.ele("offer", { id: product.article, available: true });
-      offer.ele("price").txt(product.price.UAH).up()
-      offer.ele("oldprice").txt(Math.round(product.price.UAH * 1.18)).up()
-      offer.ele("quantity_in_stock").txt(product.quantityInStock).up()
-      offer.ele("currencyId").txt('UAH').up()
-      offer.ele("categoryId").txt(categoriesMap[product.category].zid).up()
+    if (!product?.name?.RU) continue;
 
-      product.images.forEach(photo => {
-        offer.ele("picture").txt(photo).up();
-      });
+    batch.push(product);
+    count++;
 
-      offer.ele("delivery").txt('true').up()
-      offer.ele("name").txt(product.name.RU).up()
-      offer.ele("name_ua").txt(product.name.UA).up()
-      offer.ele("description").dat(product.description.RU || '').up()
-      offer.ele("description_ua").dat(product.description.UA || '').up()
-      offer.ele("vendor").txt(product.brand).up()
-      offer.ele("vendorCode").txt(product.article).up()
-      offer.ele("country_of_origin").txt(product.params.countryOfOrigin).up()
-      offer.ele("param", { name: 'Состояние' }).txt("новый").up()
-      // <param name="Вид">аксесуари</param>
-      if (product?.params?.destination) {
-        offer.ele("param", { name: 'Назначение' }).txt(product.params.destination).up()
-      }
-      if (product?.color && product.color !== '') {
-        offer.ele("param", { name: 'Цвет' }).txt(product?.color).up()
-      }
-      
-      offer.up();
+    if (batch.length === BATCH_SIZE) {
+      await writeBatch(batch, stream);
+      batch = [];
+      batch.length = 0;
+      console.log(`Processed: ${count}`);
+    }
+
+    if (count >= 7000) break;
   }
 
-  const xml = root.end({ prettyPrint: true });
+  // остаток
+  if (batch.length) {
+    await writeBatch(batch, stream);
+  }
 
-  fs.writeFileSync("./public/xml/zakupka.xml.tmp", xml);
+  // 🔹 footer
+  await write(stream, `</offers>\n</shop>\n</yml_catalog>`);
+
+  stream.end();
+
+  await new Promise(resolve => stream.on("finish", resolve));
+
   fs.renameSync("./public/xml/zakupka.xml.tmp", "./public/xml/zakupka.xml");
 
   console.log("Feed updated");
