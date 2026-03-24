@@ -222,7 +222,7 @@ async function generateFeed() {
     if (!categoriesMap[product?.category]?.zid || product.name.RU === '') continue;
     if (!product?.marketplaces?.zakupka) continue;
     count ++;
-    if (count > 7000) break;
+    if (count > 4000) break;
     const offer = offersNode.ele("offer", { id: product.article, available: true });
       offer.ele("price").txt(product.price.UAH).up()
       offer.ele("oldprice").txt(Math.round(product.price.UAH * 1.18)).up()
