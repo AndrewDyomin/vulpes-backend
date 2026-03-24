@@ -275,7 +275,7 @@ async function updatePromBase(req, res, next) {
     const sourceId = spreadsheetId;
     const targetId = "1fmGFTYbCZWn0I3K1-5BWd6nrTImytpyvRhW0Ufz53cw";
     let startRow = 1;
-    const chunkSize = 1000;
+    const chunkSize = 500;
     const noIdItems = [];
 
     await sheets.spreadsheets.values.clear({
