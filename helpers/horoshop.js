@@ -137,8 +137,8 @@ async function generateHoroshopProduct(article) {
             parent_article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
             article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
             title: {
-              ru: `${product.titleRu} для ${brand.brand} ${model.model} ${year} ${targetColor.description}`,
-              ua: `${product.titleUk} для ${brand.brand} ${model.model} ${year} ${targetColor.uk}`,
+              ru: `${product.titleRu} для ${brand.brand} ${model.model} ${year} ${targetColor.description} ${article.code}${article.colour.code}`,
+              ua: `${product.titleUk} для ${brand.brand} ${model.model} ${year} ${targetColor.uk} ${article.code}${article.colour.code}`,
             },
             description: {
               ru: product.descriptionRu,
