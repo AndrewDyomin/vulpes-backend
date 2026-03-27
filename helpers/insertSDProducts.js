@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const sax = require("sax");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
-const CHUNK_SIZE = 100;
+const CHUNK_SIZE = 500;
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const MAIN_DB_URI = process.env.DB_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
@@ -17,27 +17,36 @@ async function importProductsFromYML() {
   let totalProcessed = 0;
   let totalModified = 0;
   let totalUpserted = 0;
+  const maxFlush = 3;
+  let flushCount = 0;
 
   const flush = async () => {
     if (!operations.length) return;
+    flushCount++;
 
     const chunk = operations.splice(0, CHUNK_SIZE);
 
-    const result = await Product.bulkWrite(chunk, { ordered: false });
+    try {
+      const result = await Product.bulkWrite(chunk, { ordered: false });
 
-    totalProcessed += chunk.length;
-    totalModified += result.modifiedCount;
-    totalUpserted += result.upsertedCount;
+      totalProcessed += chunk.length;
+      totalModified += result.modifiedCount;
+      totalUpserted += result.upsertedCount;
 
-    // console.log({
-    //   processed: totalProcessed,
-    //   matched: result.matchedCount,
-    //   modified: result.modifiedCount,
-    //   upserted: result.upsertedCount
-    // });
+      // console.log({
+      //   processed: totalProcessed,
+      //   matched: result.matchedCount,
+      //   modified: result.modifiedCount,
+      //   upserted: result.upsertedCount
+      // });
+    } catch (err) {
+      console.log('bulkWrite error:', err)
+    } finally {
+      flushCount--;
+    }
   };
 
-  const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
+  const response = await axios.get(PRODUCTS_URI, { responseType: "stream", timeout: 0 });
 
   const parser = sax.createStream(true, { trim: true });
 
@@ -153,13 +162,19 @@ async function importProductsFromYML() {
     parser.write(chunk);
 
     if (operations.length >= CHUNK_SIZE) {
-      await flush();
+      while (flushCount >= maxFlush) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      flush();
     }
   }
 
   parser.end();
 
   while (operations.length) {
+    while (flushCount > 0) {
+      await new Promise(r => setTimeout(r, 50));
+    }
     await flush();
   }
 
