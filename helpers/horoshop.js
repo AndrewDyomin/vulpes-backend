@@ -95,8 +95,8 @@ const colors = [
   { code: "Z", description: "Gold", uk: "Золотий" },
   { code: "S", description: "Graphics", uk: "Graphics" },
 ];
-
-const redFlag = ["Available on", "Few units in stock"];
+// "Few units in stock"
+const redFlag = ["Available on"];
 
 async function getToken() {
   const user = await User.findOne({ name: "horoshop" }).exec();
@@ -317,6 +317,12 @@ async function checkProductsFromHoroshop() {
       );
 
       page += 500;
+
+      if (!data?.response?.products?.length) {
+        console.log('data.length === 0')
+        break;
+      }
+
       for (const product of data.response.products) {
         if (product.supplier.value === "Puig") {
           const article = product.article.includes('-') ? product.article.split('-')[0] : product.article;
@@ -352,12 +358,19 @@ async function checkProductsFromHoroshop() {
             const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
             if (res.data.status === 'OK') {
               for (const log of res.data.response.log) {
-                if (log?.info[0]?.code === 0) continue;
                 console.log(log)
               }
+            } else if (res.data.status === 'WARNING') {
+              console.log('WARNING:', res.data)
+              if (res.data?.response?.log?.length) {
+                for (const error of res.data?.response?.log) {
+                  if (log?.info[0]?.code === 0) continue;
+                  console.log(error);
+                }
+              }
             } else {
-              await sendTelegramMessage(`Ошибка обновления Puig на ХОРОШОПЕ. res.data: ${res.data}`, process.env.ADMIN_CHAT_ID)
-              console.log(res.data)
+              await sendTelegramMessage(`Ошибка обновления Puig на ХОРОШОПЕ. res.data: ${JSON.stringify(res.data)}`, process.env.ADMIN_CHAT_ID)
+              console.log(JSON.stringify(res.data))
             }
             updatedProducts.length = 0;
           }
@@ -369,7 +382,12 @@ async function checkProductsFromHoroshop() {
         token = await getToken();
         continue;
       }
-      console.log(err);
+      console.log('err:', err);
+      if (err?.response?.log?.length) {
+        for (const error of err?.response?.log) {
+          console.log(error);
+        }
+      }
     }
   }
 
@@ -380,9 +398,19 @@ async function checkProductsFromHoroshop() {
         if (log?.info[0]?.code === 0) continue;
         console.log(log)
       }
+    } else if (res.data.status === 'WARNING') {
+      // console.log('WARNING:', JSON.stringify(res.data))
+      if (res.data?.response?.log?.length) {
+        for (const log of res.data?.response?.log) {
+          for (const info of log.info) {
+            if (info?.code === 0) continue;
+            console.log(log);
+          }
+        }
+      }
     } else {
-      await sendTelegramMessage(`Ошибка обновления Puig на ХОРОШОПЕ. res.data: ${res.data}`, process.env.ADMIN_CHAT_ID)
-      console.log(res.data)
+      await sendTelegramMessage(`Ошибка обновления Puig на ХОРОШОПЕ. res.data: ${JSON.stringify(res.data)}`, process.env.ADMIN_CHAT_ID)
+      console.log(JSON.stringify(res.data))
     }
     updatedProducts.length = 0;
   }
