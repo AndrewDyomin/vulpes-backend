@@ -1,14 +1,12 @@
 const cron = require("node-cron");
 const axios = require("axios");
 const sax = require("sax");
-const csv = require("csv-parser");
 const { fork } = require("child_process");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 const path = require("path");
 const Product = require("../models/item");
 const User = require("../models/user");
-const MoteaItem = require("../models/moteaItem");
 const TableRow = require("../models/tableRow");
 const OrdersArchive = require("../models/ordersArchive");
 require("dotenv").config();
@@ -28,44 +26,6 @@ const { generateFeed } = require("../helpers/zakupka");
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 let isChild = false;
-
-const fetchAvailability = async (array) => {
-  const articles = array.map((p) => p.article);
-  const variantArticles = array.map((p) => `${p.article}-0`);
-
-  const donors = await MoteaItem.find({
-    article: { $in: [...articles, ...variantArticles] },
-  }).lean();
-
-  const availabilityMap = new Map();
-  for (const d of donors) {
-    availabilityMap.set(d.article, d.availability);
-  }
-
-  const linkMap = new Map();
-  for (const d of donors) {
-    linkMap.set(d.article, d.link);
-  }
-
-  const arrayCopy = array.map((product) => {
-    const availability =
-      availabilityMap.get(product.article) ||
-      availabilityMap.get(`${product.article}-0`) ||
-      "";
-
-    const link =
-      linkMap.get(product.article) || linkMap.get(`${product.article}-0`) || "";
-    return {
-      ...product._doc,
-      availabilityInMotea: availability,
-      linkInMotea: link,
-    };
-  });
-
-  availabilityMap.clear();
-  linkMap.clear();
-  return arrayCopy;
-};
 
 async function sendToSheets() {
   const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
@@ -286,131 +246,6 @@ async function importYMLtoGoogleFeed() {
       chatId,
     );
   }
-}
-
-async function saveMoteaFeedToDb() {
-  try {
-    // if (mongoose.connection.readyState !== 0) {
-    //   await mongoose.disconnect();
-    //   console.log("Disconnected from main DB");
-    // }
-
-    // await mongoose.connect(DB_MOTEA_FEED_URI);
-    // console.log("Connected to Motea feed info DB");
-    await MoteaItem.collection.drop();
-
-    const url = process.env.MOTEA_FEED;
-    let response = await axios.get(url, { responseType: "stream" });
-
-    let batch = [];
-    let totalCount = 0;
-
-    await new Promise((resolve, reject) => {
-      response.data
-        .pipe(csv({ separator: "|" }))
-        .on("data", (row) => {
-          if (row.link) {
-            const item = {
-              name: row.title, // delete if errors.
-              link: row.link,
-              article: row.id,
-              brand: row.brand,
-              gtin: row.gtin,
-              availability: row.availability,
-            };
-
-            batch.push(item);
-            totalCount++;
-
-            if (batch.length === 1000) {
-              response.data.pause();
-              MoteaItem.insertMany(batch)
-                .then(() => {
-                  batch = [];
-                  batch.length = 0;
-                  response.data.resume();
-                })
-                .catch((err) => {
-                  console.error("Ошибка batch insert:", err);
-                  sendTelegramMessage(`Ошибка копирования фида в базу: ${err}`);
-                  reject(err);
-                });
-            }
-          }
-        })
-        .on("end", async () => {
-          if (batch.length > 0) {
-            try {
-              await MoteaItem.insertMany(batch);
-            } catch (err) {
-              console.error("Ошибка финального insertMany:", err);
-              sendTelegramMessage(
-                `Ошибка финального insertMany в базу: ${err}`,
-              );
-              reject(err);
-            }
-          }
-
-          console.log(`Обработка завершена. Всего записей: ${totalCount}`);
-          sendTelegramMessage(
-            `Я скопировал фид МОТЕА, новая информация уже в базе. Всего записей: ${totalCount}.`,
-            chatId,
-          );
-          resolve();
-        })
-        .on("error", (err) => {
-          console.error("Ошибка чтения CSV:", "err");
-          reject(err);
-        });
-    });
-
-    response = null;
-
-    // await mongoose.disconnect();
-    // console.log("Disconnected from Motea feed info DB");
-
-    // await mongoose.connect(MAIN_DB_URI);
-    // console.log("Reconnected to main DB");
-  } catch (err) {
-    console.error("Ошибка обработки:", "err");
-  }
-}
-
-async function updateProductsAvailability() {
-  const BATCH_SIZE = 1000;
-  let skip = 0;
-  let hasMore = true;
-
-  while (hasMore) {
-    console.log(`${skip / 1000}).`);
-    let batch = await Product.find({}).skip(skip).limit(BATCH_SIZE).exec();
-
-    const updatedBatch = await fetchAvailability(batch);
-
-    const operations = updatedBatch.map((product) => ({
-      updateOne: {
-        filter: { _id: product._id },
-        update: {
-          $set: {
-            availabilityInMotea: product.availabilityInMotea || null,
-            linkInMotea: product.linkInMotea || null,
-          },
-        },
-      },
-    }));
-
-    if (operations.length > 0) {
-      await Product.bulkWrite(operations);
-    }
-
-    skip += BATCH_SIZE;
-    hasMore = batch.length === BATCH_SIZE;
-    batch = null;
-  }
-  sendTelegramMessage(
-    "Информация о наличии товаров в МОТЕА обновлена.",
-    chatId,
-  );
 }
 
 function getLastWeeksRanges() {
@@ -762,34 +597,24 @@ cron.schedule(    //  update prom base 1 per 3 hours
 cron.schedule(    // save Motea feed at 01:10
   "10 1 * * *",
   () => {
-    try {
-      saveMoteaFeedToDb();
-    } catch (error) {
-      console.error("Ошибка при выполнении cron-задачи:", error);
-      sendTelegramMessage(
-        `Ошибка при выполнении cron-задачи: ${error}`,
-        chatId,
-      );
-    }
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  },
-);
+    const importMoteaFeed = path.join(__dirname, "moteaProducts.js");
+    console.log("Время проверить фид Мотеа");
 
-cron.schedule(    //  update availability
-  "25 */11 * * *",
-  () => {
-    try {
-      updateProductsAvailability();
-    } catch (error) {
-      console.error("Ошибка при выполнении cron-задачи:", error);
+    const child = fork(importMoteaFeed, [], {
+      execArgv: ["--max-old-space-size=50"],
+    });
+
+    child.on("exit", async(code) => {
+      console.log(`Проверка фида Мотеа завершена с кодом ${code}`);
+    });
+
+    child.on("error", (err) => {
+      console.error("Ошибка проверки фида:", err);
       sendTelegramMessage(
-        `Ошибка при выполнении cron-задачи: ${error}`,
+        `Ошибка при выполнении проверки фида: ${err}`,
         chatId,
       );
-    }
+    });
   },
   {
     scheduled: true,
