@@ -1,4 +1,5 @@
 const Product = require("../models/item");
+const puigArticle = require("../models/puigArticles");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const sax = require("sax");
@@ -19,6 +20,8 @@ async function importProductsFromYML() {
   let totalUpserted = 0;
   const maxFlush = 3;
   let flushCount = 0;
+  const puigArticlesArray = [];
+  const toDel = [];
 
   const flush = async () => {
     if (!operations.length) return;
@@ -138,6 +141,10 @@ async function importProductsFromYML() {
         data.vendorprice = Number(currentProduct.vendorprice);
       }
 
+      if (currentProduct?.vendor === "Puig") {
+        puigArticlesArray.push(article);
+      }
+
       operations.push({
         updateOne: {
           filter: { article },
@@ -176,6 +183,25 @@ async function importProductsFromYML() {
       await new Promise(r => setTimeout(r, 50));
     }
     await flush();
+  }
+
+  for (const sku of puigArticlesArray) {
+    let target = null;
+    const match = sku.match(/^(\d+)([A-Z])-/);
+    if (match) {
+      const code = match[1];
+      const color = match[2];
+      target = await puigArticle.findOne({ code, "colour.code": color }, {code: 1}).lean()
+    }
+
+    if (target) {
+      toDel.push(sku)
+    }
+  }
+
+  while (toDel?.length > 0) {
+    const arr = toDel.splice(0, CHUNK_SIZE);
+    await Product.deleteMany({ article: { $in: arr } })
   }
 
   console.log("Импорт товаров из СД завершён");
