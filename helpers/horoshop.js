@@ -249,7 +249,7 @@ async function getArticlesFromHoroshop(art) {
   const articles = [];
   const result = [];
 
-  if (product.enableSplitting) {
+  if (product?.enableSplitting) {
     for (const [brandIndex, brand] of art.bikesArray.entries()) {
       for (const [modelIndex, model] of brand.models.entries()) {
         for (let i = 0; i < model.year.length; i++) {
