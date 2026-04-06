@@ -122,6 +122,7 @@ async function getToken() {
 async function generateHoroshopProduct(article) {
   const product = await Product.findOne({ id: article.product.id }).exec();
   const result = [];
+  if (!product) return [];
   const targetCategory = categories.find(
     (i) => i.name === product.category.title,
   );
@@ -272,7 +273,7 @@ async function getArticlesFromHoroshop(art) {
         },
       );
 
-      if (data.response.products.length > 0) {
+      if (data?.response?.products?.length > 0) {
         result.push(...data.response.products);
       }
     } catch(err) {
@@ -319,6 +320,9 @@ async function checkProductsFromHoroshop() {
       page += 500;
 
       if (!data?.response?.products?.length) {
+        if (data?.response?.code === 429) {
+          console.log(data.status, data.response.message);
+        }
         console.log('data.length === 0')
         break;
       }
