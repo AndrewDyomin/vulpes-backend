@@ -244,6 +244,7 @@ async function updatePromBase(req, res, next) {
     let rowsM = [];
 
     for await (const product of cursor) {
+      if (product?.marketplaces && product?.marketplaces?.prom === false) continue;
       const price = product.price.UAH;
       rowsA.push([String(product.article)]);
       rowsI.push([price, "UAH", "шт."]);

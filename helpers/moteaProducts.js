@@ -114,15 +114,11 @@ const fetchAvailability = async (array) => {
   }
 
   const arrayCopy = array.map((product) => {
-    const availability =
-      availabilityMap.get(product.article) ||
-      availabilityMap.get(`${product.article}-0`) ||
-      "";
+    const availability = availabilityMap.get(`${product.article}-0`) || availabilityMap.get(product.article) || "";
 
-    const link =
-      linkMap.get(product.article) || linkMap.get(`${product.article}-0`) || "";
+    const link = linkMap.get(`${product.article}-0`) || linkMap.get(product.article) ||  "";
     return {
-      ...product._doc,
+      ...product,
       availabilityInMotea: availability,
       linkInMotea: link,
     };
@@ -137,7 +133,7 @@ const fetchAvailability = async (array) => {
 
 async function updateProductsAvailability() {
   await mongoose.connect(MAIN_DB_URI);
-  const BATCH_SIZE = 1000;
+  const BATCH_SIZE = 500;
   let skip = 0;
   let hasMore = true;
 

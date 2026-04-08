@@ -154,6 +154,10 @@ const puigArticlesSchema = new mongoose.Schema({
     type: Array,
     default: [],
   },
+  quantityInStock: {
+    type: Number,
+    default: 0,
+  },
 });
 
 module.exports = mongoose.model("PuigArticles", puigArticlesSchema);
