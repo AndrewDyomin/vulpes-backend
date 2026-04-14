@@ -69,8 +69,8 @@ async function horoshopCheckUpdatePrice(req, res) {
       lastId = batch[batch.length - 1]._id;
 
       for (const item of batch) {
-        const db = item.price.UAH || 0;
-        const mt = item.moteaPrice.UAH || 0;
+        const db = item?.price?.UAH || 0;
+        const mt = item?.moteaPrice?.UAH || 0;
         if (mt === 0 || db === 0) continue;
         const difference = Math.round((Math.abs(db - mt) / db) * 100);
 

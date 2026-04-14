@@ -181,8 +181,10 @@ async function checkPuigProductsUpdates() {
             if (Object.keys(diff).length > 0) {
               await Articles.findByIdAndUpdate(art._id, { $set: diff }, { new: true }).exec();
             }
-            console.log(currentMinute);
-            console.log(count, '- из 27081???');
+            
+            if (count % 500 === 0) {
+              console.log(count, '- из 27000???');
+            }
           } catch(err) {
             console.log(err)
           }

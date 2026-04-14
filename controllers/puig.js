@@ -74,8 +74,8 @@ async function getProductById(req, res, next) {
 
     if (result?.articles[0]) {
       for (const art of result.articles) {
-        const article = await Articles.findOne({ code: art }).exec();
-        array.push(article);
+        const arts = await Articles.find({ code: art }).exec();
+        array.push(...arts);
       }
 
       result.articles = array;
