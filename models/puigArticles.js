@@ -32,6 +32,10 @@ const puigArticlesSchema = new mongoose.Schema({
     enum: ["on", "canceled", "off"],
     default: 'off'
   },
+  horoshopAddDate: {
+    type: String,
+    default: null,
+  },
   mesures: {
     packaging: {
       weight: {
