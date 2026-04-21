@@ -5,6 +5,7 @@ const Product = require("../models/item");
 const MoteaProduct = require("../models/moteaItem");
 const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
+const Bikes = require("../models/bikes")
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -44,6 +45,17 @@ async function getAll(req, res, next) {
     const limit = parseInt(req.query.limit) || 20;
     const inStockFilter = req?.query?.stockfilter === 'true' ? { quantityInStock: { $gte: 1 } } : {};
     const sort = req?.query?.sort === 'availability' ? { quantityInStock: -1 } : {};
+    const targetBike = { brand: req?.query?.brand, model: req?.query?.model, year: req?.query?.year };
+
+    if (Object.values(targetBike).every(v => v !== "")) {
+      inStockFilter.bikeList = {
+        $elemMatch: {
+          make: targetBike.brand,
+          model: targetBike.model,
+          year: Number(targetBike.year),
+        }
+      }
+    }
 
     const skip = (page - 1) * limit;
 
@@ -117,6 +129,20 @@ async function search(req, res, next) {
     const inStockFilter = req?.body?.filter?.inStock ? { quantityInStock: { $gte: 1 } } : {};
     const skip = (page - 1) * limit;
     const sort = req?.body?.sort === 'availability' ? { quantityInStock: -1 } : {};
+    const targetBike = req?.body?.targetBike;
+    const brand = targetBike?.brand || null;
+    const model = targetBike?.model || null;
+    const year = targetBike?.year || null;
+
+    if (brand && model && year) {
+      inStockFilter.bikeList = {
+        $elemMatch: {
+          make: brand,
+          model: model,
+          year: Number(year),
+        }
+      }
+    }
 
     let query = { article: { $regex: value, $options: "i" }, ...inStockFilter };
 
@@ -348,103 +374,103 @@ async function compareYear (req, res, next) {
 
   try {
 
-  for (let i = 0; i < totalBatches; i++) {
-    const products = await Product.find({})
-      .skip(i * batch)
-      .limit(batch)
-      .lean()
-      .exec();
+    for (let i = 0; i < totalBatches; i++) {
+      const products = await Product.find({})
+        .skip(i * batch)
+        .limit(batch)
+        .lean()
+        .exec();
 
-    for(const product of products) {
-      if (/\b\d{2}-\d{2}\b/.test(product?.name?.UA)) {
-        itemsWithYears.push({article: product.article, name: product.name.UA})
+      for(const product of products) {
+        if (/\b\d{2}-\d{2}\b/.test(product?.name?.UA)) {
+          itemsWithYears.push({article: product.article, name: product.name.UA})
+        }
       }
     }
-  }
 
-  await mongoose.disconnect();
-  console.log("Disconnected from main DB");
-  await mongoose.connect(DB_MOTEA_FEED_URI);
-  console.log("Connected to Motea feed info DB");
+    await mongoose.disconnect();
+    console.log("Disconnected from main DB");
+    await mongoose.connect(DB_MOTEA_FEED_URI);
+    console.log("Connected to Motea feed info DB");
 
-  let allArticles = itemsWithYears.flatMap(item => [item.article, item.article + '-0']);
+    let allArticles = itemsWithYears.flatMap(item => [item.article, item.article + '-0']);
 
-  let products = await MoteaItem.find({ article: { $in: allArticles } }).exec();
+    let products = await MoteaItem.find({ article: { $in: allArticles } }).exec();
 
-  let productMap = new Map(products.map(p => [p.article, p.name]));
+    let productMap = new Map(products.map(p => [p.article, p.name]));
 
-  for (const item of itemsWithYears) {
-    item.trueName = productMap.get(item.article + '-0') || productMap.get(item.article) || undefined;
-  }
+    for (const item of itemsWithYears) {
+      item.trueName = productMap.get(item.article + '-0') || productMap.get(item.article) || undefined;
+    }
 
-  allArticles = null;
-  products = null;
-  productMap = null;
+    allArticles = null;
+    products = null;
+    productMap = null;
 
-  await mongoose.disconnect();
-  console.log("Disconnected from Motea feed info DB");
-  await mongoose.connect(MAIN_DB_URI);
-  console.log("Connected to main DB");
-  
-  let wrongYears = [];
+    await mongoose.disconnect();
+    console.log("Disconnected from Motea feed info DB");
+    await mongoose.connect(MAIN_DB_URI);
+    console.log("Connected to main DB");
+    
+    let wrongYears = [];
 
-  for (const item of itemsWithYears) {
-    if (item.name && item.trueName) {
-      const year = item.name.match(/\b(\d{2})-(\d{2})\b/);
-      const trueYear = item.trueName.match(/\b(\d{2})-(\d{2})\b/);
-      if (year && trueYear && year[0] !== trueYear[0]) {
-        item.fixedName = item.name.replace(year[0], trueYear[0]);
-        wrongYears.push(item)
+    for (const item of itemsWithYears) {
+      if (item.name && item.trueName) {
+        const year = item.name.match(/\b(\d{2})-(\d{2})\b/);
+        const trueYear = item.trueName.match(/\b(\d{2})-(\d{2})\b/);
+        if (year && trueYear && year[0] !== trueYear[0]) {
+          item.fixedName = item.name.replace(year[0], trueYear[0]);
+          wrongYears.push(item)
+        }
       }
     }
-  }
 
-  if (wrongYears.length > 0) {
-    const fileName = `fixed-names.xlsx`;
-    const filePath = path.join(__dirname, "..", "tmp", fileName);
+    if (wrongYears.length > 0) {
+      const fileName = `fixed-names.xlsx`;
+      const filePath = path.join(__dirname, "..", "tmp", fileName);
 
-    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-      filename: filePath,
-    });
-    const worksheet = workbook.addWorksheet("Products");
+      const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+        filename: filePath,
+      });
+      const worksheet = workbook.addWorksheet("Products");
 
-    worksheet.columns = [
-      { header: "Артикул", key: "article", width: 25 },
-      { header: "Исправленное название", key: "fixedName", width: 35 },
-      { header: "Название в базе", key: "name", width: 35 },
-      { header: "Название у МОТЕА", key: "trueName", width: 35 },
-    ];
+      worksheet.columns = [
+        { header: "Артикул", key: "article", width: 25 },
+        { header: "Исправленное название", key: "fixedName", width: 35 },
+        { header: "Название в базе", key: "name", width: 35 },
+        { header: "Название у МОТЕА", key: "trueName", width: 35 },
+      ];
 
-    for (const product of wrongYears) {
-      worksheet
-        .addRow({
-          article: product.article,
-          fixedName: product.fixedName || "",
-          name: product.name || "",
-          trueName: product.trueName || "",
-        })
-        .commit();
+      for (const product of wrongYears) {
+        worksheet
+          .addRow({
+            article: product.article,
+            fixedName: product.fixedName || "",
+            name: product.name || "",
+            trueName: product.trueName || "",
+          })
+          .commit();
+      }
+
+      await worksheet.commit();
+      await workbook.commit();
+
+      await sendTelegramFile(filePath, "Таблица с исправленными названиями", req.user.user.chatId);
+      fs.unlinkSync(filePath);
     }
-
-    await worksheet.commit();
-    await workbook.commit();
-
-    await sendTelegramFile(filePath, "Таблица с исправленными названиями", req.user.user.chatId);
-    fs.unlinkSync(filePath);
+    
+    const count = wrongYears.length
+    itemsWithYears = null;
+    wrongYears = null;
+    if (count > 0) {
+      return res.status(200).send({ message: `Found ${count} wrong names. The table will be sent to your telegram.` });
+    } else {
+      return res.status(200).send({ message: "invalid years not found" });
+    }
+  } catch(error) {
+    console.log(error);
+    return res.status(200).send({ message: error });
   }
-  
-  const count = wrongYears.length
-  itemsWithYears = null;
-  wrongYears = null;
-  if (count > 0) {
-    return res.status(200).send({ message: `Found ${count} wrong names. The table will be sent to your telegram.` });
-  } else {
-    return res.status(200).send({ message: "invalid years not found" });
-  }
-} catch(error) {
-  console.log(error);
-  return res.status(200).send({ message: error });
-}
 }
 
 async function updateProduct (req, res) {
@@ -552,6 +578,24 @@ async function getProductTranslate (req, res) {
   }
 }
 
+async function getBikes (req, res) {
+  const brand = req?.query?.brand;
+  try {
+    if (!brand || brand === '') {
+      const bikes = await Bikes.find({}, { brand: 1 }).lean();
+      const result = bikes.map(b => b.brand).sort();
+      res.status(200).send(result);
+    } else {
+      const bikes = await Bikes.find({ brand }, { brand: 1, models: 1 }).lean();
+      const [ models ] = bikes.map(b => b.models).sort();
+      res.status(200).send(models);
+    }
+  } catch(err) {
+    console.log(err)
+    res.status(200).send({message: 'error'});
+  }
+}
+
 module.exports = {
   getAll,
   getAllBarcodes,
@@ -563,4 +607,5 @@ module.exports = {
   compareYear,
   updateProduct,
   getProductTranslate,
+  getBikes,
 };

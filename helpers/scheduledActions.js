@@ -554,6 +554,13 @@ async function sendPriceDifference() {
   fs.unlinkSync(filePath);
 }
 
+// Call check price helper
+setInterval(() => {
+  fetch('https://vulpes-backend-helper.onrender.com/actions/check-price')
+    .then(() => {console.log('Helper called.')})
+    .catch(() => {});
+}, 15 * 60 * 1000);
+
 cron.schedule(    // import products
   "30 */6 * * *",
   () => {
