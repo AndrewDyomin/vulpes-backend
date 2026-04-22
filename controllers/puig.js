@@ -3,6 +3,7 @@ const updateSheets = require("../helpers/updateSheets");
 const Categories = require("../models/puigCategories");
 const Products = require("../models/puigProducts");
 const Articles = require("../models/puigArticles");
+const Bikes = require("../models/puigBikes");
 const path = require("path");
 const { fork } = require("child_process");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
@@ -18,9 +19,39 @@ function sleep(ms) {
 }
 
 async function getCategories(req, res, next) {
+  const targetModel = req?.query;
   try {
-    const array = await Categories.find({}).exec();
-    res.status(200).send(JSON.stringify(array));
+    if (!Object.keys(targetModel).length) {
+      const array = await Categories.find({}).exec();
+      res.status(200).send(JSON.stringify(array));
+    } else {
+      const bike = await Bikes.findOne({ brand: targetModel.make, model: targetModel.model, year: targetModel.year }).lean();
+
+      if (!bike.lastUpdate || Date.now() - Number(bike.lastUpdate) >= 43200000) {
+        const { data } = await axios.get(bike.articles,
+          {
+            headers: {
+              "Api-Token": process.env.PUIG_TOKEN,
+            },
+          },
+        );
+        bike.lastUpdate = Date.now();
+        bike.articlesArray = data.data.articles;
+        await Bikes.findByIdAndUpdate(bike._id, { lastUpdate: Date.now(), articlesArray: [ ...data.data.articles.map(art => ({ code: art.code, colour: art.colour, product: { id: art?.product?.id, category_id: art?.product?.category?.id } })) ] });
+        console.log('bike updated')
+      }
+      
+      const arr = [
+        ...new Set(
+          bike.articlesArray
+            .filter(art => art?.product?.category_id)
+            .map(art => art.product.category_id)
+            .sort()
+        )
+      ];
+      const result = await Categories.find({ id: { $in: arr } }).lean()
+      res.status(200).send(JSON.stringify(result));
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send(JSON.stringify(err));
@@ -40,9 +71,24 @@ async function getCategoryById(req, res, next) {
 
 async function getProductsByCategory(req, res, next) {
   const { id } = req.params;
+  const { make, model, year } = req?.query;
   try {
-    const result = await Products.find({ "category.id": id }).exec();
-    res.status(200).send(JSON.stringify(result));
+    if (!year) {
+      const result = await Products.find({ "category.id": id }).exec();
+      res.status(200).send(JSON.stringify(result));
+    } else {
+      const bike = await Bikes.findOne({ brand: make, model, year }).lean();
+      const arr = [
+        ...new Set(
+          bike.articlesArray
+            .filter(art => art?.product?.id && String(art?.product?.category_id) === String(id))
+            .map(art => art.product.id)
+            .sort()
+        )
+      ];
+      const result = await Products.find({ id: { $in: arr } }).exec();
+      res.status(200).send(JSON.stringify(result));
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send(JSON.stringify(err));
@@ -68,17 +114,35 @@ async function updateCategory(req, res, next) {
 
 async function getProductById(req, res, next) {
   const { id } = req.params;
+  const { make, model, year } = req?.query;
   try {
     const result = await Products.findOne({ id }).exec();
     const array = [];
 
-    if (result?.articles[0]) {
+    if (result?.articles[0] && !year) {
       for (const art of result.articles) {
         const arts = await Articles.find({ code: art }).exec();
         array.push(...arts);
       }
 
       result.articles = array;
+    } else if (result?.articles[0] && year) {
+      const bike = await Bikes.findOne({ brand: make, model, year }).lean();
+      const articles = bike.articlesArray.filter(i => String(i.product?.id) === String(id));
+      for (const art of articles) {
+        const arts = await Articles.find({ code: art.code }).exec();
+        array.push(...arts);
+      }
+
+      const unique = [
+        ...new Map(
+          array.map(item => [
+            `${item.code}_${item.colour?.code}`,
+            item
+          ])
+        ).values()
+      ];
+      result.articles = unique;
     }
 
     res.status(200).send(JSON.stringify(result));
@@ -313,6 +377,51 @@ async function updateBikesByArticle(req, res) {
   }
 }
 
+async function getBrands(req, res) {
+  try {
+    const brandsArray = await Bikes.find({}, { brand: 1 }).lean()
+    const result = [ ...new Set(brandsArray.map(p => p.brand).sort()) ];
+    res.status(200).send(result);
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: 'Error, try again later.' });
+  }
+  
+}
+
+async function getBikeModels(req, res) {
+  const { brand } = req?.query
+  try {
+    if (brand) {
+      const array = await Bikes.find({ brand }, { brand: 1, model: 1, year: 1 }).lean();
+      const result = Object.values(
+        array.reduce((acc, item) => {
+          const key = `${item.brand}_${item.model}`;
+          if (!acc[key]) {
+            acc[key] = {
+              model: item.model,
+              years: new Set()
+            };
+          }
+
+          acc[key].years.add(item.year);
+
+          return acc;
+        }, {})
+      ).map(item => ({
+        ...item,
+        years: [...item.years].sort((a, b) => a - b)
+      }));
+
+      res.status(200).send(result);
+    }
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: 'Error, try again later.' });
+  } 
+  
+}
+
 module.exports = {
   getCategories,
   updateCategory,
@@ -326,4 +435,6 @@ module.exports = {
   checkProductsUpdates,
   changeHoroshopStatus,
   updateBikesByArticle,
+  getBrands,
+  getBikeModels,
 };

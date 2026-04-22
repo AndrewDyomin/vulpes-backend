@@ -70,30 +70,30 @@ async function checkBikes() {
         }
     }
 
-    const puigBikes = PuigBikes.find({}, { brand: 1, model: 1, year: 1 }).lean().cursor();
+    // const puigBikes = PuigBikes.find({}, { brand: 1, model: 1, year: 1 }).lean().cursor();
 
-    for await (const bike of puigBikes) {
-        const brandName = bike.brand.trim().toLowerCase();
-        const modelName = bike.model.trim().toLowerCase();
-        const years = parseYears(bike.year);
+    // for await (const bike of puigBikes) {
+    //     const brandName = bike.brand.trim().toLowerCase();
+    //     const modelName = bike.model.trim().toLowerCase();
+    //     const years = parseYears(bike.year);
 
-        // --- BRAND ---
-        if (!brandMap.has(brandName)) {
-            brandMap.set(brandName, new Map());
-        }
+    //     // --- BRAND ---
+    //     if (!brandMap.has(brandName)) {
+    //         brandMap.set(brandName, new Map());
+    //     }
 
-        const modelMap = brandMap.get(brandName);
+    //     const modelMap = brandMap.get(brandName);
 
-        // --- MODEL ---
-        if (!modelMap.has(modelName)) {
-            modelMap.set(modelName, new Set());
-        }
+    //     // --- MODEL ---
+    //     if (!modelMap.has(modelName)) {
+    //         modelMap.set(modelName, new Set());
+    //     }
 
-        const yearSet = modelMap.get(modelName);
+    //     const yearSet = modelMap.get(modelName);
 
-        // --- YEARS ---
-        years.forEach(y => yearSet.add(y));
-    }
+    //     // --- YEARS ---
+    //     years.forEach(y => yearSet.add(y));
+    // }
 
     const result = [];
 

@@ -41,6 +41,14 @@ const puigBikesSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  lastUpdate: {
+    type: String,
+    default: '1776848171026',
+  },
+  articlesArray: {
+    type: Array,
+    default: [],
+  }
 });
 
 module.exports = mongoose.model("PuigBikes", puigBikesSchema);

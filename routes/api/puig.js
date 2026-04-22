@@ -16,5 +16,7 @@ router.post("/update-product", PuigController.updateProduct);
 router.get("/check-articles-updates", PuigController.checkProductsUpdates);
 router.get("/horoshop/:code/:color/:command", PuigController.changeHoroshopStatus);
 router.post("/update-bikes-by-article", PuigController.updateBikesByArticle);
+router.get("/bike-brands", PuigController.getBrands);
+router.get("/bike-models", PuigController.getBikeModels);
 
 module.exports = router;
