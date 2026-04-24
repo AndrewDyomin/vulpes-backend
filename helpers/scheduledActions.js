@@ -590,8 +590,8 @@ cron.schedule(    // import products
   },
 );
 
-cron.schedule(    //  update prom base 1 per 3 hours
-  "20 */3 * * *",
+cron.schedule(    //  update prom base 1 per 6 hours
+  "20 */6 * * *",
   () => {
     updatePromBase();
   },
