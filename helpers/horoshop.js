@@ -68,33 +68,33 @@ const categories = [
 ];
 
 const colors = [
-  { code: "", description: "Without colour", uk: "Прозорий" },
-  { code: "A", description: "Blue", uk: "Блакитний" },
-  { code: "B", description: "White", uk: "Білий" },
-  { code: "C", description: "Carbon look", uk: "Carbon" },
-  { code: "D", description: "Anodized aluminum", uk: "Алюміній" },
-  { code: "E", description: "Squares", uk: "Squares" },
-  { code: "F", description: "Dark Smoke", uk: "Темно-димчастий" },
-  { code: "G", description: "Yellow", uk: "Жовтий" },
-  { code: "H", description: "Smoke", uk: "Димчастий" },
-  { code: "I", description: "Stainless steel", uk: "Сріблястий" },
-  { code: "J", description: "Matt black", uk: "Чорний" },
-  { code: "K", description: "Laser", uk: "Laser" },
-  { code: "L", description: "Purple", uk: "Фіолетовий" },
-  { code: "M", description: "Pure white", uk: "Білий" },
-  { code: "N", description: "Black", uk: "Чорний" },
-  { code: "O", description: "Gold", uk: "Золотий" },
-  { code: "P", description: "Silver", uk: "Сріблястий" },
-  { code: "Q", description: "Pink", uk: "Рожевий" },
-  { code: "R", description: "Red", uk: "Червоний" },
-  { code: "T", description: "Orange", uk: "Помаранчевий" },
-  { code: "U", description: "Grey", uk: "Сірий" },
-  { code: "V", description: "Green", uk: "Зелений" },
-  { code: "W", description: "Clear", uk: "Прозорий" },
-  { code: "X", description: "Orange KTM", uk: "Помаранчевий КТМ" },
-  { code: "Y", description: "Titanium", uk: "Тітановий" },
-  { code: "Z", description: "Gold", uk: "Золотий" },
-  { code: "S", description: "Graphics", uk: "Graphics" },
+  { code: "", description: "Without colour", uk: "прозорий", ru: "прозрачный", key: "Прозорий" },
+  { code: "A", description: "Blue", uk: "синього кольору", ru: "синего цвета", key: "Синій" },
+  { code: "B", description: "White", uk: "білого кольору", ru: "белого цвета", key: "Білий" },
+  { code: "C", description: "Carbon look", uk: "під карбон", ru: "под карбон", key: "Під карбон" },
+  { code: "D", description: "Anodized aluminum", uk: "Алюміній", ru: "Алюминий", key: "Алюміній" },
+  { code: "E", description: "Squares", uk: "", ru: "", key: "" },
+  { code: "F", description: "Dark Smoke", uk: "темно-димчастого кольору", ru: "темно-дымчастого цвета", key: "Темно-димчастий" },
+  { code: "G", description: "Yellow", uk: "жовтого кольору", ru: "желтого цвета", key: "Жовтий" },
+  { code: "H", description: "Smoke", uk: "димчастого кольору", ru: "дымчастого цвета", key: "Димчастий" },
+  { code: "I", description: "Stainless steel", uk: "сріблястого кольору", ru: "серебристого цвета", key: "Сріблястий" },
+  { code: "J", description: "Matt black", uk: "матово-чорного кольору", ru: "матово-черного цвета", key: "Матово-чорний" },
+  { code: "K", description: "Laser", uk: "", ru: "", key: "" },
+  { code: "L", description: "Purple", uk: "фіолетового кольору", ru: "фиолетового цвета", key: "Фіолетовий" },
+  { code: "M", description: "Pure white", uk: "білого кольору", ru: "белого цвета", key: "Білий" },
+  { code: "N", description: "Black", uk: "чорного цвета", ru: "черного цвета", key: "Чорний" },
+  { code: "O", description: "Gold", uk: "золотого кольору", ru: "золотого цвета", key: "Золотий" },
+  { code: "P", description: "Silver", uk: "сріблястого кольору", ru: "серебристого цвета", key: "Сріблястий" },
+  { code: "Q", description: "Pink", uk: "рожевого кольору", ru: "розового цвета", key: "Рожевий" },
+  { code: "R", description: "Red", uk: "червоного кольору", ru: "красного цвета", key: "Червоний" },
+  { code: "T", description: "Orange", uk: "помаранчевого кольору", ru: "оранжевого цвета", key: "Помаранчевий" },
+  { code: "U", description: "Grey", uk: "сірого кольору", ru: "серого цвета", key: "Сірий" },
+  { code: "V", description: "Green", uk: "зеленого кольору", ru: "зеленого цвета", key: "Зелений" },
+  { code: "W", description: "Clear", uk: "прозорий", ru: "прозрачный", key: "Прозорий" },
+  { code: "X", description: "Orange KTM", uk: "", ru: "", key: "" },
+  { code: "Y", description: "Titanium", uk: "тітанового кольору", ru: "титанового цвета", key: "Тітановий" },
+  { code: "Z", description: "Gold", uk: "золотого кольору", ru: "золотого цвета", key: "Золотий" },
+  { code: "S", description: "Graphics", uk: "", ru: "", key: "" },
 ];
 // "Few units in stock"
 const redFlag = ["Available on"];
@@ -124,130 +124,150 @@ async function getToken() {
   return result;
 }
 
-async function generateHoroshopProduct(article) {
-  const product = await Product.findOne({ id: article.product.id }).exec();
+async function generateHoroshopProduct(ref, family) {
   const result = [];
-  if (!product) return [];
-  const targetCategory = categories.find(
-    (i) => i.name === product.category.title,
-  );
+  try {
+    const product = await Product.findOne({ id: ref.product.id }).exec();
+    const parentArt = `${family[0].code}${family[0].colour.code}`
+    
+    if (!product || !product.titleRu || product.titleRu === '') return [];
+    const targetCategory = categories.find(
+      (i) => i.name === product.category.title,
+    );
 
-  if (product.enableSplitting) {
-    if (article?.bikesArray?.length > 0) {
-      for (const [brandIndex, brand] of article.bikesArray.entries()) {
-        for (const [modelIndex, model] of brand.models.entries()) {
-          for (const [i, year] of model.year.entries()) {
-            const targetColor = colors.find(
-              (c) => c.code === article.colour.code,
-            );
-            const draft = {
-              parent_article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
-              article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
-              title: {
-                ru: `${product.titleRu} для ${brand.brand} ${model.model} ${year} ${targetColor.description} ${article.code}${article.colour.code}`,
-                ua: `${product.titleUk} для ${brand.brand} ${model.model} ${year} ${targetColor.uk} ${article.code}${article.colour.code}`,
-              },
-              description: {
-                ru: product.descriptionRu,
-                ua: product.descriptionUk,
-              },
-              seo_description: {
-                ru: product.descriptionRu
-                  .replace(/\n+/g, " ")
-                  .replace(/\s+/g, " ")
-                  .trim(),
-                ua: product.descriptionUk
-                  .replace(/\n+/g, " ")
-                  .replace(/\s+/g, " ")
-                  .trim(),
-              },
-              color: targetColor?.uk || "",
-              gtin: article.barcode,
-              parent: { id: targetCategory?.id || 1105 },
-              forceAliasUpdate: true,
-              display_in_showcase: true,
-              presence: "Доставка 10-18 днів",
-              price: Number(article.priceUAH),
-              price_old: 0,
-              currency: 'UAH',
-              icons: ["Новинка"],
-              brand: "Puig",
-              characteristics: {
-                material: article.material,
-                country: {
-                  ru: article.origin,
-                  ua: article.origin,
-                },
-              },
-              export_to_marketplace: "Google Feed for Merchant Center",
-              supplier: {
-                id: 4,
-                value: "Puig"
-              },
-              images: {
-                override: true,
-                links: [...article.images],
-              },
-            };
-            result.push(draft);
+    for (const article of family) {
+      if (article?.horoshopAddDate || article?.horoshopStatus !== "on") continue;
+      const stock = Number(article.stock);
+      if (product.enableSplitting) {
+        if (article?.bikesArray?.length > 0) {
+          for (const [brandIndex, brand] of article.bikesArray.entries()) {
+            for (const [modelIndex, model] of brand.models.entries()) {
+              for (const [i, year] of model.year.entries()) {
+                const targetColor = colors.find(
+                  (c) => c.code === article.colour.code,
+                );
+                const draft = {
+                  parent_article: `${parentArt}-${brandIndex}${modelIndex}${i}`,
+                  article: `${article.code}${article.colour.code}-${brandIndex}${modelIndex}${i}`,
+                  title: {
+                    ru: `${product.titleRu} Puig для ${brand.brand} ${model.model} ${year}`,
+                    ua: `${product.titleUk} Puig для ${brand.brand} ${model.model} ${year}`,
+                  },
+                  mod_title: {
+                    ru: targetColor.ru === "" ? `${product.titleRu} Puig для ${brand.brand} ${model.model} ${year} ${article.code}${article.colour.code}` : `${product.titleRu} Puig для ${brand.brand} ${model.model} ${year} ${targetColor.ru} ${article.code}${article.colour.code}`,
+                    ua: targetColor.uk === "" ? `${product.titleUk} Puig для ${brand.brand} ${model.model} ${year} ${article.code}${article.colour.code}` : `${product.titleUk} Puig для ${brand.brand} ${model.model} ${year} ${targetColor.uk} ${article.code}${article.colour.code}`,
+                  },
+                  description: {
+                    ru: product.descriptionRu,
+                    ua: product.descriptionUk,
+                  },
+                  seo_description: {
+                    ru: product.descriptionRu
+                      .replace(/\n+/g, " ")
+                      .replace(/\s+/g, " ")
+                      .trim(),
+                    ua: product.descriptionUk
+                      .replace(/\n+/g, " ")
+                      .replace(/\s+/g, " ")
+                      .trim(),
+                  },
+                  color: targetColor?.key || "",
+                  gtin: article.barcode,
+                  parent: { id: targetCategory?.id || 1105 },
+                  forceAliasUpdate: true,
+                  display_in_showcase: Number.isFinite(stock) ? true : false,
+                  presence: Number.isFinite(stock) ? "Доставка 10-18 днів" : "Немає в наявності",
+                  price: Number(article.priceUAH),
+                  price_old: 0,
+                  currency: 'UAH',
+                  icons: ["Новинка"],
+                  brand: "Puig",
+                  characteristics: {
+                    material: article.material,
+                    country: {
+                      ru: article.origin,
+                      ua: article.origin,
+                    },
+                  },
+                  export_to_marketplace: Number.isFinite(stock) ? "Google Feed for Merchant Center" : "",
+                  supplier: {
+                    id: 4,
+                    value: "Puig"
+                  },
+                  images: {
+                    override: true,
+                    links: [...article.images],
+                  },
+                };
+                result.push(draft);
+              }
+            }
           }
+        } else {
+          await sendTelegramMessage(`Ошибка создания товара для Хорошоп. У артикула ${article.code}${article.colour.code} нет массива байков`, process.env.ADMIN_CHAT_ID);
         }
+      } else {
+        const targetColor = colors.find((c) => c.code === article.colour.code);
+        const draft = {
+          parent_article: parentArt,
+          article: `${article.code}${article.colour.code}`,
+          title: {
+            ru: `${product.titleRu} Puig`,
+            ua: `${product.titleRu} Puig`,
+          },
+          mod_title: {
+            ru: targetColor.ru === "" ? `${product.titleRu} Puig ${article.code}${article.colour.code}` : `${product.titleRu} Puig ${targetColor.ru} ${article.code}${article.colour.code}`,
+            ua: targetColor.uk === "" ? `${product.titleRu} Puig ${article.code}${article.colour.code}` : `${product.titleRu} Puig ${targetColor.uk} ${article.code}${article.colour.code}`,
+          },
+          description: {
+            ru: product.descriptionRu,
+            ua: product.descriptionUk,
+          },
+          seo_description: {
+            ru: product.descriptionRu
+              .replace(/\n+/g, " ")
+              .replace(/\s+/g, " ")
+              .trim(),
+            ua: product.descriptionUk
+              .replace(/\n+/g, " ")
+              .replace(/\s+/g, " ")
+              .trim(),
+          },
+          color: targetColor?.key || "",
+          gtin: article.barcode,
+          parent: { id: targetCategory?.id || 1105 },
+          forceAliasUpdate: true,
+          display_in_showcase: Number.isFinite(stock) ? true : false,
+          presence: Number.isFinite(stock) ? "Доставка 10-18 днів" : "Немає в наявності",
+          price: Number(article.priceUAH),
+          price_old: 0,
+          currency: 'UAH',
+          icons: ["Новинка"],
+          brand: "Puig",
+          characteristics: {
+            material: article.material,
+            country: {
+              ru: article.origin,
+              ua: article.origin,
+            },
+          },
+          export_to_marketplace: Number.isFinite(stock) ? "Google Feed for Merchant Center" : "",
+          supplier: {
+            id: 4,
+            value: "Puig"
+          },
+          images: {
+            override: true,
+            links: [...article.images],
+          },
+        };
+        result.push(draft);
       }
-    } else {
-      await sendTelegramMessage(`Ошибка создания товара для Хорошоп. У артикула ${article.code}${article.colour.code} нет массива байков`, process.env.ADMIN_CHAT_ID);
     }
-  } else {
-    const targetColor = colors.find((c) => c.code === article.colour.code);
-    const draft = {
-      parent_article: `${article.code}${article.colour.code}`,
-      article: `${article.code}${article.colour.code}`,
-      title: {
-        ru: `${product.titleRu} ${targetColor.description} ${article.code}${article.colour.code}`,
-        ua: `${product.titleUk} ${targetColor.uk} ${article.code}${article.colour.code}`,
-      },
-      description: {
-        ru: product.descriptionRu,
-        ua: product.descriptionUk,
-      },
-      seo_description: {
-        ru: product.descriptionRu
-          .replace(/\n+/g, " ")
-          .replace(/\s+/g, " ")
-          .trim(),
-        ua: product.descriptionUk
-          .replace(/\n+/g, " ")
-          .replace(/\s+/g, " ")
-          .trim(),
-      },
-      color: targetColor?.uk || "",
-      gtin: article.barcode,
-      parent: { id: targetCategory?.id || 1105 },
-      forceAliasUpdate: true,
-      display_in_showcase: true,
-      presence: "Доставка 10-18 днів",
-      price: Number(article.priceUAH),
-      price_old: 0,
-      currency: 'UAH',
-      icons: ["Новинка"],
-      brand: "Puig",
-      characteristics: {
-        material: article.material,
-        country: {
-          ru: article.origin,
-          ua: article.origin,
-        },
-      },
-      export_to_marketplace: "Google Feed for Merchant Center",
-      supplier: {
-        id: 4,
-        value: "Puig"
-      },
-      images: {
-        override: true,
-        links: [...article.images],
-      },
-    };
-    result.push(draft);
+    
+  } catch(err) {
+    console.log(err)
+    sendTelegramMessage(`Не получилось создать товар от Puig - ERROR: ${JSON.stringify(err)}`, process.env.ADMIN_CHAT_ID)
   }
 
   return result;
@@ -288,6 +308,8 @@ async function sendNewProducts(toCreate) {
 }
 
 async function checkProductsForHoroshop() {
+  await checkProductsFromHoroshop();
+
   const newProducts = [];
   const operations = [];
   let lastId = null;
@@ -296,6 +318,7 @@ async function checkProductsForHoroshop() {
     while (true) {
       const query = lastId ? { _id: { $gt: lastId }, horoshopStatus: "on" } : { horoshopStatus: "on" };
       const batch = await Articles.find(query).sort({ _id: 1 }).limit(batchSize).lean();
+      const processedCodes = new Set();
 
       for (const art of batch) {
         if (redFlag.includes(art.stock) || redFlag.includes(art.stock_prevision)) {
@@ -306,20 +329,29 @@ async function checkProductsForHoroshop() {
           await Product.findOneAndUpdate({ id: art.product.id }, { warning: true });
           await Articles.findByIdAndUpdate(
             { _id: art._id },
-            { horoshopStatus: "canceled" },
+            { horoshopStatus: "canceled", horoshopAddDate: null },
           );
           continue;
         }
-        
-        if (!art?.horoshopAddDate) {
-          const draft = await generateHoroshopProduct(art)
-          if (draft.length === 0) continue;
-          newProducts.push(...draft);
+
+        if (processedCodes.has(art.code)) continue;
+        processedCodes.add(art.code);
+
+        const family = await Articles.find({ code: art.code }).sort({ code: 1, 'colour.code': 1 }).lean();
+
+        const hasNew = family.some(i => !i.horoshopAddDate);
+        if (!hasNew) continue;
+
+        const draft = await generateHoroshopProduct(art, family);
+        if (draft.length === 0) continue;
+
+        newProducts.push(...draft);
+
+        for (const i of family) {
           operations.push({
             updateOne: {
-              filter: { _id: art._id },
-              update: { $set: { horoshopAddDate: `${new Date()}` } },
-              upsert: true,
+              filter: { _id: i._id },
+              update: { $set: { horoshopAddDate: new Date() } },
             },
           });
         }
@@ -351,13 +383,14 @@ async function checkProductsForHoroshop() {
   } catch(err) {
     console.log(err);
   }
-  console.log("checkProductsForHoroshop comleted)))")
+  console.log("checkProductsForHoroshop comleted)))");
 }
 
 async function checkProductsFromHoroshop() {
   let page = 0;
   const updatedProducts = [];
-  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { code: 1, colour: 1, stock: 1, stock_prevision: 1, priceUAH: 1, images: 1 }).exec();
+  const operations = [];
+  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { code: 1, colour: 1, stock: 1, stock_prevision: 1, priceUAH: 1, images: 1, horoshopAddDate: 1 }).lean();
   const articlesMap = new Map();
   for (const a of articlesArray) {
     const key = `${a.code}_${a.colour.code}`;
@@ -372,20 +405,22 @@ async function checkProductsFromHoroshop() {
         {
           offset: page,
           limit: 500,
-          includedParams: ["price", "presence", "images", "export_to_marketplace", "supplier"],
+          includedParams: ["article", "presence", "export_to_marketplace", "supplier"],
           token,
         },
       );
 
-      page += 500;
-
       if (!data?.response?.products?.length) {
         if (data?.response?.code === 429) {
           console.log(data.status, data.response.message);
+          await sleep(5000); // < ---------------------------------------CHANGE TO NEXT HOUR
+          continue;
         }
         console.log('data.length === 0')
         break;
       }
+
+      page += 500;
 
       for (const product of data.response.products) {
         if (product.supplier.value === "Puig") {
@@ -394,30 +429,11 @@ async function checkProductsFromHoroshop() {
           const colorCode = article.slice(-1);
           const key = `${art}_${colorCode}`;
           const target = articlesMap.get(key);
-          if (!target) {
+          if (!target && product.presence?.value?.ua !== 'Немає в наявності') {
             updatedProducts.push({ article: product.article, parent_article: product.parent_article, presence: 'Немає в наявності', export_to_marketplace: [] });
             continue;
           };
-          const targetStatus = redFlag.includes(target.stock) || redFlag.includes(target.stock_prevision) ? 'Немає в наявності' : "Доставка 10-18 днів";
-          const diff = {};
-          if (product.presence.value.ua !== targetStatus) {
-            diff.presence = targetStatus;
-            diff.export_to_marketplace = targetStatus === 'Немає в наявності' ? [] : [ { id: 1, value: 'Google Feed for Merchant Center' } ];
-          }
-          if (product.price !== target.priceUAH) {
-            diff.price = Number(target.priceUAH);
-          }
-          if (product.images.length !== target.images.length) {
-            diff.images = {
-              override: true,
-              links: [...target.images],
-            }
-          }
-          if (Object.keys(diff).length > 0) {
-            diff.article = product.article;
-            diff.parent_article = product.parent_article;
-            updatedProducts.push(diff);
-          }
+          
           if (updatedProducts.length >=500) {
             const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
             if (res.data.status === 'OK') {
@@ -438,6 +454,7 @@ async function checkProductsFromHoroshop() {
             }
             updatedProducts.length = 0;
           }
+          articlesMap.delete(key);
         }
       }
       if (data.response.products.length < 500) break;
@@ -463,7 +480,7 @@ async function checkProductsFromHoroshop() {
         console.log(log)
       }
     } else if (res.data.status === 'WARNING') {
-      // console.log('WARNING:', JSON.stringify(res.data))
+      console.log('WARNING:', JSON.stringify(res.data))
       if (res.data?.response?.log?.length) {
         for (const log of res.data?.response?.log) {
           for (const info of log.info) {
@@ -477,6 +494,26 @@ async function checkProductsFromHoroshop() {
       console.log(JSON.stringify(res.data))
     }
     updatedProducts.length = 0;
+  }
+
+  const notFounded = [ ...articlesMap.values() ];
+
+  console.dir(notFounded, { deep: null });
+  for (const i of notFounded) {
+    operations.push({
+      updateOne: {
+        filter: { _id: i._id },
+        update: { $set: { horoshopAddDate: null } },
+      },
+    });
+    if (operations.length >= 500) {
+      await Articles.bulkWrite(operations, { ordered: false });
+      operations.length = 0;
+    }
+  }
+  if (operations.length > 0) {
+    await Articles.bulkWrite(operations, { ordered: false });
+    operations.length = 0;
   }
   console.log("Products check completed.")
 }
