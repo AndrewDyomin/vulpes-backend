@@ -30,7 +30,7 @@ const fetchOrders = async () => {
 
 const getDeliveryDate = async (item) => {
   const itemInfo = await Product.findOne({article: item}).exec();
-  const link = itemInfo.linkInMotea;
+  const link = itemInfo?.linkInMotea;
   if (!link) {return null;}
   const response = await axios.get(link);
 
@@ -767,7 +767,7 @@ const changeTable = async () => {
 
     for (const i of orderArray) {
       const product = await Product.findOne({article: i.item}).exec();
-      if (product.quantityInStock >= i.amount && !leverDetails.includes(i.item)) continue;
+      if (product?.quantityInStock >= i.amount && !leverDetails.includes(i.item)) continue;
       const row = [i.order.join(', '), i.item, i.amount]; 
       rows.push(row);
     }

@@ -339,13 +339,19 @@ async function fetchOrdersToMotea(req, res, next) {
     });
     let rowNumber = 2;
 
-    for (const row of data.values) {
-      result.push({ numbers: row[0] || '', sku: row[1] || '', amount: row[2] || '', bestand: row[3] || '', name: row[4] || '', row: rowNumber, pending: false });
+    if (data?.values?.length) {
+      for (const row of data.values) {
+        result.push({ numbers: row[0] || '', sku: row[1] || '', amount: row[2] || '', bestand: row[3] || '', name: row[4] || '', row: rowNumber, pending: false });
+        rowNumber++;
+      }
+    } else {
+      result.push({ numbers: 'null', sku: 'null', amount: 'null', bestand: 'null', name: 'таблица пуста', row: rowNumber, pending: false });
       rowNumber++;
     }
 
     res.status(200).send(result);
   } catch(err) {
+    console.log(err)
     res.status(500).send({ message: err });
   }
 }
