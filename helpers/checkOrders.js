@@ -46,6 +46,11 @@ const getDeliveryDate = async (item) => {
   }
 
   const targetTag = response.data.slice(startIndex + startToken.length, endIndex).trim();
+  
+  if (String(targetTag) === "<strong>Ready to ship </strong>in 1-3 business days") {
+    const date = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    return date.getTime();
+  }
 
   const matches = targetTag.match(/(\d{2})\.(\d{2})\.(\d{4})/g);
   const [day, month, year] = matches[0].split('.').map(Number);
