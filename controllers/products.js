@@ -123,8 +123,8 @@ async function getByArticle(req, res, next) {
       const targetProduct = await puigProducts.findOne({ id: targetArticle.product.id}, {titleRu: 1, titleUk: 1}).lean();
       product = { 
         name: { 
-          UA: `${targetProduct.titleUk} ${targetArticle.colour.description} (${targetArticle.code}${targetArticle.colour.code})`, 
-          RU: `${targetProduct.titleRu} ${targetArticle.colour.description} (${targetArticle.code}${targetArticle.colour.code})` 
+          UA: `${targetProduct.titleUk} ${targetArticle.colour.description} Puig(${targetArticle.code}${targetArticle.colour.code})`, 
+          RU: `${targetProduct.titleRu} ${targetArticle.colour.description} Puig(${targetArticle.code}${targetArticle.colour.code})` 
         },
       }
     }
