@@ -14,6 +14,7 @@ const sendTelegramFile = require("../helpers/sendTelegramFile");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const updateSheets = require("../helpers/updateSheets");
 const { translateService } = require('./puig');
+const PuigArticles = require('../models/puigArticles');
 const puigProducts = require('../models/puigProducts');
 const chatId = process.env.ADMIN_CHAT_ID;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
@@ -118,8 +119,8 @@ async function getByArticle(req, res, next) {
       const ref = article.includes('-') ? article.split('-')[0] : article;
       const art = ref.slice(0, -1);
       const colorCode = ref.slice(-1);
-      const targetArticle = await PuigArticles.findOne({ code: art, "colour.code": colorCode }, {code: 1, colour: 1}).lean();
-      const targetProduct = await puigProducts.findOne({ id: targetArticle.product.id}, {titleRu: 1, titleUk}).lean();
+      const targetArticle = await PuigArticles.findOne({ code: art, "colour.code": colorCode }, {code: 1, colour: 1, product: 1}).lean();
+      const targetProduct = await puigProducts.findOne({ id: targetArticle.product.id}, {titleRu: 1, titleUk: 1}).lean();
       product = { 
         name: { 
           UA: `${targetProduct.titleUk} ${targetArticle.colour.description} (${targetArticle.code}${targetArticle.colour.code})`, 
