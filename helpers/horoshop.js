@@ -2,6 +2,7 @@ const axios = require("axios");
 const User = require("../models/user");
 const Articles = require("../models/puigArticles");
 const Product = require("../models/puigProducts");
+const Item = require("../models/item");
 const sendTelegramMessage = require("./sendTelegramMessage");
 const batchSize = 100;
 
@@ -122,6 +123,27 @@ async function getToken() {
   }
 
   return result;
+}
+
+async function getHoroshopItems(array) {
+  try {
+    let token = await getToken();
+    const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
+      {
+        expr: {
+          article: array,
+        },
+        limit: 500,
+        token,
+      },
+    );
+    // ----------------- ОБРАБОТАТЬ ПРОБРОС ОШИБКИ -------------------- //
+    
+    return { products: [ ...data?.response?.products ], error: null };
+  } catch(err) {
+    console.log(err);
+    return { products: [], error: err }
+  }
 }
 
 async function generateHoroshopProduct(ref, family) {
@@ -390,11 +412,18 @@ async function checkProductsFromHoroshop() {
   let page = 0;
   const updatedProducts = [];
   const operations = [];
+  const itemOperations = [];
   const articlesArray = await Articles.find({ horoshopStatus: "on" }, { code: 1, colour: 1, stock: 1, stock_prevision: 1, priceUAH: 1, images: 1, horoshopAddDate: 1 }).lean();
   const articlesMap = new Map();
   for (const a of articlesArray) {
     const key = `${a.code}_${a.colour.code}`;
     articlesMap.set(key, a);
+  }
+  const itemsArray = await Item.find({}, { outdated: 1, article: 1 }).lean();
+  const itemsMap = new Map();
+  for (const i of itemsArray) {
+    const key = i.article;
+    itemsMap.set(key, i);
   }
   let token = await getToken();
 
@@ -413,7 +442,9 @@ async function checkProductsFromHoroshop() {
       if (!data?.response?.products?.length) {
         if (data?.response?.code === 429) {
           console.log(data.status, data.response.message);
-          await sleep(5000); // < ---------------------------------------CHANGE TO NEXT HOUR
+          console.log("Error 429 - awaiting next hour");
+          const ms = 3605000 - (Date.now() % 3600000);
+          await sleep(ms);
           continue;
         }
         console.log('data.length === 0')
@@ -455,6 +486,27 @@ async function checkProductsFromHoroshop() {
             updatedProducts.length = 0;
           }
           articlesMap.delete(key);
+        } else if (product.supplier.value === "MOTEA") {
+          const target = itemsMap.get(product.article)
+          if (target && !target?.outdated && product.presence?.value?.ua === 'Немає в наявності') {
+            itemOperations.push({
+              updateOne: {
+                filter: { _id: target._id },
+                update: { $set: { outdated: new Date() } },
+              },
+            });
+          } else if (target && target?.outdated && product.presence?.value?.ua !== 'Немає в наявності') {
+            itemOperations.push({
+              updateOne: {
+                filter: { _id: target._id },
+                update: { $set: { outdated: null } },
+              },
+            });
+          }
+          if (itemOperations.length >= 500) {
+            await Item.bulkWrite(itemOperations, { ordered: false });
+            itemOperations.length = 0;
+          }
         }
       }
       if (data.response.products.length < 500) break;
@@ -498,7 +550,7 @@ async function checkProductsFromHoroshop() {
 
   const notFounded = [ ...articlesMap.values() ];
 
-  console.dir(notFounded, { deep: null });
+  // console.dir(notFounded, { deep: null }, `Всего не найдено ${notFounded.length} артикулов.`);
   for (const i of notFounded) {
     operations.push({
       updateOne: {
@@ -515,7 +567,11 @@ async function checkProductsFromHoroshop() {
     await Articles.bulkWrite(operations, { ordered: false });
     operations.length = 0;
   }
+  if (itemOperations.length > 0) {
+    await Item.bulkWrite(itemOperations, { ordered: false });
+    itemOperations.length = 0;
+  }
   console.log("Products check completed.")
 }
 
-module.exports = { checkProductsForHoroshop, checkProductsFromHoroshop };
+module.exports = { checkProductsForHoroshop, checkProductsFromHoroshop, getHoroshopItems };

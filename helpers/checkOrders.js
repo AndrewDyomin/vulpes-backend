@@ -133,6 +133,8 @@ const changeTable = async () => {
 
     const targetOrders = await fetchOrders();
     const filteredOrders = await checkDeliveryDate(targetOrders);
+    const filteredIds = new Set(filteredOrders.map(i => i.id));
+    const excludedOrders = targetOrders.filter(i => !filteredIds.has(i.id));
     const orderArray = [];
 
     for (const order of filteredOrders) {
@@ -769,15 +771,36 @@ const changeTable = async () => {
 'A632047',
 'A632050',
 'A632260',];
+    const excludedProducts = [];
 
     for (const i of orderArray) {
       const product = await Product.findOne({article: i.item}).exec();
-      if (product?.quantityInStock >= i.amount && !leverDetails.includes(i.item)) continue;
+      if (product?.quantityInStock >= i.amount && !leverDetails.includes(i.item)) {
+        excludedProducts.push(i.item);
+        continue;
+      };
       const row = [i.order.join(', '), i.item, i.amount]; 
       rows.push(row);
     }
     
     await updateSheets(sheets, spreadsheetId, range, rows);
+
+    if (excludedOrders.length > 0 || excludedProducts.length > 0) {
+      let report = `В шаблон заказа вписано: ${filteredOrders.length} заказов, ${rows.length} товаров\n\n`;
+
+      if (excludedOrders.length > 0) {
+        report += `Некоторые заказы были отфильтрованы:\n${excludedOrders.map(o => o.id).join(';\n')}\n`;
+      }
+      if (excludedProducts.length > 0) {
+        report += `Некоторые товары были отфильтрованы:\n${excludedProducts.join(';\n')}\n`;
+      }
+      const owners = await User.find({ role: "owner" }).exec();
+      for (const owner of owners) {
+        if (owner?.chatId && owner?.chatId !== "") {
+          await sendTelegramMessage(report, owner.chatId);
+        }
+      }
+    }
   } catch (error) {
     console.error("Error changing table:", error);
   }

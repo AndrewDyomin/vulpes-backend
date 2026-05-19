@@ -1,25 +1,15 @@
 const axios = require("axios");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
+const { getHoroshopItems } = require("../helpers/horoshop");
 const Product = require("../models/item");
 const PuigArticles = require("../models/puigArticles")
 const User = require("../models/user");
 const readline = require("readline");
+const { google } = require("googleapis");
+const fs = require("fs");
+const path = require("path");
 
 let updateFlag = false;
-
-// function waitEnter(message = "Нажмите Enter...") {
-//     const rl = readline.createInterface({
-//       input: process.stdin,
-//       output: process.stdout,
-//     });
-
-//     return new Promise((resolve) => {
-//       rl.question(message, () => {
-//         rl.close();
-//         resolve();
-//       });
-//     });
-// }
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -236,7 +226,7 @@ async function horoshopUpdatePrice(req, res) {
             const recommendedPrice = Math.round(Number(target.pvp_recommended) * eurSell);
             const difference = Math.round((Math.abs(product?.price - recommendedPrice) / product?.price) * 100);
 
-            if (difference >= 5) {
+            if (difference >= 3) {
               updated.price = recommendedPrice;
               updated.price_old = recommendedPrice;
             }
@@ -344,4 +334,166 @@ async function horoshopUpdatePrice(req, res) {
   }
 }
 
-module.exports = { horoshopCheckUpdatePrice, horoshopUpdatePrice };
+async function saveImages(product) {
+  try {
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.OAUTH_CLIENT_ID,
+      process.env.OAUTH_CLIENT_SECRET,
+      'https://developers.google.com/oauthplayground'
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: process.env.OAUTH_REFRESH_TOKEN,
+    });
+
+    const drive = google.drive({ version: 'v3', auth: oauth2Client, });
+    const rootFolderId = process.env.IMAGES_DRIVE;
+
+    const res = await drive.files.list({
+      q: `
+        mimeType = 'application/vnd.google-apps.folder'
+        and name = '${product.article}'
+        and '${rootFolderId}' in parents
+        and trashed = false
+      `,
+      fields: 'files(id, name)',
+    });
+    let targetFolder;
+    
+    if (res.data?.files?.length > 0) {
+      targetFolder = res.data?.files[0];
+    } else {
+      const create = await drive.files.create({
+        requestBody: {
+          name: product.article,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [rootFolderId],
+        },
+        fields: 'id, name',
+      });
+      targetFolder = create.data;
+    }
+
+    const filesRes = await drive.files.list({
+      q: `'${targetFolder.id}' in parents and trashed = false`,
+      fields: 'files(id, name, mimeType)',
+      pageSize: 100,
+    });
+    targetFolder.files = filesRes.data?.files;
+
+    if (targetFolder.files?.length !== product.images?.length) {
+      let i = 0;
+      for (const link of product.images) {
+        const tmpPath = path.join(
+          process.cwd(),
+          'tmp',
+          `${product.article}_${i}.jpg`
+        );
+
+        const response = await axios({
+          url: link,
+          method: 'GET',
+          responseType: 'stream',
+        });
+
+        await new Promise((resolve, reject) => {
+          const writer = fs.createWriteStream(tmpPath);
+
+          response.data.pipe(writer);
+
+          writer.on('finish', resolve);
+          writer.on('error', reject);
+        });
+
+        const newFile = await drive.files.create({
+          requestBody: {
+            name: `${product.article}_${i}`,
+            parents: [targetFolder.id],
+          },
+          media: {
+            mimeType: response.headers['content-type'] || 'image/jpeg',
+            body: fs.createReadStream(tmpPath),
+          },
+          fields: 'id',
+        });
+        targetFolder.files.push(newFile.data)
+        fs.unlinkSync(tmpPath);
+        i++;
+      }
+    }
+
+    targetFolder.uploaded = true;
+
+    return targetFolder;
+  } catch(err) {
+    console.log(err);
+    return { uploaded: false };
+  }
+};
+
+async function horoshopGetOutdatedProducts(req, res) {
+  const daysCount = 4;
+  const daysMs = 24 * 60 * 60 * 1000 * daysCount;
+  const now = new Date();
+  try {
+    const result = [];
+    const products = await Product.find({ outdated: { $exists: true, $nin: [null, "true"] } }, { quantityInStock: 1, article: 1, name: 1, outdated: 1, images: 1, imagesDrive: 1 }).limit(400).lean();
+
+    for (const product of products) {
+      const dateDifference = now - new Date(product.outdated);
+      if ((!product?.quantityInStock || product.quantityInStock < 1) && Number(dateDifference) >= Number(daysMs)) {
+        if (!product?.imagesDrive?.uploaded) {
+          const drive = await saveImages(product);
+          if (drive?.uploaded) {
+            await Product.findByIdAndUpdate(product._id, { imagesDrive: { folderId: drive.id, uploaded: true } })
+            product.imagesDrive = { folderId: drive.id, uploaded: true };
+          }
+        }
+        result.push({ ...product, dateDifference })
+      }
+      if (result?.length >= 30) break;
+    }
+
+    res.status(200).send(result);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(JSON.stringify(err));
+  }
+}
+
+async function horoshopRefreshOutdatedProducts(req, res) {
+  const targetArray = req?.body;
+  if (targetArray?.length) {
+    try {
+      const { products, error } = await getHoroshopItems(req?.body);
+      if (error) {
+        res.status(500).send({ error });
+        return;
+      }
+      const existingArticles = new Set(products.map(i => i.article));
+      const notFound = targetArray.filter(article => !existingArticles.has(article));
+
+      if (notFound?.length) {
+        const operations = [];
+        for (const item of notFound) {
+          operations.push({
+            updateOne: {
+              filter: { article: item },
+              update: { $set: { outdated: "true" } },
+            },
+          });
+        }
+        await Product.bulkWrite(operations, { ordered: false });
+      }
+
+      await horoshopGetOutdatedProducts(req, res)
+    } catch(err) {
+      console.log(err);
+      res.status(500).send({ error: err });
+    }
+  } else {
+    res.status(200).send({ message: 'Array is empty.' });
+  }
+}
+
+module.exports = { horoshopCheckUpdatePrice, horoshopUpdatePrice, horoshopGetOutdatedProducts, horoshopRefreshOutdatedProducts };

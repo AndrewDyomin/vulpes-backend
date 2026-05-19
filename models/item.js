@@ -235,6 +235,20 @@ const itemSchema = new mongoose.Schema({
       default: true,
     },
   },
+  outdated: {
+      type: String,
+      default: null,
+  },
+  imagesDrive: {
+    folderId: {
+      type: String,
+      default: '',
+    },
+    uploaded: {
+      type: Boolean,
+      default: false,
+    }
+  },
 });
 
 itemSchema.index({ quantityInStock: -1 });

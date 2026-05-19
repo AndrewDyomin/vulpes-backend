@@ -191,6 +191,7 @@ async function download(req, res, next) {
     );
     res.send(buffer);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 }
