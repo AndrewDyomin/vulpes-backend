@@ -252,9 +252,32 @@ async function horoshopUpdatePrice(req, res) {
           }
 
         } else {
-          undefinedProducts.push(product.article);
-          console.log(product.article, '- undefined');
-          continue;
+          target = donorsMap.get(product.article);
+          if (!target) {
+            undefinedProducts.push(product.article);
+            continue;
+          }
+
+          if (target.quantityInStock > 0 && product.presence.id !== 1) {
+              updated.presence = 'В наявності';
+              updated.export_to_marketplace = 'Google Feed for Merchant Center';
+              updated.display_in_showcase = true;
+          }
+
+          if (target.quantityInStock <= 0) {
+              if (target?.availabilityInMotea === 'in stock' && product?.presence?.value?.ua !== 'Доставка 10-18 днів') {
+                  updated.presence = 'Доставка 10-18 днів';
+                  updated.export_to_marketplace = 'Google Feed for Merchant Center';
+                  updated.display_in_showcase = true;
+              } else if (target?.availabilityInMotea !== 'in stock' && product?.presence?.value?.ua !== 'Немає в наявності') {
+                  updated.presence = 'Немає в наявності';
+                  updated.export_to_marketplace = '';
+                  updated.display_in_showcase = false;
+              }
+          }
+          // undefinedProducts.push(product.article);
+          // console.log(product.article, '- undefined');
+          // continue;
         }        
 
         if (Object.keys(updated).length > 0) {
