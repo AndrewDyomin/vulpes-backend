@@ -455,7 +455,7 @@ async function saveImages(product) {
 };
 
 async function horoshopGetOutdatedProducts(req, res) {
-  const daysCount = 4;
+  const daysCount = 14;
   const daysMs = 24 * 60 * 60 * 1000 * daysCount;
   const now = new Date();
   try {

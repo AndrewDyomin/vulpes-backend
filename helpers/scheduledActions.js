@@ -88,7 +88,7 @@ async function sendToSheets() {
         const row = obj.row;
         const sku = row[0].replace("-9", "");
         const product = await Product.findOne({ article: sku }).exec();
-        if (product.category === "1167") {
+        if (product?.category === "1167") {
           toTable.push([`${sku}-10`, ...row.slice(1)]);
         }
       }
@@ -105,10 +105,11 @@ async function sendToSheets() {
         hasMore = false;
       }
     }
+    console.log('Sheets updated')
   } catch (err) {
-    console.log("Google feed table are not updated. Error:", err.response.data);
+    console.log("Google feed table are not updated. Error:", err);
     sendTelegramMessage(
-      `Во время обновления таблицы в Google MC feed возникла ошибка : ${JSON.stringify(err.response.data)}`,
+      `Во время обновления таблицы в Google MC feed возникла ошибка : ${JSON.stringify(err)}`,
       chatId,
     );
   }
