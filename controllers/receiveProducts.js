@@ -2,6 +2,7 @@
 // const xml2js = require('xml2js');
 const XLSX = require("xlsx");
 const Receive = require("../models/receive");
+const Invoices = require("../models/Invoices");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 
 const format = (number) => {
@@ -20,14 +21,14 @@ async function getAll(req, res, next) {
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([
-      Receive.find().skip(skip).limit(limit).exec(),
+      Receive.find().sort({ _id: -1 }).skip(skip).limit(limit).exec(),
       Receive.countDocuments(),
     ]);
 
     const totalPages = Math.ceil(total / limit);
 
     return res.status(200).json({
-      items,
+      items: items.map((r) => ({ ...r._doc, items: r._doc.items.map((i) => ({ ...i, article: i.article.replace(/а/g, 'a').replace(/А/g, 'A') })) })),
       pagination: {
         total,
         totalPages,
@@ -66,15 +67,18 @@ async function add(req, res, next) {
 
     for (const item of items) {
       if (item?.article && item.article !== '' && item.article !== '?') {
-        array.push({article: item.article, count: item.count})
+        if (/а/gi.test(item.article)) {
+          item.article = item.article.replace(/а/gi, 'A');
+        }
+        array.push({article: item.article, count: item.count, barcode: item?.barcode});
       } else {
-        const chatId = process.env.ADMIN_CHAT_ID;
         array.push(item)
-        sendTelegramMessage(`Приход товара №${name} создан с ошибками`, chatId)
+        sendTelegramMessage(`Приход товара №${name} создан с ошибками`, process.env.ADMIN_CHAT_ID)
       }
     }
 
     await Receive.create({ name, items: array });
+    sendTelegramMessage(`${req?.user?.user.name} добавил новый приход товаров.`, process.env.ADMIN_CHAT_ID);
 
     res.status(200).json({ message: "Receive created.", name });
   } catch (error) {
@@ -196,4 +200,38 @@ async function download(req, res, next) {
   }
 }
 
-module.exports = { getAll, getById, add, remove, update, combine, download };
+async function getAllInvoices(req, res) {
+  try {
+    const result = await Invoices.find().exec()
+    res.status(200).send([ ...result ])
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: 'Something went wrong. :/' })
+  }
+}
+
+async function addInvoice(req, res) {
+  try {
+    const { name, items, total } = req.body;
+    const array = [];
+    let lastChild = null;
+
+    for (const item of items) {
+      if (item?.position && item?.price && item.position !== '') {
+        lastChild = { ...item, set: [] };
+        array.push(lastChild);
+      } else if (lastChild) {
+        lastChild.set.push({ article: item.article, count: item.count })
+      }
+    }
+
+    await Invoices.create({ name, items: array, total: Number(total) });
+
+    res.status(200).send({ message: 'Invoice saved' })
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: 'Something went wrong. :/' })
+  }
+}
+
+module.exports = { getAll, getById, add, remove, update, combine, download, getAllInvoices, addInvoice };

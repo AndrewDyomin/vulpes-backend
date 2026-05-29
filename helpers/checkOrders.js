@@ -53,6 +53,9 @@ const getDeliveryDate = async (item) => {
   }
 
   const matches = targetTag.match(/(\d{2})\.(\d{2})\.(\d{4})/g);
+  if (!matches) {
+    return new Date().getTime();
+  }
   const [day, month, year] = matches[0].split('.').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
 
