@@ -13,5 +13,6 @@ router.post("/combine", receiveController.combine);
 router.post("/download", receiveController.download);
 router.get("/all-invoices", receiveController.getAllInvoices);
 router.post("/add-invoice", receiveController.addInvoice);
+router.post("/del-invoice", receiveController.delInvoice);
 
 module.exports = router;

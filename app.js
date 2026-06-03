@@ -32,7 +32,7 @@ app.use("/users", isAuth, usersRoutes);
 app.use("/products", productsRoutes);
 app.use("/orders", ordersRoutes);
 app.use("/inventory-check", isAuth, inventoryCheckRoutes);
-app.use("/receive-products", ReceiveRoutes);
+app.use("/receive-products", isAuth, ReceiveRoutes);
 app.use("/files", FilesRoutes);
 app.use("/webhook", TelegramRoutes);
 app.use("/stat", isAuth, StatisticRoutes);

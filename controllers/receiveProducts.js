@@ -103,10 +103,11 @@ async function remove(req, res, next) {
 }
 
 async function update(req, res, next) {
-  const { id, items } = req.body;
+  const { id, items, invoices } = req.body;
+  const invoicesArray = invoices || [];
 
   try {
-    await Receive.findByIdAndUpdate(id, { items }).exec();
+    await Receive.findByIdAndUpdate(id, { items, invoices: invoicesArray }).exec();
     res.status(200).json({ message: "Inventory check was updated" });
   } catch (error) {
     next(error);
@@ -202,7 +203,7 @@ async function download(req, res, next) {
 
 async function getAllInvoices(req, res) {
   try {
-    const result = await Invoices.find().exec()
+    const result = await Invoices.find().sort({ _id: -1 }).limit(20).exec()
     res.status(200).send([ ...result ])
   } catch(err) {
     console.log(err);
@@ -234,4 +235,26 @@ async function addInvoice(req, res) {
   }
 }
 
-module.exports = { getAll, getById, add, remove, update, combine, download, getAllInvoices, addInvoice };
+async function delInvoice(req, res) {
+  const { _id } = req?.body;
+  try {
+    await Invoices.findByIdAndDelete(_id).exec()
+    res.status(200).send({ message: 'Invoice deleted' })
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: 'Something went wrong. :/' })
+  }
+}
+
+module.exports = { 
+  getAll, 
+  getById, 
+  add, 
+  remove, 
+  update, 
+  combine, 
+  download, 
+  getAllInvoices, 
+  addInvoice, 
+  delInvoice 
+};

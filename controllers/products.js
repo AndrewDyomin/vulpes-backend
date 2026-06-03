@@ -120,6 +120,17 @@ async function getByArticle(req, res, next) {
       const art = ref.slice(0, -1);
       const colorCode = ref.slice(-1);
       const targetArticle = await PuigArticles.findOne({ code: art, "colour.code": colorCode }, {code: 1, colour: 1, product: 1}).lean();
+      if (!targetArticle) {
+        product = { 
+          name: { 
+            UA: 'не знайдено', 
+            RU: 'не найдено' 
+          },
+          // --------------- ДОБАВЬ ЗАГЛУШКУ НА ДИСК И ВСТАВЬ ССЫЛКУ
+          images: ['']
+        }
+        return res.status(200).json({ product });
+      }
       const targetProduct = await puigProducts.findOne({ id: targetArticle.product.id}, {titleRu: 1, titleUk: 1}).lean();
       product = { 
         name: { 

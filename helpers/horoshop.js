@@ -301,7 +301,7 @@ async function sendNewProducts(toCreate) {
     try {
       const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: toCreate, token: await getToken() });
 
-      if (res.data.status === 'OK') {
+      if (res.data.status === 'OK' || res.data.status === 'WARNING') {
         for (const log of res.data.response.log) {
           console.log(log)
         }
@@ -312,7 +312,7 @@ async function sendNewProducts(toCreate) {
         await sleep(ms);
         continue;
       } else {
-        console.log(res.data)
+        console.dir(res.data, { deep: null });
       }
       break;
     } catch(err) {
@@ -359,7 +359,7 @@ async function checkProductsForHoroshop() {
         if (processedCodes.has(art.code)) continue;
         processedCodes.add(art.code);
 
-        const family = await Articles.find({ code: art.code }).sort({ code: 1, 'colour.code': 1 }).lean();
+        const family = await Articles.find({ code: art.code, outdated: 0 }).sort({ code: 1, 'colour.code': 1 }).lean();
 
         const hasNew = family.some(i => !i.horoshopAddDate);
         if (!hasNew) continue;
@@ -550,11 +550,12 @@ async function checkProductsFromHoroshop() {
 
   const notFounded = [ ...articlesMap.values() ];
 
-  // console.dir(notFounded, { deep: null }, `Всего не найдено ${notFounded.length} артикулов.`);
+  // console.dir(notFounded, { deep: null });
+  console.log(`Всего не найдено ${notFounded.length} артикулов.`)
   for (const i of notFounded) {
     operations.push({
       updateOne: {
-        filter: { _id: i._id },
+        filter: { code: i.code, "colour.code": i.colour.code },
         update: { $set: { horoshopAddDate: null } },
       },
     });

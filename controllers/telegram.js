@@ -63,7 +63,7 @@ async function bot(req, res, next) {
     }
 
     if (
-      userStates[req.body.message.chat.id]?.step === "awaiting_urls" &&
+      userStates[req.body.message?.chat.id]?.step === "awaiting_urls" &&
       req.body?.message?.document
     ) {
       const chatId = req.body.message.chat.id;
