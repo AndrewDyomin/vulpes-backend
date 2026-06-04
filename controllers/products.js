@@ -122,12 +122,12 @@ async function getByArticle(req, res, next) {
       const targetArticle = await PuigArticles.findOne({ code: art, "colour.code": colorCode }, {code: 1, colour: 1, product: 1}).lean();
       if (!targetArticle) {
         product = { 
+          article,
           name: { 
             UA: 'не знайдено', 
             RU: 'не найдено' 
           },
-          // --------------- ДОБАВЬ ЗАГЛУШКУ НА ДИСК И ВСТАВЬ ССЫЛКУ
-          images: ['']
+          images: ['https://lh3.googleusercontent.com/d/12EQCWgYdZVfL_sTcX8AL1n479ValLi24?authuser=0']
         }
         return res.status(200).json({ product });
       }

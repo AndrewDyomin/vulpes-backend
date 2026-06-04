@@ -246,6 +246,37 @@ async function delInvoice(req, res) {
   }
 }
 
+async function report(req, res) {
+  const { receive, extra, notEnough, invoices } = req.body;
+  if (!invoices?.length) {
+    res.status(200).send({ message: 'Target invoices not found' })
+  }
+  let reportText = `Завершена проверка товаров от ${receive}. \n`;
+
+  if (!extra?.length && !notEnough?.length) {
+    reportText += '\nВсе ок =)\nСчет закрыт.';
+    for (const name of invoices) {
+      await Invoices.findOneAndUpdate({ name }, { verified: true }).exec();
+    }
+  }
+
+  if (notEnough?.length) {
+    reportText += `\nНекоторых товаров не хватает:\n${notEnough.map(i => `${i.article} - ${i.count}шт;`).join('\n')}\n`;
+  }
+
+  if (extra?.length) {
+    reportText += `\nЕсть товары, которых нет в ${invoices.length > 1 ? 'счетах' : 'счете'}:\n${extra.map(i => `${i.article} - ${i.count}шт;`).join('\n')}\n`;
+  }
+
+  const owners = await User.find({ role: "owner" }).exec();
+  for (const owner of owners) {
+    if (owner?.chatId && owner?.chatId !== "") {
+      await sendTelegramMessage(reportText, owner.chatId);
+    }
+  }
+  res.status(200).send({ message: 'Report sended' });
+}
+
 module.exports = { 
   getAll, 
   getById, 
@@ -256,5 +287,6 @@ module.exports = {
   download, 
   getAllInvoices, 
   addInvoice, 
-  delInvoice 
+  delInvoice,
+  report 
 };
