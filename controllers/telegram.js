@@ -1,6 +1,7 @@
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { changeTable } = require("../helpers/checkOrders");
 const { sendBatchToIndexing } = require("../helpers/indexingApi");
+const Invoices = require("../models/Invoices");
 require("dotenv").config();
 
 const userStates = {};
@@ -52,6 +53,22 @@ async function bot(req, res, next) {
               chatId
             );
           });
+      }
+
+      if (data.includes('CLOSE_INVOICES')) {
+        const match = data.match(/\[(.*?)\]/);
+        const invoices = match
+          ? match[1].split(',').map(i => i.trim())
+          : [];
+
+        if (invoices?.length > 0) {
+          for (const invoice of invoices) {
+            await Invoices.findOneAndUpdate({ name: invoice }, { verified: true }).exec();
+          }
+          await sendTelegramMessage(`${invoices.length > 1 ? 'Счета' : 'Счет'} ${invoices.join(', ')} ${invoices.length > 1 ? 'закрыты' : 'закрыт'}.`, chatId);
+        } else {
+          await sendTelegramMessage('Не получилось распознать номера счетов, позовите Андрея.', chatId);
+        }
       }
 
       return res

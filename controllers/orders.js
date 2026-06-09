@@ -202,7 +202,6 @@ async function getByFilter(req, res, next) {
 
 async function orderedStatus(req, res, next) {
   const ordersArray = req.body.orders
-  console.log(ordersArray, '- - - -', req.body.cancel)
 
   try {
     const url = "https://vulpes.salesdrive.me/api/order/update/";
@@ -212,7 +211,7 @@ async function orderedStatus(req, res, next) {
     };
 
     for (const order of ordersArray) {
-      if (!req.body?.cancel) {
+      if (!req.body?.cancel && order !== 'склад') {
         const data = {
           id: order,
           data: {
@@ -221,7 +220,7 @@ async function orderedStatus(req, res, next) {
         };
 
         await axios.post(url, data, { headers });
-      } else if (req.body?.cancel) {
+      } else if (req.body?.cancel && order !== 'склад') {
         const data = {
           id: order,
           data: {

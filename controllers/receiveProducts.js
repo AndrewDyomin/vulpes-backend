@@ -2,7 +2,7 @@
 // const xml2js = require('xml2js');
 const XLSX = require("xlsx");
 const Receive = require("../models/receive");
-const User = require("../models/user")
+const User = require("../models/user");
 const Invoices = require("../models/Invoices");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 
@@ -119,6 +119,7 @@ async function combine(req, res, next) {
   // const { role } = req.user.user;
   const { array } = req.body;
   const resultArray = [];
+  const invoices = [];
   let name = "";
 
   try {
@@ -138,8 +139,14 @@ async function combine(req, res, next) {
         if (name === "") {
           name = check.name;
         }
+
+        for (const inv of check.invoices) {
+          if (!invoices.includes(inv)) {
+            invoices.push(inv);
+          }
+        }
       }
-      await Receive.create({ name, items: resultArray });
+      await Receive.create({ name, items: resultArray, invoices });
 
       for (const id of array) {
         await Receive.findByIdAndDelete(id).exec();
@@ -247,12 +254,26 @@ async function delInvoice(req, res) {
   }
 }
 
+async function closeInvoice(req, res) {
+  const { _id } = req.body;
+  console.log(_id)
+  try {
+    await Invoices.findByIdAndUpdate(_id, { verified: true }).exec();
+    res.status(200).send({ message: 'invoice closed' });
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: 'Something went wrong, please try again later.' })
+  }
+}
+
 async function report(req, res) {
   const { receive, extra, notEnough, invoices } = req.body;
+  let replyButtons = null;
+
   if (!invoices?.length) {
     res.status(200).send({ message: 'Target invoices not found' })
   }
-  let reportText = `Завершена проверка товаров от ${receive}. \n`;
+  let reportText = `Завершена проверка товаров от ${receive}. \nЗатронуты счета:\n${invoices.join('\n')}\n`;
 
   if (!extra?.length && !notEnough?.length) {
     reportText += '\nВсе ок =)\nСчет закрыт.';
@@ -263,18 +284,30 @@ async function report(req, res) {
 
   if (notEnough?.length) {
     reportText += `\nНекоторых товаров не хватает:\n${notEnough.map(i => `${i.article} - ${i.count}шт;`).join('\n')}\n`;
+  } else {
+    replyButtons = {
+      inline_keyboard: [
+        [
+          {
+            text: `Закрыть ${invoices.length > 1 ? 'счета' : 'счет'}`,
+            callback_data: `CLOSE_INVOICES_[${invoices.join(', ')}]`,
+          },
+        ],
+      ],
+    };
   }
 
   if (extra?.length) {
     reportText += `\nЕсть товары, которых нет в ${invoices.length > 1 ? 'счетах' : 'счете'}:\n${extra.map(i => `${i.article} - ${i.count}шт;`).join('\n')}\n`;
   }
 
-  const owners = await User.find({ role: "owner" }).exec();
-  for (const owner of owners) {
-    if (owner?.chatId && owner?.chatId !== "") {
-      await sendTelegramMessage(reportText, owner.chatId);
-    }
-  }
+  // const owners = await User.find({ role: "owner" }).exec();
+  // for (const owner of owners) {
+  //   if (owner?.chatId && owner?.chatId !== "") {
+  //     await sendTelegramMessage(reportText, owner.chatId);
+  //   }
+  // }
+  await sendTelegramMessage(reportText, process.env.ADMIN_CHAT_ID, replyButtons);
   res.status(200).send({ message: 'Report sended' });
 }
 
@@ -289,5 +322,6 @@ module.exports = {
   getAllInvoices, 
   addInvoice, 
   delInvoice,
+  closeInvoice,
   report 
 };

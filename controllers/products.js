@@ -5,7 +5,8 @@ const Product = require("../models/item");
 const MoteaProduct = require("../models/moteaItem");
 const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
-const Bikes = require("../models/bikes")
+const Bikes = require("../models/bikes");
+const PurchaseRequest = require("../models/purchaseRequest");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -623,6 +624,66 @@ async function getBikes (req, res) {
   }
 }
 
+async function addToPurchaseRequest (req, res) {
+  const { article } = req?.body;
+  const result = {};
+
+  if (article) {
+    result.article = article.replace(/а/g, 'a').replace(/А/g, 'A');
+    const target = await PurchaseRequest.findOne({ article: result.article }).lean();
+    if (target) {
+      res.status(200).send({ message: 'This product is alredy on the list.' })
+      return;
+    }
+    const product = await Product.findOne({ article: result.article }, { name: 1, images: 1 }).lean();
+    if (product?.name?.UA !== '') {
+      result.name = product?.name?.UA;
+    } else if (product?.name?.RU !== '') {
+      result.name = product?.name?.RU;
+    } else {
+      result.name = '';
+    }
+    if (product?.images?.length > 0) {
+      result.image = product.images[0];
+    } else {
+      result.image = 'https://lh3.googleusercontent.com/d/12EQCWgYdZVfL_sTcX8AL1n479ValLi24?authuser=0';
+    }
+
+    await PurchaseRequest.create(result);
+    res.status(200).send({ message: 'Ok' })
+  } else {
+    res.status(500).send({ message: 'Article not found.' })
+  }
+}
+
+async function removeFromPurchaseRequest (req, res) {
+  const { _id, article } = req.body;
+  if (_id) {
+    await PurchaseRequest.findByIdAndDelete(_id).exec();
+    res.status(200).send({ message: 'Ok' })
+  } else if (article) {
+    await PurchaseRequest.findOneAndDelete({ article }).exec();
+    res.status(200).send({ message: 'Ok' })
+  } else {
+    res.status(500).send({ message: 'Article not found.' })
+  }
+}
+
+async function getAllPurchaseRequests (req, res) {
+  try {
+    const array = await PurchaseRequest.find().lean();
+
+    if (!array) {
+      res.status(200).send({ array: [] });
+    } else {
+      res.status(200).send({ array });
+    }
+  } catch(err) {
+    console.log(err)
+    res.status(500)
+  }
+}
+
 module.exports = {
   getAll,
   getAllBarcodes,
@@ -635,4 +696,7 @@ module.exports = {
   updateProduct,
   getProductTranslate,
   getBikes,
+  addToPurchaseRequest,
+  getAllPurchaseRequests,
+  removeFromPurchaseRequest,
 };

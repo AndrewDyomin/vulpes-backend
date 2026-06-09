@@ -15,5 +15,6 @@ router.post("/report", receiveController.report);
 router.get("/all-invoices", receiveController.getAllInvoices);
 router.post("/add-invoice", receiveController.addInvoice);
 router.post("/del-invoice", receiveController.delInvoice);
+router.post("/close-invoice", receiveController.closeInvoice);
 
 module.exports = router;

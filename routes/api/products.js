@@ -15,6 +15,8 @@ router.post("/update-prom-base", isAuth, ProductsController.updatePromBase);
 router.post("/update", isAuth, ProductsController.updateProduct);
 router.post("/get-translate", isAuth, ProductsController.getProductTranslate);
 router.get("/bikes", ProductsController.getBikes)
-// router.post("/delete", ProductsController.deleteProduct);
+router.post("/add-to-purchase-request", isAuth, ProductsController.addToPurchaseRequest);
+router.post("/remove-from-purchase-request", isAuth, ProductsController.removeFromPurchaseRequest);
+router.get("/all-purchase-requests", isAuth, ProductsController.getAllPurchaseRequests);
 
 module.exports = router;

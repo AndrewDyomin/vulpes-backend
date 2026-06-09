@@ -1,6 +1,7 @@
 const OrdersArchive = require("../models/ordersArchive");
 const User = require("../models/user");
 const Product = require("../models/item");
+const PurchaseRequest = require("../models/purchaseRequest");
 const sendTelegramMessage = require("./sendTelegramMessage");
 const { google } = require("googleapis");
 const updateSheets = require("../helpers/updateSheets");
@@ -22,6 +23,24 @@ const fetchOrders = async () => {
       };
       result.push(orderData);
     }
+
+    const extra = await PurchaseRequest.find().lean();
+    if (extra?.length) {
+      const orderData = {
+        id: 'склад',
+        statusLabel: "замовити",
+        products: [],
+      };
+      for (const product of extra) {
+        orderData.products.push({
+          amount: '-',
+          sku: product.article,
+          isSet: [],
+        })
+      }
+      result.push(orderData);
+    }
+
     return result;
   } catch (error) {
     console.error("Error fetching orders:", error);
