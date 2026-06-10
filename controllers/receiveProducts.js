@@ -130,7 +130,10 @@ async function combine(req, res, next) {
         for (const item of check.items) {
           const target = resultArray.find((i) => i.article === item.article);
           if (target) {
-            target.count = String(Number(target.count) + Number(item.count));
+            target.count = Number(target.count) + Number(item.count);
+            if ((!target?.barcode || target?.barcode === '') && item?.barcode) {
+              target.barcode = item.barcode;
+            }
           } else {
             resultArray.push(item);
           }
