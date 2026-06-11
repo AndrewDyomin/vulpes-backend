@@ -22,6 +22,7 @@ const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
 const { checkProductsUpdates } = require("../controllers/puig");
 const { generateFeed } = require("../helpers/zakupka");
+const { horoshopUpdatePrice } = require("../controllers/marketplaces");
 
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
@@ -575,6 +576,7 @@ cron.schedule(    // import products
     child.on("exit", async(code) => {
       console.log(`Проверка товаров в СД завершена с кодом ${code}`);
       await generateFeed();
+      await horoshopUpdatePrice();
     });
 
     child.on("error", (err) => {

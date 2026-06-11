@@ -4,6 +4,7 @@ const { getHoroshopItems } = require("../helpers/horoshop");
 const Product = require("../models/item");
 const PuigArticles = require("../models/puigArticles")
 const User = require("../models/user");
+const Marketplaces = require("../models/marketplaces");
 const readline = require("readline");
 const { google } = require("googleapis");
 const fs = require("fs");
@@ -79,17 +80,21 @@ async function horoshopCheckUpdatePrice(req, res) {
 }
 
 async function horoshopUpdatePrice(req, res) {
-  const chatId = req?.user?.user?.chatId || null;
+  const chatId = req?.user?.user?.chatId || process.env.ADMIN_CHAT_ID;
   const undefinedProducts = [];
   const autoIncreased = [];
   let total = 0;
 
   try {
     if (updateFlag) {
-      res.status(200).send({ message: "price update has alrady started" });
-      return;
+      if (res) {
+        res.status(200).send({ message: "price update has alrady started" });
+      }
+        return;
     } else {
-      res.status(200).send({ message: "price update started" });
+      if (res) {
+        res.status(200).send({ message: "price update started" });
+      }
     }
 
     const { data } = await axios.get('https://api.monobank.ua/bank/currency');
@@ -519,4 +524,34 @@ async function horoshopRefreshOutdatedProducts(req, res) {
   }
 }
 
-module.exports = { horoshopCheckUpdatePrice, horoshopUpdatePrice, horoshopGetOutdatedProducts, horoshopRefreshOutdatedProducts };
+async function addMarketplace(req, res) {
+  const { name } = req.body;
+  try {
+    await Marketplaces.create({ name });
+
+    res.status(200).send({message: "Ok"});
+  } catch(err) {
+    console.log(err)
+    res.status(200).send({message: "Error. Try again later"});
+  }
+}
+
+async function getAllMarketplaces(req, res) {
+  try {
+    const array = await Marketplaces.find();
+
+    res.status(200).send(array);
+  } catch(err) {
+    console.log(err);
+    res.status(500).send([]);
+  }
+}
+
+module.exports = { 
+  horoshopCheckUpdatePrice, 
+  horoshopUpdatePrice, 
+  horoshopGetOutdatedProducts, 
+  horoshopRefreshOutdatedProducts, 
+  addMarketplace,
+  getAllMarketplaces,
+};

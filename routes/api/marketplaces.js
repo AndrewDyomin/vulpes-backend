@@ -8,5 +8,7 @@ router.get("/horoshop-check-update-price", marketplacesController.horoshopCheckU
 router.get("/horoshop-update-price", marketplacesController.horoshopUpdatePrice);
 router.get("/horoshop-check-outdated-products", marketplacesController.horoshopGetOutdatedProducts);
 router.post("/horoshop-refresh-outdated-products", marketplacesController.horoshopRefreshOutdatedProducts);
+router.post("/add", marketplacesController.addMarketplace);
+router.get("/all", marketplacesController.getAllMarketplaces);
 
 module.exports = router;
