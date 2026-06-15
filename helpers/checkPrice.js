@@ -1,6 +1,7 @@
 const Product = require("../models/item");
 const mongoose = require("mongoose");
 const cheerio = require("cheerio");
+const axios = require("axios");
 
 const MAIN_DB_URI = process.env.DB_URI;
 const blackList = [
