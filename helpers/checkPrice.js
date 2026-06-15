@@ -132,7 +132,17 @@ async function checkPrice() {
     const now = new Date();
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    const exchangeRate = 50.5;
+    // const exchangeRate = 50.5;
+    const { data } = await axios.get('https://api.monobank.ua/bank/currency');
+
+    const findRate = (codeA, codeB) =>
+      data.find(
+      item =>
+          item.currencyCodeA === codeA &&
+          item.currencyCodeB === codeB
+      );
+    const eur = findRate(978, 980);
+    const exchangeRate = Math.round((eur?.rateSell + Number.EPSILON) * 100) / 100 || Math.round((eur?.rateCross + Number.EPSILON) * 100) / 100;
 
     const BATCH_SIZE = 200;
     let lastId = null;
