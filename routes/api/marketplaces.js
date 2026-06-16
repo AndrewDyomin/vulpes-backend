@@ -10,5 +10,6 @@ router.get("/horoshop-check-outdated-products", marketplacesController.horoshopG
 router.post("/horoshop-refresh-outdated-products", marketplacesController.horoshopRefreshOutdatedProducts);
 router.post("/add", marketplacesController.addMarketplace);
 router.get("/all", marketplacesController.getAllMarketplaces);
+router.post("/update-marketplace", marketplacesController.updateMarketplace);
 
 module.exports = router;

@@ -42,8 +42,13 @@ async function horoshopCheckUpdatePrice(req, res) {
   const batchSize = 20;
   let skip = 0;
   let lastId = null;
+  let markup = 1;
 
   try {
+    const market = await Marketplaces.findById({ _id: '6a2ab8b087d179dd95924ab0' }).lean();
+    if (market?.markup) {
+      markup = market.markup;
+    }
     while (result.length < 10) {
       const query = lastId ? { _id: { $gt: lastId } } : {};
       const batch = await Product.find(query, {
@@ -63,10 +68,10 @@ async function horoshopCheckUpdatePrice(req, res) {
         const db = item?.price?.UAH || 0;
         const mt = item?.moteaPrice?.UAH || 0;
         if (mt === 0 || db === 0) continue;
-        const difference = Math.round((Math.abs(db - mt) / db) * 100);
+        const difference = Math.round((Math.abs(db - (mt * markup)) / db) * 100);
 
         if (difference >= 5) {
-          result.push(item);
+          result.push({ ...item, moteaPrice: { ...item.moteaPrice, UAH: Math.round(item.moteaPrice.UAH * markup) } });
         }
         if (result.length === 10) break;
       }
@@ -83,6 +88,7 @@ async function horoshopUpdatePrice(req, res) {
   const chatId = req?.user?.user?.chatId || process.env.ADMIN_CHAT_ID;
   const undefinedProducts = [];
   const autoIncreased = [];
+  let markup = 1;
   let total = 0;
 
   try {
@@ -97,6 +103,10 @@ async function horoshopUpdatePrice(req, res) {
       }
     }
 
+    const market = await Marketplaces.findById({ _id: '6a2ab8b087d179dd95924ab0' }).lean();
+    if (market?.markup) {
+      markup = market.markup;
+    }
     const { data } = await axios.get('https://api.monobank.ua/bank/currency');
 
     const findRate = (codeA, codeB) =>
@@ -178,25 +188,24 @@ async function horoshopUpdatePrice(req, res) {
           }
 
           if (target?.moteaPrice?.UAH && target.moteaPrice.UAH !== 0) {
-              const difference = Math.round((Math.abs(product?.price_old - target?.moteaPrice?.UAH) / product?.price_old) * 100);
+            const difference = Math.round((Math.abs(product?.price_old - (target?.moteaPrice?.UAH * markup)) / product?.price_old) * 100);
 
-              if (difference >= 5 && product.brand?.value?.ua !== 'Puig' && product.brand?.value?.ua !== 'MRA') {
-                updated.price = Math.round(target?.moteaPrice?.UAH * 0.85);
-                updated.price_old = target?.moteaPrice?.UAH;
-                if (target.vendorprice && target.vendorprice * 2 > updated.price) {
-                  updated.price = Math.round(target.vendorprice * 2.35 * 0.85);
-                  updated.price_old = Math.round(target.vendorprice * 2.35);
-                  autoIncreased.push({ article: product.article, price: target.moteaPrice.UAH, newPrice: updated.price })
-                }
-              } else if (difference >= 5 && (product.brand?.value?.ua === 'Puig' || product.brand?.value?.ua === 'MRA')) {
-                updated.price = Math.round(target?.moteaPrice?.UAH);
-                if (target.vendorprice && target.vendorprice * 2 > updated.price) {
-                  updated.price = Math.round(target.vendorprice * 2);
-                  updated.price_old = Math.round(target.vendorprice * 2);
-                  autoIncreased.push({ article: product.article, price: target.moteaPrice.UAH, newPrice: updated.price });
-                }
+            if (difference >= 5 && product.brand?.value?.ua !== 'Puig' && product.brand?.value?.ua !== 'MRA') {
+              updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.85);
+              updated.price_old = Math.round(target?.moteaPrice?.UAH * markup);
+              if (target.vendorprice && target.vendorprice * 2 > updated.price) {
+                updated.price = Math.round(target.vendorprice * 2.35 * 0.85);
+                updated.price_old = Math.round(target.vendorprice * 2.35);
+                autoIncreased.push({ article: product.article, price: target.moteaPrice.UAH, newPrice: updated.price })
               }
-
+            } else if (difference >= 5 && (product.brand?.value?.ua === 'Puig' || product.brand?.value?.ua === 'MRA')) {
+              updated.price = Math.round(target?.moteaPrice?.UAH * markup);
+              if (target.vendorprice && target.vendorprice * 2 > updated.price) {
+                updated.price = Math.round(target.vendorprice * 2);
+                updated.price_old = Math.round(target.vendorprice * 2);
+                autoIncreased.push({ article: product.article, price: target.moteaPrice.UAH, newPrice: updated.price });
+              }
+            }
           }
 
           if (target.quantityInStock > 0 && product.presence.id !== 1) {
@@ -223,12 +232,11 @@ async function horoshopUpdatePrice(req, res) {
           target = await PuigArticles.findOne({ code: art, "colour.code": colorCode }, { stock: 1, stock_prevision: 1, pvp: 1, pvp_recommended: 1, quantityInStock: 1, horoshopStatus: 1 }).lean();
           if (!target) {
             undefinedProducts.push(product.article);
-            console.log(product.article, '- undefined');
             continue;
           }
 
           if (target.pvp_recommended && target.pvp_recommended !== "0") {
-            const recommendedPrice = Math.round(Number(target.pvp_recommended) * eurSell);
+            const recommendedPrice = Math.round(Number(target.pvp_recommended) * eurSell * markup);
             const difference = Math.round((Math.abs(product?.price - recommendedPrice) / product?.price) * 100);
 
             if (difference >= 3) {
@@ -280,9 +288,6 @@ async function horoshopUpdatePrice(req, res) {
                   updated.display_in_showcase = false;
               }
           }
-          // undefinedProducts.push(product.article);
-          // console.log(product.article, '- undefined');
-          // continue;
         }        
 
         if (Object.keys(updated).length > 0) {
@@ -460,7 +465,7 @@ async function saveImages(product) {
 };
 
 async function horoshopGetOutdatedProducts(req, res) {
-  const daysCount = 14;
+  const daysCount = 21;
   const daysMs = 24 * 60 * 60 * 1000 * daysCount;
   const now = new Date();
   try {
@@ -547,6 +552,44 @@ async function getAllMarketplaces(req, res) {
   }
 }
 
+async function updateMarketplace(req, res) {
+  const body = req?.body;
+  const draft = {};
+  try {
+    const marketplace = await Marketplaces.findById({ _id: body?._id }).lean();
+    if (!marketplace) {
+      res.status(500)
+      return;
+    }
+    Object.keys(marketplace).forEach(key => {
+      if (
+        marketplace[key] &&
+        typeof marketplace[key] === 'object' &&
+        !Array.isArray(marketplace[key])
+      ) {
+        Object.keys(marketplace[key]).forEach(subKey => {
+          if (body[key][subKey] !== marketplace[key][subKey]) {
+            draft[key][subKey] = body[key][subKey];
+          }
+        });
+      } else {
+        if (body[key] !== marketplace[key]) {
+          draft[key] = body[key];
+        }
+      }
+    });
+
+    if (Object.keys(draft)?.length) {
+      await Marketplaces.findByIdAndUpdate({ _id: body._id }, draft)
+    }
+
+    res.status(200).send({ message: 'Ok' });
+  } catch(err) {
+    console.log(err);
+    res.status(500)
+  }
+}
+
 module.exports = { 
   horoshopCheckUpdatePrice, 
   horoshopUpdatePrice, 
@@ -554,4 +597,5 @@ module.exports = {
   horoshopRefreshOutdatedProducts, 
   addMarketplace,
   getAllMarketplaces,
+  updateMarketplace,
 };

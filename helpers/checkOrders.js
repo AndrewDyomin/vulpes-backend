@@ -113,6 +113,8 @@ const checkDeliveryDate = async (targetOrders) => {
     }
     if (!isInStock.includes(false)) {
       result.push(order);
+    } else if (order.id === 'склад') {
+      result.push(order);
     }
   }
 

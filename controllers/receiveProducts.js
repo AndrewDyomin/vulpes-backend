@@ -167,6 +167,7 @@ async function combine(req, res, next) {
 async function download(req, res, next) {
   const { id } = req.body;
   const resultArray = [];
+  const pricesMap = new Map();
   const now = new Date();
   const today = format(now.getDate());
   const month = format(now.getMonth() + 1);
@@ -177,6 +178,23 @@ async function download(req, res, next) {
   try {
     const doc = await Receive.findById(id);
     if (!doc) return res.status(404).send("Not found");
+    if (doc?.invoices?.length) {
+      const invoices = await Invoices.find({ name: { $in: doc.invoices } }).lean();
+      for (const invoice of invoices) {
+        for (const item of invoice.items) {
+          const existing = pricesMap.get(item.article);
+
+          if (existing && item.price) {
+            existing.price = Number(item.price || 0);
+          } else if (!existing) {
+            pricesMap.set(item.article, {
+              article: item.article,
+              price: Number(item.price || null),
+            });
+          }
+        }
+      }
+    }
 
     for (const item of doc.items) {
       const target = resultArray.find((i) => i.article === item.article);
@@ -188,13 +206,24 @@ async function download(req, res, next) {
     }
 
     const data = resultArray.map((item) => ({
-      Article: item.article,
-      Count: item.count,
+      id: item.article,
+      sku: item.article,
+      name: '',
+      count: Number(item.count),
+      price: pricesMap.get(item.article)?.price || '-',
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
+    const worksheet = XLSX.utils.json_to_sheet(data, {
+      header: ['id', 'sku', 'name', 'count', 'price'],
+    });
+
+    XLSX.utils.sheet_add_aoa(
+      worksheet,
+      [['ID', 'SKU', 'Название', 'К-во', 'Закупочная цена']],
+      { origin: 'A1' }
+    );
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Receive");
 
     // Gen buffer
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
