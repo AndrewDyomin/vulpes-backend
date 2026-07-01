@@ -249,6 +249,10 @@ const itemSchema = new mongoose.Schema({
       default: false,
     }
   },
+  promId: {
+    type: String,
+    default: null,
+  },
 });
 
 itemSchema.index({ quantityInStock: -1 });

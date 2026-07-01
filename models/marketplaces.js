@@ -16,6 +16,10 @@ const marketplacesSchema = new mongoose.Schema({
       type: String,
       default: "",
     },
+    backFeed: {
+      type: String,
+      default: "",
+    },
     generate: {
       type: Boolean,
       default: false,

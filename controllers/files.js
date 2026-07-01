@@ -3,7 +3,9 @@ const path = require("path");
 const parseMyPdf = require("../helpers/parseInvoice");
 const XLSX = require("xlsx");
 const Product = require("../models/item");
+const Marketplaces = require("../models/marketplaces");
 const { generateFeed } = require("../helpers/zakupka");
+const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
 
 async function uploadInvoice(req, res, next) {
   const filePath = req.file.path;
@@ -101,4 +103,28 @@ async function getXmlToZakupka(req, res) {
   }
 }
 
-module.exports = { uploadInvoice, downloadBrokerTable, getXmlToZakupka };
+async function getXmlFromId(req, res) {
+  const { id } = req.params;
+  if (!id) {
+    res.status(500).send({ message: 'Id not found' });
+    return;
+  }
+
+  try {
+    const marketplace = await Marketplaces.findById({ _id: id }).lean();
+    const xmlPath = path.join(__dirname, "../", "public", "xml", `${marketplace.name}.xml`);
+
+    try {
+      await fs.access(xmlPath);
+    } catch {
+      await generateFeedsForMarketplaces();
+    }
+
+    res.status(200).sendFile(xmlPath);
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: 'Something went wrong.' });
+  }
+}
+
+module.exports = { uploadInvoice, downloadBrokerTable, getXmlToZakupka, getXmlFromId };

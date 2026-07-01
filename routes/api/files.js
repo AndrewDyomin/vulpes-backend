@@ -11,6 +11,7 @@ const router = express.Router();
 router.post("/invoiceParser", isAuth, upload.single("invoice"), filesController.uploadInvoice);
 router.post("/download-table-for-broker", isAuth, filesController.downloadBrokerTable);
 router.get("/zakupka.xml", filesController.getXmlToZakupka);
+router.get("/feed-xml/:id", filesController.getXmlFromId);
 router.get("/update-zakupka", async (req, res) => { await generateFeed(); res.status(200).send('ok');})
 
 module.exports = router;

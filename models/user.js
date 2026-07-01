@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema({
   chatId: {
     type: String,
     default: null,
+  },
+  oauthRefreshToken: {
+    type: String,
+    default: null,
   }
 });
 

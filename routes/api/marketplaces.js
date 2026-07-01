@@ -11,5 +11,7 @@ router.post("/horoshop-refresh-outdated-products", marketplacesController.horosh
 router.post("/add", marketplacesController.addMarketplace);
 router.get("/all", marketplacesController.getAllMarketplaces);
 router.post("/update-marketplace", marketplacesController.updateMarketplace);
+router.get("/generate-xml-for-marketplaces", marketplacesController.generateXmlForMarketplaces);
+router.post("/refresh-google-oauth-token", marketplacesController.refreshOauthToken);
 
 module.exports = router;

@@ -21,7 +21,8 @@ const updateSheets = require("../helpers/updateSheets");
 const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
 const { checkProductsUpdates } = require("../controllers/puig");
-const { generateFeed } = require("../helpers/zakupka");
+// const { generateFeed } = require("../helpers/zakupka");
+const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
 const { horoshopUpdatePrice } = require("../controllers/marketplaces");
 
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
@@ -575,7 +576,7 @@ cron.schedule(    // import products
 
     child.on("exit", async(code) => {
       console.log(`Проверка товаров в СД завершена с кодом ${code}`);
-      await generateFeed();
+      await generateFeedsForMarketplaces();
       await horoshopUpdatePrice();
     });
 

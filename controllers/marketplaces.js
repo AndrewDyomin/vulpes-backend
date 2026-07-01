@@ -1,6 +1,7 @@
 const axios = require("axios");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getHoroshopItems } = require("../helpers/horoshop");
+const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
 const Product = require("../models/item");
 const PuigArticles = require("../models/puigArticles")
 const User = require("../models/user");
@@ -367,7 +368,11 @@ async function horoshopUpdatePrice(req, res) {
   }
 }
 
-async function saveImages(product) {
+async function saveImages(product, refreshToken) {
+  if (!refreshToken) {
+    return { uploaded: false, error: 'invalid_grant' };
+  }
+
   try {
     const oauth2Client = new google.auth.OAuth2(
       process.env.OAUTH_CLIENT_ID,
@@ -376,7 +381,7 @@ async function saveImages(product) {
     );
 
     oauth2Client.setCredentials({
-      refresh_token: process.env.OAUTH_REFRESH_TOKEN,
+      refresh_token: refreshToken,
     });
 
     const drive = google.drive({ version: 'v3', auth: oauth2Client, });
@@ -460,7 +465,11 @@ async function saveImages(product) {
     return targetFolder;
   } catch(err) {
     console.log(err);
-    return { uploaded: false };
+    if (err?.response?.data?.error === 'invalid_grant') {
+      return { uploaded: false, error: 'invalid_grant' };
+    } else {
+      return { uploaded: false };
+    }
   }
 };
 
@@ -476,10 +485,15 @@ async function horoshopGetOutdatedProducts(req, res) {
       const dateDifference = now - new Date(product.outdated);
       if ((!product?.quantityInStock || product.quantityInStock < 1) && Number(dateDifference) >= Number(daysMs)) {
         if (!product?.imagesDrive?.uploaded) {
-          const drive = await saveImages(product);
+          const user = await User.findById({ _id: req.user.user._id }, { oauthRefreshToken: 1 }).lean();
+          const refreshToken = user.oauthRefreshToken;
+          const drive = await saveImages(product, refreshToken);
           if (drive?.uploaded) {
             await Product.findByIdAndUpdate(product._id, { imagesDrive: { folderId: drive.id, uploaded: true } })
             product.imagesDrive = { folderId: drive.id, uploaded: true };
+          } else if (drive?.error === 'invalid_grant') {
+            res.status(200).send({ error: 'invalid_grant' });
+            return;
           }
         }
         result.push({ ...product, dateDifference })
@@ -561,14 +575,17 @@ async function updateMarketplace(req, res) {
       res.status(500)
       return;
     }
-    Object.keys(marketplace).forEach(key => {
+    Object.keys(body).forEach(key => {
       if (
-        marketplace[key] &&
-        typeof marketplace[key] === 'object' &&
-        !Array.isArray(marketplace[key])
+        body[key] &&
+        typeof body[key] === 'object' &&
+        !Array.isArray(body[key])
       ) {
-        Object.keys(marketplace[key]).forEach(subKey => {
+        Object.keys(body[key]).forEach(subKey => {
           if (body[key][subKey] !== marketplace[key][subKey]) {
+            if (!draft[key]) {
+              draft[key] = marketplace[key];
+            }
             draft[key][subKey] = body[key][subKey];
           }
         });
@@ -590,6 +607,30 @@ async function updateMarketplace(req, res) {
   }
 }
 
+async function refreshOauthToken(req, res) {
+  const { code } = req.body;
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.OAUTH_CLIENT_ID,
+    process.env.OAUTH_CLIENT_SECRET,
+    'postmessage'
+  );
+
+  const { tokens } = await oauth2Client.getToken(code);
+  
+  if (tokens?.refresh_token) {
+    await User.findByIdAndUpdate({ _id: req.user.user._id }, { oauthRefreshToken: tokens.refresh_token });
+    res.status(200).send({ message: "Ok" });
+  } else {
+    res.status(500).send({ message: "Google did not return refresh_token" });
+  }
+}
+
+async function generateXmlForMarketplaces(req, res) {
+  
+  generateFeedsForMarketplaces();
+  res.status(200).send({ message: "Ok" })
+}
+
 module.exports = { 
   horoshopCheckUpdatePrice, 
   horoshopUpdatePrice, 
@@ -598,4 +639,6 @@ module.exports = {
   addMarketplace,
   getAllMarketplaces,
   updateMarketplace,
+  refreshOauthToken,
+  generateXmlForMarketplaces,
 };
