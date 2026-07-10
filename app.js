@@ -16,6 +16,7 @@ const FilesRoutes = require('./routes/api/files');
 const StatisticRoutes = require('./routes/api/stat');
 const PuigRoutes = require('./routes/api/puig');
 const MarketplacesRoutes = require('./routes/api/marketplaces');
+const LeversRoutes = require('./routes/api/levers');
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -38,6 +39,7 @@ app.use("/webhook", TelegramRoutes);
 app.use("/stat", isAuth, StatisticRoutes);
 app.use("/puig-api", isAuth, PuigRoutes);
 app.use("/marketplaces", isAuth, MarketplacesRoutes);
+app.use("/levers", LeversRoutes);
 
 
 app.use((req, res) => {
