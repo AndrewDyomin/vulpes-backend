@@ -211,7 +211,7 @@ async function orderedStatus(req, res, next) {
     };
 
     for (const order of ordersArray) {
-      if (!req.body?.cancel && order !== 'склад') {
+      if (!req.body?.cancel && !order.includes('склад')) {
         const data = {
           id: order,
           data: {
@@ -220,7 +220,7 @@ async function orderedStatus(req, res, next) {
         };
 
         await axios.post(url, data, { headers });
-      } else if (req.body?.cancel && order !== 'склад') {
+      } else if (req.body?.cancel && !order.includes('склад')) {
         const data = {
           id: order,
           data: {

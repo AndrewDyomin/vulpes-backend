@@ -253,6 +253,27 @@ const itemSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  lever: {
+    type: {
+      type: String,
+      enum: ["adapter", "lever", "adjustor", "tip"],
+      default: '',
+    },
+    generations: {
+      type: Array,
+      default: [],
+    },
+    side: {
+      brake: {
+        type: Array,
+        default: [],
+      },
+      clutch: {
+        type: Array,
+        default: [], // [ { brand: 'aprilia', model: 'dorsoduro 1200', from: 2011, to: null, edit: false }, { brand: 'aprilia', model: 'caponord etv 1000', from: 2001, to: null, edit: false } ]
+      },
+    },
+  },
 });
 
 itemSchema.index({ quantityInStock: -1 });

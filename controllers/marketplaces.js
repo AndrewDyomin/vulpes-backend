@@ -543,6 +543,102 @@ async function horoshopRefreshOutdatedProducts(req, res) {
   }
 }
 
+async function checkImagesFromOutdatedProducts(req, res) {
+  try {
+    const oauthRefreshToken = req.user.user.oauthRefreshToken;
+    if (!oauthRefreshToken) {
+      res.status(200).send({ error: 'invalid_grant' });
+      return;
+    }
+
+    console.log('Images check started...');
+    res.status(200).send({ message: 'Ok' });
+    
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.OAUTH_CLIENT_ID,
+      process.env.OAUTH_CLIENT_SECRET,
+      'https://developers.google.com/oauthplayground'
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: oauthRefreshToken,
+    });
+
+    const drive = google.drive({ version: 'v3', auth: oauth2Client, });
+    const rootFolderId = process.env.IMAGES_DRIVE;
+    const limit = 500;
+    let page = 1;
+    let total = 0;
+    const sdBatch = [];
+    const batch = [];
+    const headers = {
+      "X-Api-Key": process.env.X_API_KEY,
+      "Content-Type": "application/json",
+    };
+    const params = {
+      action: "update",
+      dontUpdateFields: [],
+      product: sdBatch,
+    };
+
+    while (true) {
+      const skip = (page - 1) * limit;
+      const products = await Product.find({ outdated: true }, { article: 1, images: 1, imagesDrive: 1 }).sort({ _id: 1 }).skip(skip).limit(limit).exec();
+
+      for (const product of products) {
+        const actual = product.images.some(i => !i.includes('vulpes'));
+        if (actual || product.imagesDrive.folderId === '') continue;
+
+        const response = await drive.files.list({
+          q: `'${product.imagesDrive.folderId}' in parents and trashed = false`,
+          fields: 'files(id, name, mimeType)',
+        });
+
+        const actualImages = response?.data?.files;
+        if (!actualImages?.length) continue;
+
+        const newLinks = actualImages.map(i => `https://lh3.googleusercontent.com/d/${i.id}?authuser=0`);
+
+        sdBatch.push({ id: product.article, sku: product.article, images: newLinks.map(l => ({ fullsize: l })) });
+        batch.push({ updateOne: { filter: { article: product.article }, update: { $set: { images: newLinks } } } });
+
+        if (sdBatch.length >= 90) {
+          total += sdBatch.length;
+
+          const flush = await axios.post('https://vulpes.salesdrive.me/product-handler/', params, { headers });
+          await Product.bulkWrite(batch, { ordered: false });
+          
+          sdBatch.length = 0;
+          batch.length = 0;
+          console.log(total)
+        }
+      }
+      
+      if (products.length < limit) break;
+      page ++;
+    }
+
+    if (sdBatch.length > 0) {
+      const flush = await axios.post('https://vulpes.salesdrive.me/product-handler/', params, { headers });
+      await Product.bulkWrite(batch, { ordered: false });
+      
+      sdBatch.length = 0;
+      batch.length = 0;
+      total += sdBatch.length;
+    }
+
+    console.log('Images check finished...');
+    await sendTelegramMessage(`В базе обновлены ссылки на устаревшие фотографии. Всего обработано ${total} товаров.`, req?.user?.user?.chatId);
+    return;
+  } catch(err) {
+    console.log(err);
+    if (err?.response?.data?.error === 'invalid_grant') {
+      await User.findByIdAndUpdate({ _id: req.user.user._id}, { oauthRefreshToken: null });
+    }
+    await sendTelegramMessage(`Я не смог обновить ссылки на устаревшие фотографии. Возникла ошибка: ${err}.`, req?.user?.user?.chatId);
+  }
+}
+
 async function addMarketplace(req, res) {
   const { name } = req.body;
   try {
@@ -626,7 +722,6 @@ async function refreshOauthToken(req, res) {
 }
 
 async function generateXmlForMarketplaces(req, res) {
-  
   generateFeedsForMarketplaces();
   res.status(200).send({ message: "Ok" })
 }
@@ -636,6 +731,7 @@ module.exports = {
   horoshopUpdatePrice, 
   horoshopGetOutdatedProducts, 
   horoshopRefreshOutdatedProducts, 
+  checkImagesFromOutdatedProducts,
   addMarketplace,
   getAllMarketplaces,
   updateMarketplace,
