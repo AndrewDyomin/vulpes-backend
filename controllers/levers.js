@@ -130,6 +130,54 @@ async function getTopImage(req, res) {
         "titanium": '202012-0',
     };
 
+    const safety = {
+        "black": '200134-0',
+        "black mat": '641655-0',
+        "blue": '200133-0',
+        "gold": '200135-0',
+        "green": '200132-0',
+        "orange": '641555-0',
+        "red": '200138-0',
+        "silver": '200136-0',
+        "titanium": '200137-0',
+    };
+
+    const vario = {
+        "black": '200059-0',
+        "black mat": '711573-0',
+        "blue": '200057-0',
+        "gold": '200060-0',
+        "green": '200131-0',
+        "orange": '711697-0',
+        "red": '200062-0',
+        "silver": '200061-0',
+        "titanium": '200063-0',
+    };
+
+    const varioSafety = {
+        "black": '316656-0',
+        "black mat": '712049-0',
+        "blue": '316599-0',
+        "gold": '316650-0',
+        "green": '316651-0',
+        "orange": '712134-0',
+        "red": '316654-0',
+        "silver": '316657-0',
+        "titanium": '',
+    };
+
+    const variolll = {
+        "black": '385532-0',
+        "black mat": '385533-0',
+        "blue": '709455-0',
+        "gold": '709457-0',
+        "green": '709475-0',
+        "orange": '709535-0',
+        "red": '385535-0',
+        "silver": '385534-0',
+        "titanium": '709589-0',
+    };
+
     const adjusters = {
         "black": '200001-0',
         "black mat": '333305-0',
@@ -142,6 +190,29 @@ async function getTopImage(req, res) {
         "titanium": '200006-0',
     };
 
+    const tipColors = {
+        "black": '302249-0',
+        "blue": '302255-0',
+        "gold": '302261-0',
+        "green": '335454-0',
+        "orange": '711930-0',
+        "red": '302258-0',
+        "silver": '302252-0',
+        "titanium": '',
+    };
+
+    const tiplllColors = {
+        "black": '385544-0',
+        "black mat": '385545-0',
+        "blue": '709591-0',
+        "gold": '709592-0',
+        "green": '709593-0',
+        "orange": '709738-0',
+        "red": '385547-0',
+        "silver": '385546-0',
+        "titanium": '709902-0',
+    };
+
     let link = 'https://www.motea.com/media/configuratorimg/';
 
     if (generation === 'standart short') {
@@ -152,6 +223,36 @@ async function getTopImage(req, res) {
 
     if (generation === 'standart long') {
         link += standartLong[lever];
+        link += '-';
+        link += adjusters[adjustor];
+    }
+
+    if (generation === 'safety') {
+        link += safety[lever];
+        link += '-';
+        link += adjusters[adjustor];
+    }
+
+    if (generation === 'vario') {
+        link += vario[lever];
+        link += '-';
+        link += tipColors[tip];
+        link += '-';
+        link += adjusters[adjustor].replace('-0', '');
+    }
+
+    if (generation === 'vario safety') {
+        link += varioSafety[lever];
+        link += '-';
+        link += tipColors[tip];
+        link += '-';
+        link += adjusters[adjustor].replace('-0', '');
+    }
+
+    if (generation === 'vario lll') {
+        link += variolll[lever];
+        link += '-';
+        link += tiplllColors[tip];
         link += '-';
         link += adjusters[adjustor];
     }
