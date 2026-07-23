@@ -9,5 +9,6 @@ router.post("/update", isAuth, leversController.updateLever);
 router.post("/get-by-bike", leversController.getByBike);
 router.post("/get-image", leversController.getTopImage);
 router.post("/request-a-selection", leversController.requestLevers);
+router.post("/add-order", leversController.addOrder);
 
 module.exports = router;

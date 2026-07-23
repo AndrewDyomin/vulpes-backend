@@ -1,6 +1,11 @@
 const Product = require("../models/item");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const User = require("../models/user");
+const axios = require("axios");
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function syncByColor(reference, target) {
   const map = new Map(target.map((item) => [item.color, item]));
@@ -45,6 +50,15 @@ async function updateLever(req, res) {
 async function getByBike(req, res) {
   try {
     const { brand, model, year, generation } = req.body;
+
+    const donorMap = {
+        "standart short": '115829',
+        "standart long": '115829',
+        "safety": '116856',
+        "vario": '117433',
+        "vario safety": '117874',
+        "vario lll": '118506',
+    };
 
     const clutch = await Product.find({
       "lever.side.clutch": {
@@ -102,6 +116,8 @@ async function getByBike(req, res) {
     const syncedBrakeLevers = syncByColor(clutchLevers, brakeLevers);
     const syncedBrakeTips = syncByColor(clutchTips, brakeTips);
 
+    const donor = await Product.findOne({ article: donorMap[generation] }, { price: 1 }).lean();
+
     res
       .status(200)
       .send({
@@ -112,6 +128,7 @@ async function getByBike(req, res) {
         clutchTips,
         brakeTips: syncedBrakeTips,
         adjustor,
+        price: donor?.price?.UAH || null,
       });
   } catch (err) {
     console.log(err);
@@ -310,9 +327,87 @@ async function requestLevers(req, res) {
   }
 }
 
+async function addOrder(req, res) {
+  const { 
+    firstName, 
+    lastName, 
+    phone, 
+    city, 
+    cityRef, 
+    branch, 
+    branchRef, 
+    brand, 
+    model, 
+    year, 
+    generation, 
+    price, 
+    clutch, 
+    brake, 
+  } = req.body;
+
+  try {
+    const donorMap = {
+      "standart short": '115829',
+      "standart long": '115829',
+      "safety": '116856',
+      "vario": '117433',
+      "vario safety": '117874',
+      "vario lll": '118506',
+    };
+    const donor = await Product.findOne({ article: donorMap[generation] }, { name: 1, }).lean();
+
+    const body = {
+      "getResultData": 1,
+      "lName": String(lastName),
+      "fName": String(firstName),
+      "phone": String(phone),
+      "products": [
+        {
+          "id": donorMap[generation],
+          "name": donor.name.UA,
+          "costPerItem": price,
+          "amount": 1,
+          "sku": donorMap[generation],
+        }
+      ],
+      "payment_method": "Післяплата",
+      "shipping_method": "Новая Почта",
+      "shipping_address": `${city}, ${branch}`,
+      "comment": `Важелі ${generation} для ${brand} ${model} ${year}року.
+      \n Адаптер зчеплення: ${clutch.adapter.map(i => i.article).join(', ')} - 1шт; 
+      \n Адаптер гальма: ${brake.adapter.map(i => i.article).join(', ')} - 1шт; 
+      \n Важіль зчеплення: ${clutch.lever.article} - 1шт; 
+      \n Важіль гальма: ${brake.lever.article} - 1шт; 
+      \n Регулятор: ${clutch.adjustor.article} - 2шт; 
+      ${clutch.tip ? `\n Наконечник зчеплення: ${clutch.tip.article} - 1шт; ` : ''}
+      ${brake.tip ? `\n Наконечник гальма: ${brake.tip.article} - 1шт; ` : ''}`,
+      "sajt": "vulpes-moto.app",
+      "novaposhta": {
+        "ServiceType": "Warehouse",
+        "payer": "recipient",
+        "city": cityRef,
+        "WarehouseNumber": branchRef,
+      },
+    };
+
+    const headers = {
+      "X-Api-Key": process.env.X_API_KEY,
+      "Content-Type": "application/json",
+    };
+
+    const { data } = await axios.post('https://vulpes.salesdrive.me/handler/', body, { headers });
+
+    res.status(200).send({ message: 'Order accepted', data: { success: true, data }});
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: 'Something went wrong. Try again later' });
+  }
+}
+
 module.exports = {
   updateLever,
   getByBike,
   getTopImage,
   requestLevers,
+  addOrder,
 };

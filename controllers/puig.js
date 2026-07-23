@@ -25,9 +25,30 @@ async function getCategories(req, res, next) {
       const array = await Categories.find({}).exec();
       res.status(200).send(JSON.stringify(array));
     } else {
-      const bike = await Bikes.findOne({ brand: targetModel.make, model: targetModel.model, year: targetModel.year }).lean();
+      let bike = await Bikes.findOne({ brand: targetModel.make, model: targetModel.model, year: targetModel.year }).lean();
 
       if (!bike.lastUpdate || Date.now() - Number(bike.lastUpdate) >= 43200000) {
+        const modelsArray = await axios.get(`https://api.puighitechparts.de/es/bikes/brands/${bike.brand_id}`,
+          {
+            headers: {
+              "Api-Token": process.env.PUIG_TOKEN,
+            },
+          },
+        );
+        const puigModel = modelsArray.data.data.find(m => (m.brand === targetModel.make && m.model === targetModel.model));
+        const targetBikesArray = await axios.get(`https://api.puighitechparts.de/es/bikes/brands/${bike.brand_id}/${puigModel.id}`,
+          {
+            headers: {
+              "Api-Token": process.env.PUIG_TOKEN,
+            },
+          },
+        );
+        const target = targetBikesArray.data.data.find(b => (b.model === targetModel.model && b.year === targetModel.year))
+
+        if (target.articles && (bike.id !== target.id || bike.articles !== target.articles)) {
+          bike = await Bikes.findByIdAndUpdate(bike._id, target, {new: true});
+        }
+
         const { data } = await axios.get(bike.articles,
           {
             headers: {
