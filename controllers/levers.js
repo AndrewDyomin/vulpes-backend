@@ -1,11 +1,8 @@
 const Product = require("../models/item");
+const Bikes = require("../models/bikes");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const User = require("../models/user");
 const axios = require("axios");
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function syncByColor(reference, target) {
   const map = new Map(target.map((item) => [item.color, item]));
@@ -88,6 +85,11 @@ async function getByBike(req, res) {
         },
       },
     });
+
+    if (!res) {
+      return { clutch, brake };
+    };
+
     const clutchLevers = await Product.find({
       "lever.type": "lever",
       "lever.generations": generation,
@@ -404,10 +406,66 @@ async function addOrder(req, res) {
   }
 }
 
+async function checkBikeAdapters() {
+  console.log('Checking bike adapters...');
+
+  // get all adapters
+  const adapters = await Product.find(
+    { 'lever.type': 'adapter' },
+    { 'lever.side': 1 }
+  ).lean();
+
+  // set all models with available adapters
+  const available = new Set();
+
+  for (const adapter of adapters) {
+    ['clutch', 'brake'].forEach(side => {
+      const bikes = adapter?.lever?.side?.[side] || [];
+
+      bikes.forEach(bike => {
+        available.add(
+          `${bike.brand.toLowerCase()}|${bike.model.toLowerCase()}`
+        );
+      });
+    });
+  }
+
+  const cursor = Bikes.find().cursor();
+
+  let updatedBrands = 0;
+  let updatedModels = 0;
+
+  for await (const brand of cursor) {
+    let changed = false;
+
+    for (const model of brand.models) {
+      const hasAdapters = available.has(
+        `${brand.brand.toLowerCase()}|${model.name.toLowerCase()}`
+      );
+
+      if (model.leverAdapters !== hasAdapters) {
+        model.leverAdapters = hasAdapters;
+        changed = true;
+        updatedModels++;
+      }
+    }
+
+    if (changed) {
+      await brand.save();
+      updatedBrands++;
+    }
+  }
+
+  console.log(
+    `Checking bike adapters done. Updated ${updatedBrands} brands, ${updatedModels} models.`
+  );
+}
+
 module.exports = {
   updateLever,
   getByBike,
   getTopImage,
   requestLevers,
   addOrder,
+  checkBikeAdapters,
 };

@@ -24,6 +24,7 @@ const { checkProductsUpdates } = require("../controllers/puig");
 // const { generateFeed } = require("../helpers/zakupka");
 const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
 const { horoshopUpdatePrice } = require("../controllers/marketplaces");
+const { checkBikeAdapters } = require("../controllers/levers");
 
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
@@ -681,7 +682,7 @@ cron.schedule(    // orders copy
   },
 );
 
-cron.schedule(    //  check ad spend
+cron.schedule(    //  check ad spend and bike lever adapters
   "0 15 * * 1",
   async () => {
     console.log("Запуск задачи по сбору расходов из Google Analitics");
@@ -716,6 +717,7 @@ cron.schedule(    //  check ad spend
     }
 
     console.log("Обработано:", count, "недель");
+    checkBikeAdapters();
   },
   {
     scheduled: true,

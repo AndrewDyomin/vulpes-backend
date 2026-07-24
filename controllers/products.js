@@ -607,16 +607,41 @@ async function getProductTranslate (req, res) {
 }
 
 async function getBikes (req, res) {
-  const brand = req?.query?.brand;
+  const { brand, filter } = req?.query;
   try {
     if (!brand || brand === '') {
-      const bikes = await Bikes.find({}, { brand: 1 }).lean();
+      let query = {};
+      if (filter === "leverAdapters") { 
+        query = { 'models.leverAdapters': { $exists: true }, 'models.leverAdapters': true }; 
+      };
+
+      const bikes = await Bikes.find(query, { brand: 1 }).lean();
       const result = bikes.map(b => b.brand).sort();
       res.status(200).send(result);
     } else {
-      const bikes = await Bikes.find({ brand }, { brand: 1, models: 1 }).lean();
-      const [ models ] = bikes.map(b => b.models).sort();
-      res.status(200).send(models);
+      if (filter === 'leverAdapters') {
+        const [result] = await Bikes.aggregate([
+          { $match: { brand } },
+          {
+            $project: {
+              _id: 0,
+              models: {
+                $filter: {
+                  input: '$models',
+                  as: 'model',
+                  cond: '$$model.leverAdapters',
+                },
+              },
+            },
+          },
+        ]);
+
+        res.status(200).send(result?.models ?? []);
+      } else {
+        const bikes = await Bikes.find({ brand }, { brand: 1, models: 1 }).lean();
+        const [ models ] = bikes.map(b => b.models).sort();
+        res.status(200).send(models);
+      }
     }
   } catch(err) {
     console.log(err)

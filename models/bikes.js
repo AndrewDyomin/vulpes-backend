@@ -6,6 +6,10 @@ const modelSchema = new mongoose.Schema(
       type: String,
       required: [true, "Model name is required"],
     },
+    leverAdapters: {
+      type: Boolean,
+      default: false,
+    },
     years: {
       type: [Number],
       default: [],
