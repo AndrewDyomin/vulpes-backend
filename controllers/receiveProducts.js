@@ -288,7 +288,6 @@ async function delInvoice(req, res) {
 
 async function closeInvoice(req, res) {
   const { _id } = req.body;
-  console.log(_id)
   try {
     await Invoices.findByIdAndUpdate(_id, { verified: true }).exec();
     res.status(200).send({ message: 'invoice closed' });
@@ -333,27 +332,112 @@ async function report(req, res) {
     reportText += `\nЕсть товары, которых нет в ${invoices.length > 1 ? 'счетах' : 'счете'}:\n${extra.map(i => `${i.article} - ${i.count}шт;`).join('\n')}\n`;
   }
 
-  // const owners = await User.find({ role: "owner" }).exec();
-  // for (const owner of owners) {
-  //   if (owner?.chatId && owner?.chatId !== "") {
-  //     await sendTelegramMessage(reportText, owner.chatId);
-  //   }
-  // }
-  await sendTelegramMessage(reportText, process.env.ADMIN_CHAT_ID, replyButtons);
+  const owners = await User.find({ role: "owner" }).exec();
+  for (const owner of owners) {
+    if (owner?.chatId && owner?.chatId !== "") {
+      await sendTelegramMessage(reportText, owner.chatId, replyButtons);
+    }
+  }
   res.status(200).send({ message: 'Report sended' });
 }
 
-module.exports = { 
-  getAll, 
-  getById, 
+async function checkInvoiceProducts(req, res) {
+  const { _id } = req.body;
+  try {
+    const receive = await Receive.findById(_id);
+    if (!receive?.invoices || !receive?.invoices?.length) {
+      res.status(200).send({ message: "This receive doesn't have any invoices" });
+      return;
+    }
+
+    const invoicesMap = new Map(); // ---> Все связанные инвойсы
+    const array = await Receive.find({ invoices: { $in: receive.invoices } }).lean(); // ---> Все связанные приходы
+    const receivesArray = [ ...array ];
+    const result = [];
+
+    for (const r of receivesArray) {
+      for (const name of r?.invoices) {
+        const target = invoicesMap.get(name);
+        if (!target) {
+          const i = await Invoices.findOne({ name });
+          const invoice = { name, items: [] }
+          for (const item of i.items) {
+            if (item?.set?.length >= 1) {
+              for (const preItem of item.set) {
+                const target = invoice.items.find(p => p.article === preItem.article);
+                if (!target) {
+                  invoice.items.push({ 
+                    article: preItem.article,
+                    position: item.position,
+                    count: Number(preItem.count) * Number(item.count),
+                    set: [], 
+                  })
+                } else {
+                  target.count += Number(preItem.count) * Number(item.count);
+                }
+              }
+            } else {
+              const target = invoice.items.find(p => p.article === item.article);
+                if (!target) {
+                  invoice.items.push(item);
+                } else {
+                  target.count += Number(item.count) * Number(item.count);
+                }
+            }
+          }
+          invoicesMap.set(name, invoice);
+        }
+      }
+    }
+
+    for (const r of receivesArray) {
+      for (const item of r.items) {
+        for (const name of r.invoices) {
+          const product = invoicesMap.get(name).items.find(p => p.article === item.article);
+          if (!product?.count) continue;
+          const Icount = Number(item.count);
+          const Pcount = Number(product.count)
+
+          if (Icount <= Pcount) {
+            product.count = Number(Pcount - Icount);
+            item.count = 0;
+          } else {
+            item.count = Number(Icount - Pcount);
+            product.count = 0;
+          }
+
+          if (item.count < 1) break;
+        }
+      }
+    }
+
+    for (const i of invoicesMap.values()) {
+      result.push({
+        name: i.name,
+        items: i.items.filter(p => p.count)
+      });
+    }
+
+    res.status(200).send(result);
+
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: "Something went wrong" });
+  }
+}
+
+module.exports = {  
   add, 
   remove, 
+  report,
+  getAll,
   update, 
+  getById, 
   combine, 
   download, 
-  getAllInvoices, 
   addInvoice, 
   delInvoice,
   closeInvoice,
-  report 
+  getAllInvoices, 
+  checkInvoiceProducts,
 };

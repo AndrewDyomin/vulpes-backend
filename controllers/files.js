@@ -26,7 +26,7 @@ async function uploadInvoice(req, res, next) {
 }
 
 async function downloadBrokerTable(req, res, next) {
-
+  // TO DO ----- заполнять столбцы "производитель" и "торговая марка"
   try {
     const doc = req.body.data.values;
 
