@@ -26,7 +26,6 @@ async function uploadInvoice(req, res, next) {
 }
 
 async function downloadBrokerTable(req, res, next) {
-  // TO DO ----- заполнять столбцы "производитель" и "торговая марка"
   try {
     const doc = req.body.data.values;
 
@@ -43,6 +42,8 @@ async function downloadBrokerTable(req, res, next) {
             L: product?.dimensions?.length || "",
             B: product?.dimensions?.width || "",
             H: product?.dimensions?.height || "",
+            "Об’єм": Math.round(Number(product?.dimensions?.length * product?.dimensions?.width * product?.dimensions?.height * 0.000001) * 1000) / 1000 || '',
+            "Об’єм загальний": Math.round(Number(product?.dimensions?.length * product?.dimensions?.width * product?.dimensions?.height * 0.000001 * item.count) * 1000) /1000 || '',
             "Кількість в шт": item.count,
             "Ціна за шт в € без  ндс": item.price || '',
             "Ціна взагалі": Number(item.price) * Number(item.count) || "",
@@ -52,8 +53,8 @@ async function downloadBrokerTable(req, res, next) {
             "країна виробництва для ВМД": "Китай",
             "Код УКТ ВЄД": product?.zoltarifNumber || "",
             Мито: "",
-            "Торговельна марка": "",
-            "Виробник для єлектронного инвойсу": "Motea GmbH",
+            "Торговельна марка": product?.brand || "",
+            "Виробник для єлектронного инвойсу": product?.brand === "Puig" ? product?.brand : "Motea GmbH",
             "Invoice #": req.body.data?.invoiceName || "",
             link: product?.linkInMotea || "",
           };

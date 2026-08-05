@@ -1,4 +1,7 @@
 const axios = require("axios");
+const XLSX = require('xlsx');
+const sax = require('sax');
+// const { Readable } = require('stream');
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { getHoroshopItems } = require("../helpers/horoshop");
 const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
@@ -6,6 +9,7 @@ const Product = require("../models/item");
 const PuigArticles = require("../models/puigArticles")
 const User = require("../models/user");
 const Marketplaces = require("../models/marketplaces");
+const Categories = require("../models/categories");
 const readline = require("readline");
 const { google } = require("googleapis");
 const fs = require("fs");
@@ -726,6 +730,128 @@ async function generateXmlForMarketplaces(req, res) {
   res.status(200).send({ message: "Ok" })
 }
 
+async function getPromGroups() {
+  const market = await Marketplaces.findById('6a2ab8e887d179dd95924ab3').lean();
+
+  const { data: stream } = await axios.get(market.xml.backFeed, {
+    responseType: 'stream'
+  });
+
+  return new Promise((resolve, reject) => {
+    const parser = sax.createStream(true);
+
+    const promGroups = [];
+
+    let currentCategory = null;
+    let currentTag = null;
+    let finished = false;
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+
+      stream.unpipe(parser);
+      stream.destroy();
+
+      resolve(promGroups);
+    };
+
+    parser.on('opentag', node => {
+      currentTag = node.name;
+
+      if (node.name === 'category') {
+        currentCategory = {
+          id: node.attributes.id,
+          parentId: node.attributes.parentId ?? null,
+          name: ''
+        };
+      }
+
+      // Дальше категории уже не нужны
+      if (node.name === 'offers') {
+        finish();
+      }
+    });
+
+    parser.on('text', text => {
+      if (currentTag === 'category' && currentCategory) {
+        currentCategory.name += text;
+      }
+    });
+
+    parser.on('closetag', tag => {
+      if (tag === 'category' && currentCategory) {
+        currentCategory.name = currentCategory.name.trim();
+        promGroups.push(currentCategory);
+        currentCategory = null;
+      }
+
+      currentTag = null;
+    });
+
+    parser.on('end', () => {
+      finish();
+    });
+
+    parser.on('error', err => {
+      if (!finished) reject(err);
+    });
+
+    stream.on('error', err => {
+      // Игнорируем ошибку, если сами закрыли поток
+      if (!finished && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+        reject(err);
+      }
+    });
+
+    stream.pipe(parser);
+  });
+}
+
+async function getPromCategories(req, res) {
+  try {
+
+    const response = await axios.get(
+      'https://my.prom.ua/cabinet/export_categories/xls',
+      {
+        responseType: 'arraybuffer'
+      }
+    );
+
+    const workbook = XLSX.read(response.data, {
+      type: 'buffer'
+    });
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet);
+    const promCategories = [];
+
+    for (const category of data) {
+      const name = [1, 2, 3, 4].map(i => category[`Категория${i}`]?.trim()).filter(Boolean).join('/ ');
+      const url = category['Адрес_подраздела'];
+      const id = category['Идентификатор_подраздела'];
+      promCategories.push({ name, url, id });
+    }
+
+    promCategories.sort((a, b) => a.name.localeCompare(b.name));
+
+    const groups = await getPromGroups();
+    const promGroups = groups
+    .map(g => ({ ...g, name: g.parentId ? `${groups.find(i => i.id === g.parentId).name}/ ${g.name}` : g.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+    const categories = await Categories.find().lean();
+    const our = categories
+    .map(g => ({ ...g, name: g.parentId ? `${categories.find(i => i.id === g.parentId).name}/ ${g.name}` : g.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+    res.status(200).send({ our, promGroups, promCategories })
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: "Something went wrong." })
+  }
+}
+
 module.exports = { 
   horoshopCheckUpdatePrice, 
   horoshopUpdatePrice, 
@@ -737,4 +863,5 @@ module.exports = {
   updateMarketplace,
   refreshOauthToken,
   generateXmlForMarketplaces,
+  getPromCategories,
 };

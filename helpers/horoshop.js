@@ -312,6 +312,7 @@ async function sendNewProducts(toCreate) {
         await sleep(ms);
         continue;
       } else {
+        console.log("Ошибка создания товара!")
         console.dir(res.data, { deep: null });
       }
       break;
@@ -359,7 +360,7 @@ async function checkProductsForHoroshop() {
         if (processedCodes.has(art.code)) continue;
         processedCodes.add(art.code);
 
-        const family = await Articles.find({ code: art.code, outdated: 0 }).sort({ code: 1, 'colour.code': 1 }).lean();
+        const family = await Articles.find({ code: art.code, outdated: 0, horoshopStatus: "on" }).sort({ code: 1, 'colour.code': 1 }).lean();
 
         const hasNew = family.some(i => !i.horoshopAddDate);
         if (!hasNew) continue;

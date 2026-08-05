@@ -373,7 +373,7 @@ async function checkInvoiceProducts(req, res) {
                     set: [], 
                   })
                 } else {
-                  target.count += Number(preItem.count) * Number(item.count);
+                  target.count = Number(target.count) + Number(preItem.count) * Number(item.count);
                 }
               }
             } else {
@@ -381,7 +381,7 @@ async function checkInvoiceProducts(req, res) {
                 if (!target) {
                   invoice.items.push(item);
                 } else {
-                  target.count += Number(item.count) * Number(item.count);
+                  target.count = Number(target.count) + Number(item.count);
                 }
             }
           }

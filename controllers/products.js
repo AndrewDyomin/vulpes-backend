@@ -2,6 +2,7 @@ const axios = require('axios');
 // const xml2js = require('xml2js');
 const ExcelJS = require("exceljs");
 const Product = require("../models/item");
+const Categories = require("../models/categories");
 const MoteaProduct = require("../models/moteaItem");
 const User = require("../models/user");
 const MoteaItem = require("../models/moteaItem");
@@ -709,19 +710,41 @@ async function getAllPurchaseRequests (req, res) {
   }
 }
 
+async function updateCategory (req, res) {
+  if (!req?.body?._id) {
+    res.status(400).send({ message: 'Bad request' })
+    return;
+  }
+  try {
+    const { _id, name, id, parentId, prom, promGroup, promCategory } = req?.body;
+    if (prom && (promGroup || promCategory)) {
+      await Categories.findByIdAndUpdate(_id, {
+        ...(promGroup && { promGroup }),
+        ...(promCategory && { promCategory }),
+      });
+    }
+    
+    res.status(200).send({ message: 'Ok' })
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: 'Something went wrong' })
+  }
+}
+
 module.exports = {
   getAll,
-  getAllBarcodes,
+  search,
+  getBikes,
+  compareYear,
   getByBarcode,
   getByArticle,
-  search,
-  sendAvailabilityTable,
-  updatePromBase,
-  compareYear,
   updateProduct,
+  getAllBarcodes,
+  updatePromBase,
+  updateCategory,
   getProductTranslate,
-  getBikes,
   addToPurchaseRequest,
+  sendAvailabilityTable,
   getAllPurchaseRequests,
   removeFromPurchaseRequest,
 };

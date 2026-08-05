@@ -14,5 +14,6 @@ router.get("/all", marketplacesController.getAllMarketplaces);
 router.post("/update-marketplace", marketplacesController.updateMarketplace);
 router.get("/generate-xml-for-marketplaces", marketplacesController.generateXmlForMarketplaces);
 router.post("/refresh-google-oauth-token", marketplacesController.refreshOauthToken);
+router.get("/prom-categories", marketplacesController.getPromCategories);
 
 module.exports = router;

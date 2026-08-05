@@ -13,6 +13,14 @@ const categorySchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  promGroup: {
+    type: String,
+    default: null,
+  },
+  promCategory: {
+    type: Number,
+    default: null,
+  },
 });
 
 module.exports = mongoose.model("Category", categorySchema);

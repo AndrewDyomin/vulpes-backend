@@ -18,5 +18,6 @@ router.get("/bikes", ProductsController.getBikes)
 router.post("/add-to-purchase-request", isAuth, ProductsController.addToPurchaseRequest);
 router.post("/remove-from-purchase-request", isAuth, ProductsController.removeFromPurchaseRequest);
 router.get("/all-purchase-requests", isAuth, ProductsController.getAllPurchaseRequests);
+router.post("/update-category", isAuth, ProductsController.updateCategory);
 
 module.exports = router;
