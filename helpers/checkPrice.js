@@ -176,7 +176,7 @@ async function checkPrice() {
 
         if (item?.moteaPrice?.date) {
           const dateDifference = now - new Date(item.moteaPrice.date);
-          if (dateDifference < 86400000) {
+          if (dateDifference < 172800000) {
             continue;
           }
         } else {

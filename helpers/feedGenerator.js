@@ -3,6 +3,7 @@ const sax = require("sax");
 const axios = require("axios");
 const Product = require("../models/item");
 const Marketplaces = require("../models/marketplaces");
+const Categories = require("../models/categories");
 const BATCH_SIZE = 500;
 
 const promCategories = [
@@ -91,10 +92,11 @@ async function write(stream, chunk) {
   }
 }
 
-async function writeBatch(products, stream, marketplace) {
+async function writeBatch(products, categoriesMap, stream, marketplace) {
   let xml = "";
 
   for (const product of products) {
+    const category = categoriesMap.get(product?.category);
     xml += `<offer id="${product.promId}" available="true">\n`;
 
     if (product.brand.toLowerCase() === 'puig' || product.brand.toLowerCase() === 'mra') {
@@ -116,10 +118,11 @@ async function writeBatch(products, stream, marketplace) {
     xml += `<delivery>true</delivery>\n`;
     xml += `<name>${escapeXml(product.name.RU)}</name>\n`;
     xml += `<name_ua>${escapeXml(product.name.UA)}</name_ua>\n`;
+    xml += `<categoryId>${category.promGroup}</categoryId>\n`;
+    xml += `<portal_category_id>${category.promCategory}</portal_category_id>\n`;
     xml += `<vendor>${escapeXml(product.brand)}</vendor>\n`;
     xml += `<vendorCode>${product.article}</vendorCode>\n`;
     xml += `<country_of_origin>${escapeXml(product.params?.countryOfOrigin || "")}</country_of_origin>\n`;
-
     xml += `<description><![CDATA[${product.description.RU || ""}]]></description>\n`;
     xml += `<description_ua><![CDATA[${product.description.UA || ""}]]></description_ua>\n`;
     xml += `<keywords></keywords>\n`
@@ -144,6 +147,9 @@ async function createXml(marketplace) {
   );
   const now = new Date();
   const date = `${now.getFullYear()}-${format(now.getMonth() + 1)}-${format(now.getDate())} ${format(now.getHours())}:${format(now.getMinutes())}`;
+
+  const categories = await Categories.find().lean();
+  const categoriesMap = new Map(categories.map(c => ([ c.id, c ])));
 
   await write(stream, `<?xml version="1.0" encoding="UTF-8"?>\n`);
   await write(stream, `<!DOCTYPE yml_catalog SYSTEM "shops.dtd">\n`);
@@ -205,13 +211,15 @@ async function createXml(marketplace) {
       nonPromId.push(product.article);
       continue;
     }
-    // if (!product?.name?.RU) continue;
+    if (!product?.name?.RU || product?.name?.RU === '') continue;
+    const category = categoriesMap.get(product.category);
+    if (!category.promCategory || !category.promGroup || category.promCategory === '' || category.promGroup === '') continue;
 
     batch.push(product);
     count++;
 
     if (batch.length >= BATCH_SIZE) {
-      await writeBatch(batch, stream, marketplace);
+      await writeBatch(batch, categoriesMap, stream, marketplace);
       batch = [];
       console.log(`Processed: ${count}/${countDocs}`);
     }
