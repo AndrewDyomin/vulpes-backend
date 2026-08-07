@@ -113,7 +113,7 @@ async function getXmlFromId(req, res) {
 
   try {
     const marketplace = await Marketplaces.findById({ _id: id }).lean();
-    const xmlPath = path.join(__dirname, "../", "public", "xml", `${marketplace.name}.xml`);
+    const xmlPath = path.join(__dirname, "../", "public", "xml", `${marketplace.name.toLowerCase()}.xml`);
 
     try {
       await fs.access(xmlPath);
