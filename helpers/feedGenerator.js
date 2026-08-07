@@ -213,7 +213,7 @@ async function createXml(marketplace) {
     }
     if (!product?.name?.RU || product?.name?.RU === '') continue;
     const category = categoriesMap.get(product.category);
-    if (!category.promCategory || !category.promGroup || category.promCategory === '' || category.promGroup === '') continue;
+    if (!category?.promCategory || !category?.promGroup || category.promCategory === '' || category.promGroup === '') continue;
 
     batch.push(product);
     count++;
