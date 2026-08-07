@@ -96,46 +96,49 @@ async function writeBatch(products, categoriesMap, stream, marketplace) {
   let xml = "";
 
   for (const product of products) {
-    const category = categoriesMap.get(product?.category);
-    xml += `<offer id="${product.promId}" available="true">\n`;
+    try {
+      const category = categoriesMap.get(product?.category);
+      xml += `<offer id="${product.promId}" available="true">\n`;
 
-    if (product.brand.toLowerCase() === 'puig' || product.brand.toLowerCase() === 'mra') {
-      xml += `<price>${Math.round(product.price.UAH * marketplace.markup)}</price>\n`;
-    } else {
-      xml += `<price>${Math.round(product.price.UAH * marketplace.markup * 0.85)}</price>\n`;
-      xml += `<oldprice>${Math.round(product.price.UAH * marketplace.markup)}</oldprice>\n`;
+      if (product.brand.toLowerCase() === 'puig' || product.brand.toLowerCase() === 'mra') {
+        xml += `<price>${Math.round(product.price.UAH * marketplace.markup)}</price>\n`;
+      } else {
+        xml += `<price>${Math.round(product.price.UAH * marketplace.markup * 0.85)}</price>\n`;
+        xml += `<oldprice>${Math.round(product.price.UAH * marketplace.markup)}</oldprice>\n`;
+      }
+
+      xml += `<currencyId>UAH</currencyId>\n`;
+      xml += `<quantity_in_stock>${product.quantityInStock}</quantity_in_stock>\n`;
+
+      for (const photo of product.images || []) {
+        xml += `<picture>${photo}</picture>\n`;
+      }
+
+      xml += `<pickup>true</pickup>\n`;
+      xml += `<delivery>true</delivery>\n`;
+      xml += `<name>${escapeXml(product.name.RU)}</name>\n`;
+      xml += `<name_ua>${escapeXml(product.name.UA)}</name_ua>\n`;
+      xml += `<categoryId>${category.promGroup}</categoryId>\n`;
+      xml += `<portal_category_id>${category.promCategory}</portal_category_id>\n`;
+      xml += `<vendor>${escapeXml(product.brand)}</vendor>\n`;
+      xml += `<vendorCode>${product.article}</vendorCode>\n`;
+      xml += `<country_of_origin>${escapeXml(product.params?.countryOfOrigin || "")}</country_of_origin>\n`;
+      xml += `<description><![CDATA[${product.description.RU || ""}]]></description>\n`;
+      xml += `<description_ua><![CDATA[${product.description.UA || ""}]]></description_ua>\n`;
+      xml += `<keywords></keywords>\n`
+      xml += `<keywords_ua></keywords_ua>\n`
+      xml += `<param name="Состояние">Новое</param>\n`;
+
+      if (product?.color) {
+        xml += `<param name="Цвет" unit=''>${escapeXml(product.color)}</param>\n`;
+      }
+
+      xml += `</offer>\n`;
+    } catch(err) {
+      console.log(err)
+      console.log(product)
     }
-
-    xml += `<currencyId>UAH</currencyId>\n`;
-    // xml += `<quantity_in_stock>${product.quantityInStock}</quantity_in_stock>\n`;
-    // xml += `<categoryId>${categoriesMap[product.category].zid}</categoryId>\n`;
-
-    for (const photo of product.images || []) {
-      xml += `<picture>${photo}</picture>\n`;
-    }
-
-    xml += `<pickup>true</pickup>\n`;
-    xml += `<delivery>true</delivery>\n`;
-    xml += `<name>${escapeXml(product.name.RU)}</name>\n`;
-    xml += `<name_ua>${escapeXml(product.name.UA)}</name_ua>\n`;
-    xml += `<categoryId>${category.promGroup}</categoryId>\n`;
-    xml += `<portal_category_id>${category.promCategory}</portal_category_id>\n`;
-    xml += `<vendor>${escapeXml(product.brand)}</vendor>\n`;
-    xml += `<vendorCode>${product.article}</vendorCode>\n`;
-    xml += `<country_of_origin>${escapeXml(product.params?.countryOfOrigin || "")}</country_of_origin>\n`;
-    xml += `<description><![CDATA[${product.description.RU || ""}]]></description>\n`;
-    xml += `<description_ua><![CDATA[${product.description.UA || ""}]]></description_ua>\n`;
-    xml += `<keywords></keywords>\n`
-    xml += `<keywords_ua></keywords_ua>\n`
-    xml += `<param name="Состояние">Новое</param>\n`;
-
-    if (product?.color) {
-      xml += `<param name="Цвет" unit=''>${escapeXml(product.color)}</param>\n`;
-    }
-
-    xml += `</offer>\n`;
   }
-
   await write(stream, xml);
 }
 
@@ -154,13 +157,6 @@ async function createXml(marketplace) {
   await write(stream, `<?xml version="1.0" encoding="UTF-8"?>\n`);
   await write(stream, `<!DOCTYPE yml_catalog SYSTEM "shops.dtd">\n`);
   await write(stream, `<yml_catalog date="${date}">\n<shop>\n`);
-
-  // await write(stream, `<name>Vulpes Moto</name>\n`);
-  // await write(stream, `<company>Vulpes Moto</company>\n`);
-  // await write(stream, `<url>https://vulpesmoto.com.ua</url>\n`);
-  // await write(stream, `<platform>Zakupka.com</platform>\n`);
-  // await write(stream, `<agency>Zakupka.com</agency>\n`);
-  // await write(stream, `<email>support@zakupka.com</email>\n`);
 
   if (marketplace.name === 'Prom') {
     await write(stream, `<categories>\n`);
@@ -213,7 +209,7 @@ async function createXml(marketplace) {
     }
     if (!product?.name?.RU || product?.name?.RU === '') continue;
     const category = categoriesMap.get(product.category);
-    if (!category?.promCategory || !category?.promGroup || category.promCategory === '' || category.promGroup === '') continue;
+    if (!category || !category?.promCategory || !category?.promGroup || category.promCategory === '' || category.promGroup === '') continue;
 
     batch.push(product);
     count++;
@@ -226,7 +222,7 @@ async function createXml(marketplace) {
   }
 
   if (batch.length) {
-    await writeBatch(batch, stream, marketplace);
+    await writeBatch(batch, categoriesMap, stream, marketplace);
   }
 
   await write(stream, `</offers>\n</shop>\n</yml_catalog>`);
