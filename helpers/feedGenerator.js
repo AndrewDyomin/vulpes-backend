@@ -223,8 +223,6 @@ async function createXml(marketplace) {
       batch = [];
       console.log(`Processed: ${count}/${countDocs}`);
     }
-
-    if (count >= 500) break;
   }
 
   if (batch.length) {
