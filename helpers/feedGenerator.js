@@ -4,6 +4,7 @@ const axios = require("axios");
 const Product = require("../models/item");
 const Marketplaces = require("../models/marketplaces");
 const Categories = require("../models/categories");
+const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const BATCH_SIZE = 500;
 
 const promCategories = [
@@ -94,6 +95,7 @@ async function write(stream, chunk) {
 
 async function writeBatch(products, categoriesMap, stream, marketplace) {
   let xml = "";
+  let photoCount = 0;
 
   for (const product of products) {
     try {
@@ -112,7 +114,10 @@ async function writeBatch(products, categoriesMap, stream, marketplace) {
 
       for (const photo of product.images || []) {
         xml += `<picture>${photo}</picture>\n`;
+        photoCount += 1;
+        if (photoCount > 9) break;
       }
+      photoCount = 0;
 
       xml += `<pickup>true</pickup>\n`;
       xml += `<delivery>true</delivery>\n`;
@@ -120,7 +125,9 @@ async function writeBatch(products, categoriesMap, stream, marketplace) {
       xml += `<name_ua>${escapeXml(product.name.UA)}</name_ua>\n`;
       xml += `<categoryId>${category.promGroup}</categoryId>\n`;
       xml += `<portal_category_id>${category.promCategory}</portal_category_id>\n`;
-      xml += `<vendor>${escapeXml(product.brand)}</vendor>\n`;
+      if (product?.brand && product.brand !== '') {
+        xml += `<vendor>${escapeXml(product.brand)}</vendor>\n`;
+      }
       xml += `<vendorCode>${product.article}</vendorCode>\n`;
       xml += `<country_of_origin>${escapeXml(product.params?.countryOfOrigin || "")}</country_of_origin>\n`;
       xml += `<description><![CDATA[${product.description.RU || ""}]]></description>\n`;
@@ -136,7 +143,7 @@ async function writeBatch(products, categoriesMap, stream, marketplace) {
       xml += `</offer>\n`;
     } catch(err) {
       console.log(err)
-      console.log(product)
+      console.log(product.article)
     }
   }
   await write(stream, xml);
@@ -173,6 +180,9 @@ async function createXml(marketplace) {
 
   let batch = [];
   const nonPromId = [];
+  const offMarket = [];
+  const withoutRuName = [];
+  const withoutCategory = [];
   let count = 0;
   let total = 0;
 
@@ -180,7 +190,7 @@ async function createXml(marketplace) {
     quantityInStock: { $gte: 1 },
   });
 
-  console.log("Count:", countDocs);
+  console.log("Total count:", countDocs);
 
   const products = Product.find({ quantityInStock: { $gte: 1 } })
     .select({
@@ -202,14 +212,23 @@ async function createXml(marketplace) {
     .cursor();
 
   for await (const product of products) {
-    if (!product?.marketplaces[marketplace.name.toLowerCase()]) continue;
+    if (!product?.marketplaces[marketplace.name.toLowerCase()]) {
+      offMarket.push(product.article);
+      continue;
+    }
     if (!product?.promId) {
       nonPromId.push(product.article);
       continue;
     }
-    if (!product?.name?.RU || product?.name?.RU === '') continue;
+    if (!product?.name?.RU || product?.name?.RU === '') {
+      withoutRuName.push(product.article);
+      continue;
+    }
     const category = categoriesMap.get(product.category);
-    if (!category || !category?.promCategory || !category?.promGroup || category.promCategory === '' || category.promGroup === '') continue;
+    if (!category || !category?.promCategory || !category?.promGroup || category.promCategory === '' || category.promGroup === '') {
+      withoutCategory.push(product.article)
+      continue;
+    }
 
     batch.push(product);
     count++;
@@ -217,7 +236,7 @@ async function createXml(marketplace) {
     if (batch.length >= BATCH_SIZE) {
       await writeBatch(batch, categoriesMap, stream, marketplace);
       batch = [];
-      console.log(`Processed: ${count}/${countDocs}`);
+      console.log(`Processed XML: ${count}/${countDocs}`);
     }
   }
 
@@ -233,7 +252,16 @@ async function createXml(marketplace) {
 
   fs.renameSync(`./public/xml/${marketplace.name.toLowerCase()}.xml.tmp`, `./public/xml/${marketplace.name.toLowerCase()}.xml`);
   await Marketplaces.findByIdAndUpdate({ _id: marketplace._id }, { xml: { ...marketplace.xml, path: `files/feed-xml/${marketplace._id}` } });
-  console.log('products without PromId:', nonPromId.length);
+
+  await sendTelegramMessage(
+    `Обновлен XML для Прома\n\n Вписано ${count} товаров\n Из них ${nonPromId.length} без promId\n Отфильтровно ${Number(countDocs) - Number(count)} товаров:\n
+-для ${offMarket.length} товаров отображение выключено (${offMarket.length < 10 ? offMarket.join(', ') : offMarket.slice(0, 10).join(', ') + '...'})\n
+-У ${withoutRuName.length} товаров нет названия RU (${withoutRuName.length < 10 ? withoutRuName.join(', ') : withoutRuName.slice(0, 10).join(', ') + '...'})\n
+-У ${withoutCategory.length} товаров нет категории (${withoutCategory.length < 10 ? withoutCategory.join(', ') : withoutCategory.slice(0, 10).join(', ') + '...'})\n`,
+    process.env.ADMIN_CHAT_ID
+  );
+
+  return nonPromId.length;
 }
 
 async function readBackFeed(marketplace) {
@@ -336,9 +364,9 @@ async function generateFeedsForMarketplaces() {
   try {
     const markets = await Marketplaces.find({ "xml.generate": true }).lean();
     for (const marketplace of markets) {
-      await createXml(marketplace);
+      const count = await createXml(marketplace);
 
-      if (marketplace?.xml?.backFeed) {
+      if (marketplace?.xml?.backFeed && count > 0) {
         await readBackFeed(marketplace);
       }
     }
