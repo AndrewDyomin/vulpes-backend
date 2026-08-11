@@ -264,100 +264,100 @@ async function createXml(marketplace) {
   return nonPromId.length;
 }
 
-async function readBackFeed(marketplace) {
-  console.log('reading...')
+// async function readBackFeed(marketplace) {
+//   console.log('reading...')
 
-  try {
-    let response = await axios.get(marketplace.xml.backFeed, { responseType: "stream" });
-    const parser = sax.createStream(true, { trim: true });
+//   try {
+//     let response = await axios.get(marketplace.xml.backFeed, { responseType: "stream" });
+//     const parser = sax.createStream(true, { trim: true });
 
-    let currentTag = null;
-    let currentProduct = null;
-    let textBuffer = "";
-    let currentParamName = null;
-    let currentParamValue = "";
-    const array = [];
-    const operations = [];
+//     let currentTag = null;
+//     let currentProduct = null;
+//     let textBuffer = "";
+//     let currentParamName = null;
+//     let currentParamValue = "";
+//     const array = [];
+//     const operations = [];
 
-    parser.on("opentag", (node) => {
-      textBuffer = "";
+//     parser.on("opentag", (node) => {
+//       textBuffer = "";
 
-      if (node.name === "offer") {
-        currentProduct = { id: node.attributes.id};
-      }
+//       if (node.name === "offer") {
+//         currentProduct = { id: node.attributes.id};
+//       }
 
-      currentTag = node.name;
-    });
+//       currentTag = node.name;
+//     });
 
-    parser.on("text", (text) => {
-      if (currentProduct && currentTag) {
-        textBuffer += text;
-      }
-    });
+//     parser.on("text", (text) => {
+//       if (currentProduct && currentTag) {
+//         textBuffer += text;
+//       }
+//     });
 
-    parser.on("closetag", (tagName) => {
-      if (!currentProduct) return;
+//     parser.on("closetag", (tagName) => {
+//       if (!currentProduct) return;
 
-      if (tagName === "offer") {
-        const article = currentProduct.vendorCode;
-        if (!article) return;
+//       if (tagName === "offer") {
+//         const article = currentProduct.vendorCode;
+//         if (!article) return;
 
-        const data = {
-          article,
-          id: currentProduct.id,
-          keywords: currentProduct.keywords,
-          keywordsUa: currentProduct.keywords_ua,
-        };
-        array.push(data);
+//         const data = {
+//           article,
+//           id: currentProduct.id,
+//           keywords: currentProduct.keywords,
+//           keywordsUa: currentProduct.keywords_ua,
+//         };
+//         array.push(data);
 
-        currentProduct = {};
-      } else if (currentTag && textBuffer) {
-        currentProduct[currentTag] = textBuffer;
-        textBuffer = "";
-      }
-    });
+//         currentProduct = {};
+//       } else if (currentTag && textBuffer) {
+//         currentProduct[currentTag] = textBuffer;
+//         textBuffer = "";
+//       }
+//     });
 
-    for await (const chunk of response.data) {
-      parser.write(chunk);
-    }
+//     for await (const chunk of response.data) {
+//       parser.write(chunk);
+//     }
 
-    parser.end();
-    response = null;
+//     parser.end();
+//     response = null;
 
-    while(array?.length) {
-      const chunk = array.splice(0, 500);
-      const articles = chunk.map(i => i.article)
-      const products = await Product.find({ article: { $in: articles }}, { article: 1, promId:1 }).lean();
-      const productsMap = new Map(products.map(p => [p.article, p]));
+//     while(array?.length) {
+//       const chunk = array.splice(0, 500);
+//       const articles = chunk.map(i => i.article)
+//       const products = await Product.find({ article: { $in: articles }}, { article: 1, promId:1 }).lean();
+//       const productsMap = new Map(products.map(p => [p.article, p]));
 
-      for (const item of chunk) {
-        const target = productsMap.get(item.article)
-        if (!target) continue;
-        if (!target?.promId || target?.promId === '') {
-          operations.push({
-            updateOne: {
-              filter: { article: item.article },
-              update: { $set: { promId: item.id } },
-              upsert: true,
-            },
-          });
+//       for (const item of chunk) {
+//         const target = productsMap.get(item.article)
+//         if (!target) continue;
+//         if (!target?.promId || target?.promId === '') {
+//           operations.push({
+//             updateOne: {
+//               filter: { article: item.article },
+//               update: { $set: { promId: item.id } },
+//               upsert: true,
+//             },
+//           });
 
-          if (operations.length >= 100) {
-            await Product.bulkWrite(operations, { ordered: false });
-            operations.length = 0;
-          }
-        }
-      }
-    }
+//           if (operations.length >= 100) {
+//             await Product.bulkWrite(operations, { ordered: false });
+//             operations.length = 0;
+//           }
+//         }
+//       }
+//     }
 
-    if (operations.length > 0) {
-      await Product.bulkWrite(operations, { ordered: false });
-    }
-  } catch(err) {
-    console.log(err)
-  }
-  return;
-}
+//     if (operations.length > 0) {
+//       await Product.bulkWrite(operations, { ordered: false });
+//     }
+//   } catch(err) {
+//     console.log(err)
+//   }
+//   return;
+// }
 
 async function generateFeedsForMarketplaces() {
   console.log("generate started");
@@ -367,7 +367,7 @@ async function generateFeedsForMarketplaces() {
       const count = await createXml(marketplace);
 
       if (marketplace?.xml?.backFeed && count > 0) {
-        await readBackFeed(marketplace);
+        // await readBackFeed(marketplace);
       }
     }
     console.log("generate finished");

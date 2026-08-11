@@ -146,7 +146,6 @@ async function horoshopUpdatePrice(req, res) {
       }
     }
 
-    // const usd = findRate(840, 980); // USD → UAH
     const eur = findRate(978, 980); // EUR → UAH
     const eurSell = normalize(eur?.rateSell) || normalize(eur?.rateCross);
 
@@ -300,7 +299,7 @@ async function horoshopUpdatePrice(req, res) {
           toUpdate.push(updated);
         }
         
-        if (toUpdate.length >= 100) { // UP TO 500
+        if (toUpdate.length >= 200) { // UP TO 500
           // flush products to marketplace
           total += toUpdate.length;
           const batch = toUpdate.splice(0);

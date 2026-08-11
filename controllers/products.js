@@ -11,6 +11,7 @@ const PurchaseRequest = require("../models/purchaseRequest");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
+const { fork } = require("child_process");
 const { google } = require("googleapis");
 const sendTelegramFile = require("../helpers/sendTelegramFile");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
@@ -731,6 +732,27 @@ async function updateCategory (req, res) {
   }
 }
 
+async function getProductsFromSd (req, res) {
+  const importProductsFromYML = path.join(__dirname, "../helpers", "insertSDProducts.js");
+  res.status(200).send({ message: 'Products update started' })
+
+  const child = fork(importProductsFromYML, [], {
+    execArgv: ["--max-old-space-size=50"],
+  });
+
+  child.on("exit", async(code) => {
+    console.log(`Проверка товаров в СД завершена с кодом ${code}`);
+  });
+
+  child.on("error", (err) => {
+    console.error("Ошибка проверки товаров в СД:", err);
+    sendTelegramMessage(
+      `Ошибка при выполнении проверки товаров в СД: ${err}`,
+      chatId,
+    );
+  });
+}
+
 module.exports = {
   getAll,
   search,
@@ -742,6 +764,7 @@ module.exports = {
   getAllBarcodes,
   updatePromBase,
   updateCategory,
+  getProductsFromSd,
   getProductTranslate,
   addToPurchaseRequest,
   sendAvailabilityTable,
