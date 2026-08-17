@@ -83,7 +83,7 @@ const colors = [
   { code: "K", description: "Laser", uk: "", ru: "", key: "" },
   { code: "L", description: "Purple", uk: "фіолетового кольору", ru: "фиолетового цвета", key: "Фіолетовий" },
   { code: "M", description: "Pure white", uk: "білого кольору", ru: "белого цвета", key: "Білий" },
-  { code: "N", description: "Black", uk: "чорного цвета", ru: "черного цвета", key: "Чорний" },
+  { code: "N", description: "Black", uk: "чорного кольору", ru: "черного цвета", key: "Чорний" },
   { code: "O", description: "Gold", uk: "золотого кольору", ru: "золотого цвета", key: "Золотий" },
   { code: "P", description: "Silver", uk: "сріблястого кольору", ru: "серебристого цвета", key: "Сріблястий" },
   { code: "Q", description: "Pink", uk: "рожевого кольору", ru: "розового цвета", key: "Рожевий" },
@@ -235,11 +235,11 @@ async function generateHoroshopProduct(ref, family) {
           article: `${article.code}${article.colour.code}`,
           title: {
             ru: `${product.titleRu} Puig`,
-            ua: `${product.titleRu} Puig`,
+            ua: `${product.titleUk} Puig`,
           },
           mod_title: {
             ru: targetColor.ru === "" ? `${product.titleRu} Puig ${article.code}${article.colour.code}` : `${product.titleRu} Puig ${targetColor.ru} ${article.code}${article.colour.code}`,
-            ua: targetColor.uk === "" ? `${product.titleRu} Puig ${article.code}${article.colour.code}` : `${product.titleRu} Puig ${targetColor.uk} ${article.code}${article.colour.code}`,
+            ua: targetColor.uk === "" ? `${product.titleUk} Puig ${article.code}${article.colour.code}` : `${product.titleUk} Puig ${targetColor.uk} ${article.code}${article.colour.code}`,
           },
           description: {
             ru: product.descriptionRu,

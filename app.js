@@ -18,6 +18,7 @@ const PuigRoutes = require('./routes/api/puig');
 const MarketplacesRoutes = require('./routes/api/marketplaces');
 const LeversRoutes = require('./routes/api/levers');
 const NovaPoshtaRoutes = require('./routes/api/novaPoshta');
+const KnowledgeRoutes = require('./routes/api/knowledge');
 const isAuth = require("./middlewares/isAuth");
 
 const app = express();
@@ -42,6 +43,7 @@ app.use("/puig-api", isAuth, PuigRoutes);
 app.use("/marketplaces", isAuth, MarketplacesRoutes);
 app.use("/levers", LeversRoutes);
 app.use("/nova-poshta", NovaPoshtaRoutes);
+app.use("/knowledge", isAuth, KnowledgeRoutes);
 
 
 app.use((req, res) => {
