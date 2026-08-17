@@ -107,6 +107,12 @@ async function getByBarcode(req, res, next) {
   const barcode = req.body.barcode;
   try {
     const product = await Product.findOne({ barcode }).exec();
+
+    if (!product) {
+      res.status(404).send({ message: 'Product not found' });
+      return;
+    }
+
     return res.status(200).json({ product });
   } catch (error) {
     next(error);
