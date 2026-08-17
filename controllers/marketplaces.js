@@ -95,6 +95,7 @@ async function horoshopUpdatePrice(req, res) {
   const autoIncreased = [];
   let markup = 1;
   let total = 0;
+  let flushCount = 0;
 
   try {
     if (updateFlag) {
@@ -304,6 +305,12 @@ async function horoshopUpdatePrice(req, res) {
           total += toUpdate.length;
           const batch = toUpdate.splice(0);
           await flush(token, batch);
+          flushCount += 1;
+
+          if (flushCount === 5) {
+            await sleep(20000);
+            flushCount = 0;
+          }
         }
       }
 
