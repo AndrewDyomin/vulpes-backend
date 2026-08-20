@@ -426,11 +426,10 @@ async function checkProductsFromHoroshop() {
     const key = i.article;
     itemsMap.set(key, i);
   }
-  let token = await getToken();
 
   while(true) {
     try {
-      console.log('response: ', page)
+      let token = await getToken();
       const { data } = await axios.post("https://vulpes.com.ua/api/catalog/export/",
         {
           offset: page,
@@ -526,7 +525,7 @@ async function checkProductsFromHoroshop() {
   }
 
   if (updatedProducts.length > 0) {
-    const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token });
+    const res = await axios.post('https://vulpes.com.ua/api/catalog/import/', { products: updatedProducts, token: await getToken() });
     if (res.data.status === 'OK') {
       for (const log of res.data.response.log) {
         if (log?.info[0]?.code === 0) continue;
