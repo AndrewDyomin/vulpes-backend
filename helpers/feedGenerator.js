@@ -100,7 +100,7 @@ async function writeBatch(products, categoriesMap, stream, marketplace) {
   for (const product of products) {
     try {
       const category = categoriesMap.get(product?.category);
-      xml += `<offer id="${product.promId}" available="true">\n`;
+      xml += `<offer id="${product?.promId || product?.article}" available="true">\n`;
 
       if (product.brand.toLowerCase() === 'puig' || product.brand.toLowerCase() === 'mra') {
         xml += `<price>${Math.round(product.price.UAH * marketplace.markup)}</price>\n`;
@@ -207,8 +207,6 @@ async function createXml(marketplace) {
       marketplaces: 1,
       promId: 1,
     })
-    // .sort({ quantityInStock: -1 })
-    // .lean({ defaults: true })
     .cursor();
 
   for await (const product of products) {
@@ -218,7 +216,6 @@ async function createXml(marketplace) {
     }
     if (!product?.promId) {
       nonPromId.push(product.article);
-      continue;
     }
     if (!product?.name?.RU || product?.name?.RU === '') {
       withoutRuName.push(product.article);
@@ -254,8 +251,8 @@ async function createXml(marketplace) {
   await Marketplaces.findByIdAndUpdate({ _id: marketplace._id }, { xml: { ...marketplace.xml, path: `files/feed-xml/${marketplace._id}` } });
 
   await sendTelegramMessage(
-    `Обновлен XML для Прома\n\n Вписано ${count} товаров\n Из них ${nonPromId.length} без promId\n Отфильтровно ${Number(countDocs) - Number(count)} товаров:\n
--для ${offMarket.length} товаров отображение выключено (${offMarket.length < 10 ? offMarket.join(', ') : offMarket.slice(0, 10).join(', ') + '...'})\n
+    `Обновлен XML для Прома\n\n Вписано ${count} товаров\n Из них ${nonPromId.length} без promId${nonPromId?.length > 0 ? ` (${nonPromId.slice(0, 10).join(', ') + '...'})`: ''}\n Отфильтровно ${Number(countDocs) - Number(count)} товаров:\n
+-для ${offMarket.length} товаров отображение выключено (${offMarket.length < 10 ? offMarket.join(', ') : offMarket.slice(0, 10).join(', ') + ', ...'})\n
 -У ${withoutRuName.length} товаров нет названия RU (${withoutRuName.length < 10 ? withoutRuName.join(', ') : withoutRuName.slice(0, 10).join(', ') + '...'})\n
 -У ${withoutCategory.length} товаров нет категории (${withoutCategory.length < 10 ? withoutCategory.join(', ') : withoutCategory.slice(0, 10).join(', ') + '...'})\n`,
     process.env.ADMIN_CHAT_ID
