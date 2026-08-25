@@ -104,6 +104,9 @@ async function writeBatch(products, categoriesMap, stream, marketplace) {
 
       if (product.brand.toLowerCase() === 'puig' || product.brand.toLowerCase() === 'mra') {
         xml += `<price>${Math.round(product.price.UAH * marketplace.markup)}</price>\n`;
+      } else if (product.article === 'A031030-1') {
+        xml += `<price>${Math.round(product.price.UAH * marketplace.markup * 0.5)}</price>\n`;
+        xml += `<oldprice>${Math.round(product.price.UAH * marketplace.markup)}</oldprice>\n`;
       } else {
         xml += `<price>${Math.round(product.price.UAH * marketplace.markup * 0.85)}</price>\n`;
         xml += `<oldprice>${Math.round(product.price.UAH * marketplace.markup)}</oldprice>\n`;
