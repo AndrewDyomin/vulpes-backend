@@ -463,14 +463,14 @@ async function checkProductsFromHoroshop() {
           const targetItem = itemsMap.get(product.article);
 
           // --- OUTDATED OR NOT
-          if (targetArticle.outdated === 1 && product.presence?.value?.ua === 'Немає в наявності') {
+          if (targetItem?._id && targetArticle?.outdated === 1 && product.presence?.value?.ua === 'Немає в наявності') {
             itemOperations.push({
               updateOne: {
                 filter: { _id: targetItem._id },
                 update: { $set: { outdated: new Date() } },
               },
             });
-          } else if (targetArticle.outdated === 0 && product.presence?.value?.ua !== 'Немає в наявності') {
+          } else if (targetItem?._id && targetArticle?.outdated === 0 && product.presence?.value?.ua !== 'Немає в наявності') {
             itemOperations.push({
               updateOne: {
                 filter: { _id: targetItem._id },
