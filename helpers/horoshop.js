@@ -414,13 +414,13 @@ async function checkProductsFromHoroshop() {
   const updatedProducts = [];
   const operations = [];
   const itemOperations = [];
-  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { code: 1, colour: 1, stock: 1, stock_prevision: 1, priceUAH: 1, images: 1, horoshopAddDate: 1 }).lean();
+  const articlesArray = await Articles.find({ horoshopStatus: "on" }, { code: 1, colour: 1, stock: 1, stock_prevision: 1, priceUAH: 1, images: 1, horoshopAddDate: 1, outdated: 1 }).lean();
   const articlesMap = new Map();
   for (const a of articlesArray) {
     const key = `${a.code}_${a.colour.code}`;
     articlesMap.set(key, a);
   }
-  const itemsArray = await Item.find({}, { outdated: 1, article: 1 }).lean();
+  const itemsArray = await Item.find({}, { outdated: 1, article: 1, quantityInStock: 1 }).lean();
   const itemsMap = new Map();
   for (const i of itemsArray) {
     const key = i.article;
@@ -459,8 +459,28 @@ async function checkProductsFromHoroshop() {
           const art = article.slice(0, -1);
           const colorCode = article.slice(-1);
           const key = `${art}_${colorCode}`;
-          const target = articlesMap.get(key);
-          if (!target && product.presence?.value?.ua !== 'Немає в наявності') {
+          const targetArticle = articlesMap.get(key);
+          const targetItem = itemsMap.get(product.article);
+
+          // --- OUTDATED OR NOT
+          if (targetArticle.outdated === 1 && product.presence?.value?.ua === 'Немає в наявності') {
+            itemOperations.push({
+              updateOne: {
+                filter: { _id: targetItem._id },
+                update: { $set: { outdated: new Date() } },
+              },
+            });
+          } else if (targetArticle.outdated === 0 && product.presence?.value?.ua !== 'Немає в наявності') {
+            itemOperations.push({
+              updateOne: {
+                filter: { _id: targetItem._id },
+                update: { $set: { outdated: null } },
+              },
+            });
+          }
+          
+          // --- OUT OF STOCK
+          if (!targetArticle && (!targetItem?.quantityInStock || targetItem?.quantityInStock < 0) && product.presence?.value?.ua !== 'Немає в наявності') {
             updatedProducts.push({ article: product.article, parent_article: product.parent_article, presence: 'Немає в наявності', export_to_marketplace: [] });
             continue;
           };
@@ -550,8 +570,7 @@ async function checkProductsFromHoroshop() {
 
   const notFounded = [ ...articlesMap.values() ];
 
-  // console.dir(notFounded, { deep: null });
-  console.log(`Всего не найдено ${notFounded.length} артикулов.`)
+  console.log(`Найдено ${notFounded.length} артикулов, у которых включено отображение, но их нет на Хорошопе.`)
   for (const i of notFounded) {
     operations.push({
       updateOne: {

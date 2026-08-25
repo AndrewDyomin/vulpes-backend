@@ -235,6 +235,7 @@ async function horoshopUpdatePrice(req, res) {
           const art = article.slice(0, -1);
           const colorCode = article.slice(-1);
           target = await PuigArticles.findOne({ code: art, "colour.code": colorCode }, { stock: 1, stock_prevision: 1, pvp: 1, pvp_recommended: 1, quantityInStock: 1, horoshopStatus: 1 }).lean();
+          const stock = await Product.findOne({ article }, { quantityInStock: 1 }).lean();
           if (!target) {
             undefinedProducts.push(product.article);
             continue;
@@ -250,13 +251,13 @@ async function horoshopUpdatePrice(req, res) {
             }
           }
 
-          if (target?.quantityInStock > 0 && product.presence.id !== 1 && target?.horoshopStatus === 'on') {
+          if (stock?.quantityInStock > 0 && product.presence.id !== 1 && target?.horoshopStatus === 'on') {
             updated.presence = 'В наявності';
             updated.export_to_marketplace = 'Google Feed for Merchant Center';
             updated.display_in_showcase = true;
           }
 
-          if (!target?.quantityInStock || target?.quantityInStock <= 0) {
+          if (stock?.quantityInStock <= 0) {
             const stock = Number(target.stock)
             if (Number.isFinite(stock) && stock > 0 && product?.presence?.value?.ua !== 'Доставка 10-18 днів' && target?.horoshopStatus === 'on') {
               updated.presence = 'Доставка 10-18 днів';
