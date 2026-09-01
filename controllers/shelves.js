@@ -56,8 +56,53 @@ async function updateShelf(req, res) {
     }
 }
 
+async function getShelvesByArray(req, res) {
+    try {
+        const array = req.body;
+        if (!array?.length) {
+            throw new Error('array is empty')
+        }
+
+        const result = [];
+
+        for (const item of array) {
+            const shelves = await Shelves.find({ 'items.article': item.article }).lean();
+            const targetShelves = [];
+
+            for (const shelf of shelves) {
+                targetShelves.push({ ...shelf, items: shelf.items.filter(i => i.article === item.article) })
+                const total = shelf.items.reduce((acc, i) => acc + i.count, 0);
+                if (total >= item.count) break;
+            }
+            // TO DO --- --- Если уже есть, то добавить
+            result.push({ ...item, shelves: targetShelves });
+        }
+        
+        const sorted = [...result].sort((a, b) => {
+            const shelfA = a.shelves?.[0]?.name;
+            const shelfB = b.shelves?.[0]?.name;
+
+            if (!shelfA) return 1;
+            if (!shelfB) return -1;
+
+            return shelfA.localeCompare(shelfB, undefined, { numeric: true });
+        });
+
+        res.status(200).send(sorted);
+    } catch(err) {
+        console.log(err)
+        res.status(500).send({ message: 'Something went wrong' });
+    }
+}
+
+async function chechSendedProducts(req, res) {
+    console.log(req.body)
+}
+
 module.exports = {
     addShelf,
-    getAllShelves,
     updateShelf,
+    getAllShelves,
+    getShelvesByArray,
+    chechSendedProducts,
 }

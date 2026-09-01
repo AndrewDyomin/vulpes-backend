@@ -20,5 +20,6 @@ router.post("/remove-from-purchase-request", isAuth, ProductsController.removeFr
 router.get("/all-purchase-requests", isAuth, ProductsController.getAllPurchaseRequests);
 router.post("/update-category", isAuth, ProductsController.updateCategory);
 router.get("/get-products-from-sd", isAuth, ProductsController.getProductsFromSd);
+router.post("/sended-products", ProductsController.chechSendedProducts);
 
 module.exports = router;

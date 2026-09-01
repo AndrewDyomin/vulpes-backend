@@ -759,6 +759,14 @@ async function getProductsFromSd (req, res) {
   });
 }
 
+async function chechSendedProducts(req, res) {
+  try {
+    const { data } = req.body;
+  } catch(err) {
+
+  }
+}
+
 module.exports = {
   getAll,
   search,
@@ -772,6 +780,7 @@ module.exports = {
   updateCategory,
   getProductsFromSd,
   getProductTranslate,
+  chechSendedProducts,
   addToPurchaseRequest,
   sendAvailabilityTable,
   getAllPurchaseRequests,

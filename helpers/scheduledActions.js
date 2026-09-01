@@ -595,16 +595,16 @@ cron.schedule(    // import products
   },
 );
 
-cron.schedule(    //  update prom base 1 per 6 hours
-  "20 */6 * * *",
-  () => {
-    updatePromBase();
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  },
-);
+// cron.schedule(    //  update prom base 1 per 6 hours
+//   "20 */6 * * *",
+//   () => {
+//     updatePromBase();
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Kiev",
+//   },
+// );
 
 cron.schedule(    // save Motea feed at 01:10
   "10 1 * * *",
