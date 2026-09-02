@@ -95,8 +95,58 @@ async function getShelvesByArray(req, res) {
     }
 }
 
-async function chechSendedProducts(req, res) {
-    console.log(req.body)
+async function takeOffTheShelf(article, count) {
+    try {
+  if (!article) {
+    throw new Error('Article is required');
+  }
+
+  if (!Number.isInteger(count) || count <= 0) {
+    throw new Error('Count must be a positive integer');
+  }
+
+  const shelves = await Shelves.find({
+    'items.article': article,
+  });
+
+  if (!shelves.length) {
+    console.log(
+      `Product with article ${article} not found on shelves`
+    );
+    return;
+  }
+
+  let remaining = count;
+
+  for (const shelf of shelves) {
+    if (remaining === 0) break;
+
+    const item = shelf.items.find(
+      item => item.article === article
+    );
+
+    if (!item) continue;
+
+    const takeCount = Math.min(item.count, remaining);
+
+    item.count -= takeCount;
+    remaining -= takeCount;
+
+    if (item.count === 0) {
+      shelf.items = shelf.items.filter(
+        item => item.article !== article
+      );
+    }
+
+    await shelf.save();
+  }
+
+  return {
+    article,
+    taken: count,
+  }} catch(err) {
+    console.log(err);
+  }
 }
 
 module.exports = {
@@ -104,5 +154,5 @@ module.exports = {
     updateShelf,
     getAllShelves,
     getShelvesByArray,
-    chechSendedProducts,
+    takeOffTheShelf,
 }

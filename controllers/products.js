@@ -19,6 +19,7 @@ const updateSheets = require("../helpers/updateSheets");
 const { translateService } = require('./puig');
 const PuigArticles = require('../models/puigArticles');
 const puigProducts = require('../models/puigProducts');
+const { takeOffTheShelf } = require('./shelves');
 const chatId = process.env.ADMIN_CHAT_ID;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const MAIN_DB_URI = process.env.DB_URI;
@@ -762,8 +763,24 @@ async function getProductsFromSd (req, res) {
 async function chechSendedProducts(req, res) {
   try {
     const { data } = req.body;
-  } catch(err) {
+    if (!data?.products?.length) return;
 
+    for (const product of data.products) {
+      if (product?.isComplect) {
+        for (const item of product.complect) {
+          await takeOffTheShelf(item.sku, item.count)
+          sendTelegramMessage(`Sended: ${item.sku} - ${item.count}pcs.`, chatId);
+        }
+      } else {
+        await takeOffTheShelf(product.sku, product.amount)
+        sendTelegramMessage(`Sended: ${product.sku} - ${product.amount}pcs.`, chatId);
+      }
+    }
+
+    res.status(200).send({ message: 'OK' });
+  } catch(err) {
+    console.log(err);
+    res.status(500);
   }
 }
 
