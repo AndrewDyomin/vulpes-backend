@@ -1,5 +1,3 @@
-// const axios = require('axios');
-// const xml2js = require('xml2js');
 const XLSX = require("xlsx");
 const Receive = require("../models/receive");
 const User = require("../models/user");
@@ -104,11 +102,11 @@ async function remove(req, res, next) {
 }
 
 async function update(req, res, next) {
-  const { id, items, invoices } = req.body;
+  const { id, items, invoices, name } = req.body;
   const invoicesArray = invoices || [];
 
   try {
-    await Receive.findByIdAndUpdate(id, { items, invoices: invoicesArray }).exec();
+    await Receive.findByIdAndUpdate(id, { items, invoices: invoicesArray, name }).exec();
     res.status(200).json({ message: "Inventory check was updated" });
   } catch (error) {
     next(error);

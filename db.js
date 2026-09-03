@@ -7,6 +7,6 @@ mongoose
   .connect(DB_URI)
   .then(() => console.info("Database connection: ok"))
   .catch((error) => {
-    console.error(error);
+    console.error(error);    
     process.exit(1);
   });

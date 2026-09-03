@@ -185,24 +185,24 @@ async function importProductsFromYML() {
     await flush();
   }
 
-  for (const sku of puigArticlesArray) {
-    let target = null;
-    const match = sku.match(/^(\d+)([A-Z])-/);
-    if (match) {
-      const code = match[1];
-      const color = match[2];
-      target = await puigArticle.findOne({ code, "colour.code": color }, {code: 1}).lean()
-    }
+  // for (const sku of puigArticlesArray) {
+  //   let target = null;
+  //   const match = sku.match(/^(\d+)([A-Z])-/);
+  //   if (match) {
+  //     const code = match[1];
+  //     const color = match[2];
+  //     target = await puigArticle.findOne({ code, "colour.code": color }, {code: 1}).lean()
+  //   }
 
-    if (target) {
-      toDel.push(sku)
-    }
-  }
+  //   if (target) {
+  //     toDel.push(sku)
+  //   }
+  // }
 
-  while (toDel?.length > 0) {
-    const arr = toDel.splice(0, CHUNK_SIZE);
-    await Product.deleteMany({ article: { $in: arr } })
-  }
+  // while (toDel?.length > 0) {
+  //   const arr = toDel.splice(0, CHUNK_SIZE);
+  //   await Product.deleteMany({ article: { $in: arr } })
+  // }
 
   console.log("Импорт товаров из СД завершён");
   sendTelegramMessage(
