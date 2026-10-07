@@ -535,7 +535,14 @@ async function checkProductsFromHoroshop() {
         token = await getToken();
         continue;
       }
-      console.log('err:', err);
+
+      if (err?.response?.status === 429) {
+        console.log('Catch error:', err, '----------continue--------->');
+        await sleep(60000);
+        continue;
+      }
+
+      console.log('error:', err);
       if (err?.response?.log?.length) {
         for (const error of err?.response?.log) {
           console.log(error);
