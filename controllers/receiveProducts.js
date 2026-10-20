@@ -2,6 +2,7 @@ const XLSX = require("xlsx");
 const Receive = require("../models/receive");
 const User = require("../models/user");
 const Invoices = require("../models/Invoices");
+const Products = require("../models/item");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 
 const format = (number) => {
@@ -78,6 +79,17 @@ async function add(req, res, next) {
 
     await Receive.create({ name, items: array });
     sendTelegramMessage(`${req?.user?.user.name} добавил новый приход товаров.`, process.env.ADMIN_CHAT_ID);
+
+    for (const item of array) {
+      if (!item?.barcode) continue;
+      const target = await Products.findOne({ article: item.article }).lean();
+      if (!target || target?.barcode === item.barcode) continue;
+      if (!target?.barcode) {
+        await Products.findByIdAndUpdate(target._id, { barcode: item.barcode })
+      } else {
+        console.log(`In product ${item.article} finded barcodes - base: ${target.barcode}, scan: ${item.barcode}`);
+      }
+    }
 
     res.status(200).json({ message: "Receive created.", name });
   } catch (error) {
