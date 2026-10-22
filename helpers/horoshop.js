@@ -505,7 +505,6 @@ async function checkProductsFromHoroshop() {
             }
             updatedProducts.length = 0;
           }
-          articlesMap.delete(key);
         } else if (product.supplier.value === "MOTEA") {
           const target = itemsMap.get(product.article)
           if (target && !target?.outdated && product.presence?.value?.ua === 'Немає в наявності') {
@@ -575,21 +574,21 @@ async function checkProductsFromHoroshop() {
     updatedProducts.length = 0;
   }
 
-  const notFounded = [ ...articlesMap.values() ];
+  // const notFounded = [ ...articlesMap.values() ];
 
-  console.log(`Найдено ${notFounded.length} артикулов, у которых включено отображение, но их нет на Хорошопе.`)
-  for (const i of notFounded) {
-    operations.push({
-      updateOne: {
-        filter: { code: i.code, "colour.code": i.colour.code },
-        update: { $set: { horoshopAddDate: null } },
-      },
-    });
-    if (operations.length >= 500) {
-      await Articles.bulkWrite(operations, { ordered: false });
-      operations.length = 0;
-    }
-  }
+  // console.log(`Найдено ${notFounded.length} артикулов, у которых включено отображение, но их нет на Хорошопе.`)
+  // for (const i of notFounded) {
+  //   operations.push({
+  //     updateOne: {
+  //       filter: { code: i.code, "colour.code": i.colour.code },
+  //       update: { $set: { horoshopAddDate: null } },
+  //     },
+  //   });
+  //   if (operations.length >= 500) {
+  //     await Articles.bulkWrite(operations, { ordered: false });
+  //     operations.length = 0;
+  //   }
+  // }
   if (operations.length > 0) {
     await Articles.bulkWrite(operations, { ordered: false });
     operations.length = 0;
