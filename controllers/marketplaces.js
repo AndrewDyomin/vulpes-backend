@@ -251,23 +251,21 @@ async function horoshopUpdatePrice(req, res) {
             }
           }
 
+          const targetStock = Number(target.stock)
+          if (Number.isFinite(targetStock) && Number(targetStock) > 0 && product?.presence?.value?.ua !== 'Доставка 10-18 днів' && target?.horoshopStatus === 'on') {
+            updated.presence = 'Доставка 10-18 днів';
+            updated.export_to_marketplace = 'Google Feed for Merchant Center';
+            updated.display_in_showcase = true;
+          } else if ((!Number.isFinite(targetStock) && product?.presence?.value?.ua !== 'Немає в наявності') || target?.horoshopStatus !== 'on') {
+            updated.presence = 'Немає в наявності';
+            updated.export_to_marketplace = '';
+            updated.display_in_showcase = false;
+          }
+
           if (stock?.quantityInStock > 0 && product.presence.id !== 1 && target?.horoshopStatus === 'on') {
             updated.presence = 'В наявності';
             updated.export_to_marketplace = 'Google Feed for Merchant Center';
             updated.display_in_showcase = true;
-          }
-
-          if (stock?.quantityInStock <= 0) {
-            const stock = Number(target.stock)
-            if (Number.isFinite(stock) && stock > 0 && product?.presence?.value?.ua !== 'Доставка 10-18 днів' && target?.horoshopStatus === 'on') {
-              updated.presence = 'Доставка 10-18 днів';
-              updated.export_to_marketplace = 'Google Feed for Merchant Center';
-              updated.display_in_showcase = true;
-            } else if ((!Number.isFinite(stock) && product?.presence?.value?.ua !== 'Немає в наявності') || target?.horoshopStatus !== 'on') {
-              updated.presence = 'Немає в наявності';
-              updated.export_to_marketplace = '';
-              updated.display_in_showcase = false;
-            }
           }
 
         } else {
