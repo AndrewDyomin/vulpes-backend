@@ -64,9 +64,22 @@ async function getAll(req, res, next) {
     }
 
     const skip = (page - 1) * limit;
+    const isAuthorized = req?.headers?.isAuth;
+    const fields = isAuthorized ? {} : { 
+      article: 1, 
+      brand: 1, 
+      price: 1, 
+      oldPrice: 1, 
+      images: 1, 
+      color: 1, 
+      name: 1, 
+      description: 1, 
+      availabilityInMotea: 1, 
+      quantityInStock: 1 
+    };
 
     const [products, total] = await Promise.all([
-      Product.find(inStockFilter).sort(sort).skip(skip).limit(limit).exec(),
+      Product.find(inStockFilter, fields).sort(sort).skip(skip).limit(limit).exec(),
       Product.countDocuments(inStockFilter),
     ]);
 
@@ -106,8 +119,22 @@ async function getAllBarcodes(req, res, next) {
 
 async function getByBarcode(req, res, next) {
   const barcode = req.body.barcode;
+  const isAuthorized = req?.headers?.isAuth;
+  const fields = isAuthorized ? {} : { 
+    article: 1, 
+    brand: 1, 
+    price: 1, 
+    oldPrice: 1, 
+    images: 1, 
+    color: 1, 
+    name: 1, 
+    description: 1, 
+    availabilityInMotea: 1, 
+    quantityInStock: 1 
+  };
+
   try {
-    const product = await Product.findOne({ barcode }).exec();
+    const product = await Product.findOne({ barcode }, fields).exec();
 
     if (!product) {
       res.status(404).send({ message: 'Product not found' });
@@ -122,8 +149,22 @@ async function getByBarcode(req, res, next) {
 
 async function getByArticle(req, res, next) {
   const article = req.body.article;
+  const isAuthorized = req?.headers?.isAuth;
+  const fields = isAuthorized ? {} : { 
+    article: 1, 
+    brand: 1, 
+    price: 1, 
+    oldPrice: 1, 
+    images: 1, 
+    color: 1, 
+    name: 1, 
+    description: 1, 
+    availabilityInMotea: 1, 
+    quantityInStock: 1 
+  };
+
   try {
-    let product = await Product.findOne({ article }).exec();
+    let product = await Product.findOne({ article }, fields).exec();
 
     if (!product) {
       const ref = article.includes('-') ? article.split('-')[0] : article;
@@ -182,9 +223,22 @@ async function search(req, res, next) {
     }
 
     let query = { article: { $regex: value, $options: "i" }, ...inStockFilter };
+    const isAuthorized = req?.headers?.isAuth;
+    const fields = isAuthorized ? {} : { 
+      article: 1, 
+      brand: 1, 
+      price: 1, 
+      oldPrice: 1, 
+      images: 1, 
+      color: 1, 
+      name: 1, 
+      description: 1, 
+      availabilityInMotea: 1, 
+      quantityInStock: 1 
+    };
 
     let [products, total] = await Promise.all([
-      Product.find(query).sort(sort).skip(skip).limit(limit),
+      Product.find(query, fields).sort(sort).skip(skip).limit(limit),
       Product.countDocuments(query),
     ]);
 
@@ -192,7 +246,7 @@ async function search(req, res, next) {
       query = { "name.UA": { $regex: value, $options: "i" }, ...inStockFilter };
 
       [products, total] = await Promise.all([
-        Product.find(query).sort(sort).skip(skip).limit(limit),
+        Product.find(query, fields).sort(sort).skip(skip).limit(limit),
         Product.countDocuments(query),
       ]);
     }
