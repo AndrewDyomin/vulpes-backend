@@ -39,57 +39,187 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// ______OLD_VERSION______
+
+// async function getAll(req, res, next) {
+//   let allOrders = [];
+//   try {
+//     await OrdersArchive.collection.drop();
+
+//     const params = {
+//       page: 1,
+//       filter: {
+//         statusId: ["1", "2", "3", "4", "9", "10", "11", "13", "14", "15", "16", "17"],
+//       },
+//     };
+//     let hasMore = true;
+
+//     while (hasMore) {
+//       console.log(`Fetching page ${params.page}...`);
+//       let response = await axios.get(url, { headers, params });
+//       const pagination = response.data.pagination;
+//       if (pagination.pageCount <= pagination.currentPage) {
+//         hasMore = false;
+//       }
+//       params.page++;
+//       const statusOptions = response.data.meta.fields.statusId.options;
+//       const ordersArray = response.data.data;
+
+//       for (const order of ordersArray) {
+//         const option = statusOptions.find(
+//           (status) => Number(status.value) === Number(order.statusId)
+//         );
+//         order.statusLabel = option.text;
+//         if (order?.products) {
+//           for (const product of order.products) {
+//             const target = await Product.findOne({
+//               article: product.sku,
+//             }).exec();
+//             if (target?.isSet && target.isSet[0] !== null) {
+//               product.isSet = target.isSet;
+//             }
+//           }
+//         }
+//       }
+
+//       response = null;
+//       allOrders.push(...ordersArray);
+//     }
+
+//     await OrdersArchive.insertMany(allOrders);
+//     allOrders = null;
+//     console.log("Заказы скопированы");
+//   } catch (error) {
+//     console.error("Error fetching orders:", error);
+//     sendTelegramMessage(`Ошибка при синхронизации заказов: ${error}`, chatId);
+//   }
+// }
+
+function formatSalesDriveDate(date) {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value])
+  );
+
+  return `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute}:${values.second}`;
+}
+
 async function getAll(req, res, next) {
-  let allOrders = [];
   try {
-    await OrdersArchive.collection.drop();
+    const to = new Date();
+    const from = new Date(to.getTime() - 24 * 60 * 60 * 1000);
 
     const params = {
       page: 1,
       filter: {
-        statusId: ["1", "2", "3", "4", "9", "10", "11", "13", "14", "15", "16", "17"],
+        statusId: ["1", "2", "3", "4", "5", "9", "10", "11", "13", "14", "15", "16", "17"],
+        updateAt: {
+          from: formatSalesDriveDate(from),
+          to: formatSalesDriveDate(to),
+        },
       },
     };
+
+    let totalProcessed = 0;
     let hasMore = true;
 
     while (hasMore) {
-      console.log(`Fetching page ${params.page}...`);
-      let response = await axios.get(url, { headers, params });
-      const pagination = response.data.pagination;
-      if (pagination.pageCount <= pagination.currentPage) {
-        hasMore = false;
-      }
-      params.page++;
-      const statusOptions = response.data.meta.fields.statusId.options;
-      const ordersArray = response.data.data;
+      console.log(`Fetching orders page ${params.page}...`);
+
+      const { data } = await axios.get(url, {
+        headers,
+        params,
+      });
+
+      const ordersArray = data?.data || [];
+      const statusOptions = data.meta.fields.statusId.options;
+
+      const statusMap = new Map(
+        statusOptions.map((status) => [
+          Number(status.value),
+          status.text,
+        ])
+      );
+
+      const skus = [
+        ...new Set(
+          ordersArray.flatMap((order) =>
+            (order.products || [])
+              .map((product) => product.sku)
+              .filter(Boolean)
+          )
+        ),
+      ];
+
+      const products = skus.length
+        ? await Product.find({ article: { $in: skus } })
+            .select({ article: 1, isSet: 1 })
+            .lean()
+        : [];
+
+      const productsMap = new Map(
+        products.map((product) => [product.article, product])
+      );
+
+      const operations = [];
 
       for (const order of ordersArray) {
-        const option = statusOptions.find(
-          (status) => Number(status.value) === Number(order.statusId)
-        );
-        order.statusLabel = option.text;
-        if (order?.products) {
+        order.statusLabel = statusMap.get(Number(order.statusId)) || "";
+
+        if (order.products) {
           for (const product of order.products) {
-            const target = await Product.findOne({
-              article: product.sku,
-            }).exec();
+            const target = productsMap.get(product.sku);
+
             if (target?.isSet && target.isSet[0] !== null) {
               product.isSet = target.isSet;
             }
           }
         }
+
+        operations.push({
+          updateOne: {
+            filter: { id: order.id },
+            update: { $set: order },
+            upsert: true,
+          },
+        });
       }
 
-      response = null;
-      allOrders.push(...ordersArray);
+      if (operations.length) {
+        await OrdersArchive.bulkWrite(operations, { ordered: false });
+      }
+
+      totalProcessed += ordersArray.length;
+
+      const pagination = data.pagination;
+
+      hasMore =
+        pagination &&
+        pagination.currentPage < pagination.pageCount;
+
+      params.page++;
     }
 
-    await OrdersArchive.insertMany(allOrders);
-    allOrders = null;
-    console.log("Заказы скопированы");
+    console.log(
+      `Синхронизация заявок завершена. Обработано: ${totalProcessed}`
+    );
   } catch (error) {
     console.error("Error fetching orders:", error);
-    sendTelegramMessage(`Ошибка при синхронизации заказов: ${error}`, chatId);
+
+    sendTelegramMessage(
+      `Ошибка при синхронизации заказов: ${error}`,
+      chatId
+    );
   }
 }
 

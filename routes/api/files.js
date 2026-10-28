@@ -10,6 +10,8 @@ const router = express.Router();
 
 router.post("/invoiceParser", isAuth, upload.single("invoice"), filesController.uploadInvoice);
 router.post("/download-table-for-broker", isAuth, filesController.downloadBrokerTable);
+router.post("/upload-ad-stats", isAuth, upload.single("file"), filesController.uploadAdStatistic);
+router.post("/save-ad-stats", isAuth, filesController.saveAdStatistic);
 router.get("/zakupka.xml", filesController.getXmlToZakupka);
 router.get("/feed-xml/:id", filesController.getXmlFromId);
 router.get("/update-zakupka", async (req, res) => { await generateFeed(); res.status(200).send('ok');})

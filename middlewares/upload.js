@@ -1,5 +1,5 @@
 const path = require("node:path");
-// const crypto = require("node:crypto");
+const crypto = require("node:crypto");
 const multer = require("multer");
 
 const storage = multer.diskStorage({
@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
     const extname = path.extname(file.originalname);
     const basename = path.basename(file.originalname, extname);
 
-    cb(null, `${basename}${extname}`);
+    cb(null, `${crypto.randomUUID()}-${basename}${extname}`);
   },
 });
 

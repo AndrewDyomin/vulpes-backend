@@ -274,6 +274,16 @@ const itemSchema = new mongoose.Schema({
       },
     },
   },
+  statistic: {
+    adCost: {
+      type: Number,
+      default: 0,
+    },
+    roas: {
+      type: Number,
+      default: 0,
+    },
+  }
 });
 
 itemSchema.index({ quantityInStock: -1 });
