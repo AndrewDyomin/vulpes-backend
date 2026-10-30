@@ -14,6 +14,7 @@ router.post("/upload-ad-stats", isAuth, upload.single("file"), filesController.u
 router.post("/save-ad-stats", isAuth, filesController.saveAdStatistic);
 router.get("/zakupka.xml", filesController.getXmlToZakupka);
 router.get("/feed-xml/:id", filesController.getXmlFromId);
+router.get("/feed-gmc/:id", filesController.getXmlToGMC);
 router.get("/update-zakupka", async (req, res) => { await generateFeed(); res.status(200).send('ok');})
 
 module.exports = router;

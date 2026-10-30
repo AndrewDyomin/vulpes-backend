@@ -214,9 +214,9 @@ async function createXml(marketplace) {
       offMarket.push(product.article);
       continue;
     }
-    if (!product?.promId) {
-      nonPromId.push(product.article);
-    }
+    // if (!product?.promId) {
+    //   nonPromId.push(product.article);
+    // }
     if (!product?.name?.RU || product?.name?.RU === '') {
       withoutRuName.push(product.article);
       continue;

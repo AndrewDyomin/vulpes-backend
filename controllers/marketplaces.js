@@ -205,6 +205,7 @@ async function horoshopUpdatePrice(req, res) {
               }
             } else if (difference >= 5 && (product.brand?.value?.ua === 'Puig' || product.brand?.value?.ua === 'MRA')) {
               updated.price = Math.round(target?.moteaPrice?.UAH * markup);
+              updated.price_old = Math.round(target?.moteaPrice?.UAH * markup);
               if (target.vendorprice && target.vendorprice * 2 > updated.price) {
                 updated.price = Math.round(target.vendorprice * 2);
                 updated.price_old = Math.round(target.vendorprice * 2);

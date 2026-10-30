@@ -25,6 +25,7 @@ const { checkProductsUpdates } = require("../controllers/puig");
 const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
 const { horoshopUpdatePrice } = require("../controllers/marketplaces");
 const { checkBikeAdapters } = require("../controllers/levers");
+const { calcProductsRoas } = require("./calcProductsRoas")
 
 const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
@@ -786,6 +787,7 @@ cron.schedule(    //  update google MC feed table
   () => {
     sendToSheets();
     checkProductsUpdates();
+    calcProductsRoas();
   },
   {
     scheduled: true,

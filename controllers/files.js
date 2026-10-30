@@ -7,6 +7,7 @@ const Marketplaces = require("../models/marketplaces");
 const TmpTables = require("../models/tmpTables");
 const { generateFeed } = require("../helpers/zakupka");
 const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
+const { createXml } = require("../helpers/googleAdsFeedGenerator");
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
 const { default: axios } = require("axios");
 
@@ -256,7 +257,31 @@ async function getXmlFromId(req, res) {
   }
 }
 
+async function getXmlToGMC(req, res) {
+  const { id } = req.params;
+  if (!id) {
+    res.status(500).send({ message: 'Id not found' });
+    return;
+  }
+
+    try {
+    const xmlPath = path.join(__dirname, "../", "public", "xml", `${id}.xml`);
+
+    try {
+      await fs.access(xmlPath);
+    } catch {
+      await createXml();
+    }
+
+    res.status(200).sendFile(xmlPath);
+  } catch(err) {
+    console.log(err)
+    res.status(500).send({ message: 'Something went wrong.' });
+  }
+}
+
 module.exports = { 
+  getXmlToGMC,
   getXmlFromId, 
   uploadInvoice, 
   getXmlToZakupka, 
