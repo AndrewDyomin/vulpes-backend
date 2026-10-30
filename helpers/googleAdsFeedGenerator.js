@@ -69,7 +69,7 @@ async function writeBatch(products, stream) {
       xml += `<g:sale_price>${product.price} UAH</g:sale_price>\n`;
       xml += `<g:product_type>${product.parent.value}</g:product_type>\n`;
 
-      if (product?.brand && product.brand !== '') {
+      if (product?.brand?.value?.ua && product?.brand?.value?.ua !== '') {
         xml += `<g:brand>${product.brand.value.ua}</g:brand>\n`;
       }
 
