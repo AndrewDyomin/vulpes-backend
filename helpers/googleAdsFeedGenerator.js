@@ -29,12 +29,13 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function escapeXml(str = "") {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function escapeXml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 async function write(stream, chunk) {
@@ -53,7 +54,7 @@ async function writeBatch(products, stream) {
     try {
       xml += `<item>\n`;
       xml += `<g:id>${product.article}</g:id>\n`;
-      xml += `<g:title>${product.title.ua}</g:title>\n`;
+      xml += `<g:title>${escapeXml(product.title.ua)}</g:title>\n`;
       xml += `<g:description>${escapeXml(product.description.ua)}</g:description>\n`;
       xml += `<g:link>${product.link}</g:link>\n`;
       xml += `<g:image_link>${topImage}</g:image_link>\n`;
@@ -65,9 +66,13 @@ async function writeBatch(products, stream) {
       }
 
       xml += `<g:availability>in stock</g:availability>\n`;
-      xml += `<g:price>${product.price_old} UAH</g:price>\n`;
-      xml += `<g:sale_price>${product.price} UAH</g:sale_price>\n`;
-      xml += `<g:product_type>${product.parent.value}</g:product_type>\n`;
+      if (product.price_old == 0 || product.price == 0) {
+        xml += `<g:price>${product.price} UAH</g:price>\n`;
+      } else {
+        xml += `<g:price>${product.price_old} UAH</g:price>\n`;
+        xml += `<g:sale_price>${product.price} UAH</g:sale_price>\n`;
+      }
+      xml += `<g:product_type>${escapeXml(product.parent.value)}</g:product_type>\n`;
 
       if (product?.brand?.value?.ua && product?.brand?.value?.ua !== '') {
         xml += `<g:brand>${product.brand.value.ua}</g:brand>\n`;
