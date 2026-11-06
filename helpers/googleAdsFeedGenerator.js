@@ -97,8 +97,8 @@ async function createXml() {
   console.log('Google Merchant Center feed update started.');
 
   const groups = [
-    {name: 'lager-top', roasFrom: 90, roasTo: 250000, inStock: true},
-    {name: 'lager-rest', roasFrom: 0, roasTo: 89, inStock: true},
+    {name: 'lager-top', roasFrom: 20, roasTo: 250000, inStock: true},
+    {name: 'lager-rest', roasFrom: 0, roasTo: 20, inStock: true},
     {name: 'bestellware', roasFrom: 0, roasTo: 250000, inStock: false},
   ];
 
@@ -123,7 +123,7 @@ async function createXml() {
           offset: page,
           limit: 500,
           expr : { display_in_showcase: 1 },
-          includedParams: ["article", "price", "price_old", "presence", "brand", "display_in_showcase", "title", "description", "images", "link", "parent"],
+          includedParams: ["article", "price", "price_old", "presence", "brand", "display_in_showcase", "title", "description", "images", "link", "slug", "parent"],
           token,
         },
       );

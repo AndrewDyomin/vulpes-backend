@@ -23,13 +23,13 @@ async function calcProductsRoas() {
           console.log(count);
         }
 
-        const twoMonthsAgo = new Date();
-        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        const someTime = new Date();
+        someTime.setMonth(someTime.getMonth() - 4);
 
         const dateFrom = [
-          twoMonthsAgo.getFullYear(),
-          String(twoMonthsAgo.getMonth() + 1).padStart(2, "0"),
-          String(twoMonthsAgo.getDate()).padStart(2, "0")
+          someTime.getFullYear(),
+          String(someTime.getMonth() + 1).padStart(2, "0"),
+          String(someTime.getDate()).padStart(2, "0")
         ].join("-") + " 00:00:00";
 
         const orders = await Orders.find({
