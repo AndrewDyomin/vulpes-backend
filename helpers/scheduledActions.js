@@ -1,13 +1,13 @@
 const cron = require("node-cron");
-const axios = require("axios");
-const sax = require("sax");
+// const axios = require("axios");
+// const sax = require("sax");
 const { fork } = require("child_process");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 const path = require("path");
 const Product = require("../models/item");
 const User = require("../models/user");
-const TableRow = require("../models/tableRow");
+// const TableRow = require("../models/tableRow");
 const OrdersArchive = require("../models/ordersArchive");
 require("dotenv").config();
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
@@ -15,10 +15,10 @@ const sendTelegramFile = require("./sendTelegramFile");
 const { getAdSpendDirect } = require("./checkAds");
 const { reportToOwner } = require("./createWeeklyReport");
 const { checkOrdersToOrder } = require("./checkOrders");
-const { updatePromBase } = require("../controllers/products");
+// const { updatePromBase } = require("../controllers/products");
 const CampaignResult = require("../models/campaignResult");
-const updateSheets = require("../helpers/updateSheets");
-const { google } = require("googleapis");
+// const updateSheets = require("../helpers/updateSheets");
+// const { google } = require("googleapis");
 const { getAll } = require("../controllers/orders");
 const { checkProductsUpdates } = require("../controllers/puig");
 // const { generateFeed } = require("../helpers/zakupka");
@@ -28,231 +28,231 @@ const { checkBikeAdapters } = require("../controllers/levers");
 const { calcProductsRoas } = require("./calcProductsRoas");
 const { createXml } = require("./googleAdsFeedGenerator");
 
-const PRODUCTS_URI = process.env.PRODUCTS_URI;
+// const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 let isChild = false;
 
-async function sendToSheets() {
-  const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
-  try {
-    const client = new google.auth.JWT(
-      process.env.GOOGLE_CLIENT_EMAIL,
-      null,
-      process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      ["https://www.googleapis.com/auth/spreadsheets"],
-    );
-    await client.authorize();
-    const sheets = google.sheets({ version: "v4", auth: client });
+// async function sendToSheets() {
+//   const targetId = "1zEvtEGpPQC3Zoc-5N_gVyfdOlNKPR3_ZHBaix-eyBAY";
+//   try {
+//     const client = new google.auth.JWT(
+//       process.env.GOOGLE_CLIENT_EMAIL,
+//       null,
+//       process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+//       ["https://www.googleapis.com/auth/spreadsheets"],
+//     );
+//     await client.authorize();
+//     const sheets = google.sheets({ version: "v4", auth: client });
 
-    await sheets.spreadsheets.values.clear({
-      spreadsheetId: targetId,
-      range: "Лист1!A2:V20200",
-    });
+//     await sheets.spreadsheets.values.clear({
+//       spreadsheetId: targetId,
+//       range: "Лист1!A2:V20200",
+//     });
 
-    const batch = 100;
-    let skip = 0;
-    let hasMore = true;
-    let startRow = 2;
+//     const batch = 100;
+//     let skip = 0;
+//     let hasMore = true;
+//     let startRow = 2;
 
-    while (hasMore) {
-      const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
+//     while (hasMore) {
+//       const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
 
-      if (!rows.length) break;
+//       if (!rows.length) break;
 
-      const toTable = rows.map((item) => item.row);
-      const endRow = startRow + toTable.length - 1;
-      const range = `Лист1!A${startRow}:V${endRow}`;
+//       const toTable = rows.map((item) => item.row);
+//       const endRow = startRow + toTable.length - 1;
+//       const range = `Лист1!A${startRow}:V${endRow}`;
 
-      await updateSheets(sheets, targetId, range, toTable);
+//       await updateSheets(sheets, targetId, range, toTable);
 
-      startRow = endRow + 1;
-      skip += batch;
+//       startRow = endRow + 1;
+//       skip += batch;
 
-      if (rows.length < batch) {
-        hasMore = false;
-      }
-    }
+//       if (rows.length < batch) {
+//         hasMore = false;
+//       }
+//     }
 
-    const tableOfCovers = "131RvA-bT2mnqc05jtJiN2S_SW5e9wLIa9beBs6rUWQo"; // Таблица с чехлами
-    await sheets.spreadsheets.values.clear({
-      spreadsheetId: tableOfCovers,
-      range: "Лист1!A2:V20200",
-    });
-    skip = 0;
-    hasMore = true;
-    startRow = 2;
+//     const tableOfCovers = "131RvA-bT2mnqc05jtJiN2S_SW5e9wLIa9beBs6rUWQo"; // Таблица с чехлами
+//     await sheets.spreadsheets.values.clear({
+//       spreadsheetId: tableOfCovers,
+//       range: "Лист1!A2:V20200",
+//     });
+//     skip = 0;
+//     hasMore = true;
+//     startRow = 2;
 
-    while (hasMore) {
-      const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
+//     while (hasMore) {
+//       const rows = await TableRow.find({}).skip(skip).limit(batch).exec();
 
-      if (!rows.length) break;
+//       if (!rows.length) break;
 
-      const toTable = [];
+//       const toTable = [];
 
-      for (const obj of rows) {
-        const row = obj.row;
-        const sku = row[0].replace("-9", "");
-        const product = await Product.findOne({ article: sku }).exec();
-        if (product?.category === "1167") {
-          toTable.push([`${sku}-10`, ...row.slice(1)]);
-        }
-      }
+//       for (const obj of rows) {
+//         const row = obj.row;
+//         const sku = row[0].replace("-9", "");
+//         const product = await Product.findOne({ article: sku }).exec();
+//         if (product?.category === "1167") {
+//           toTable.push([`${sku}-10`, ...row.slice(1)]);
+//         }
+//       }
 
-      const endRow = startRow + toTable.length - 1;
-      const range = `Лист1!A${startRow}:V${endRow}`;
+//       const endRow = startRow + toTable.length - 1;
+//       const range = `Лист1!A${startRow}:V${endRow}`;
 
-      await updateSheets(sheets, tableOfCovers, range, toTable);
+//       await updateSheets(sheets, tableOfCovers, range, toTable);
 
-      startRow = endRow + 1;
-      skip += batch;
+//       startRow = endRow + 1;
+//       skip += batch;
 
-      if (rows.length < batch) {
-        hasMore = false;
-      }
-    }
-    console.log('Sheets updated')
-  } catch (err) {
-    console.log("Google feed table are not updated. Error:", err);
-    sendTelegramMessage(
-      `Во время обновления таблицы в Google MC feed возникла ошибка : ${JSON.stringify(err)}`,
-      chatId,
-    );
-  }
-}
+//       if (rows.length < batch) {
+//         hasMore = false;
+//       }
+//     }
+//     console.log('Sheets updated')
+//   } catch (err) {
+//     console.log("Google feed table are not updated. Error:", err);
+//     sendTelegramMessage(
+//       `Во время обновления таблицы в Google MC feed возникла ошибка : ${JSON.stringify(err)}`,
+//       chatId,
+//     );
+//   }
+// }
 
-async function importYMLtoGoogleFeed() {
-  if (!PRODUCTS_URI) {
-    // throw new Error("PRODUCTS_URI не указана в .env");
-    sendTelegramMessage("ERROR!!! - PRODUCTS_URI не указана в .env", chatId);
-    return;
-  }
+// async function importYMLtoGoogleFeed() {
+//   if (!PRODUCTS_URI) {
+//     // throw new Error("PRODUCTS_URI не указана в .env");
+//     sendTelegramMessage("ERROR!!! - PRODUCTS_URI не указана в .env", chatId);
+//     return;
+//   }
 
-  try {
-    console.log("Импорт в Google MC feed начат...");
-    await TableRow.collection.drop();
+//   try {
+//     console.log("Импорт в Google MC feed начат...");
+//     await TableRow.collection.drop();
 
-    let currentTag = null;
-    let currentProduct = null;
-    let currentParamName = null;
-    let textBuffer = "";
+//     let currentTag = null;
+//     let currentProduct = null;
+//     let currentParamName = null;
+//     let textBuffer = "";
 
-    const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
-    const parser = sax.createStream(true, { trim: true });
+//     const response = await axios.get(PRODUCTS_URI, { responseType: "stream" });
+//     const parser = sax.createStream(true, { trim: true });
 
-    parser.on("opentag", (node) => {
-      currentTag = node.name;
+//     parser.on("opentag", (node) => {
+//       currentTag = node.name;
 
-      if (node.name === "offer") {
-        currentProduct = { ...node.attributes, pictures: [], params: {} };
-      }
+//       if (node.name === "offer") {
+//         currentProduct = { ...node.attributes, pictures: [], params: {} };
+//       }
 
-      if (node.name === "param") {
-        currentParamName = node.attributes.name;
-      }
-    });
+//       if (node.name === "param") {
+//         currentParamName = node.attributes.name;
+//       }
+//     });
 
-    parser.on("text", (text) => {
-      if (currentProduct && currentTag) textBuffer += text;
-    });
+//     parser.on("text", (text) => {
+//       if (currentProduct && currentTag) textBuffer += text;
+//     });
 
-    parser.on("cdata", (cdata) => {
-      if (currentProduct && currentTag) textBuffer += cdata;
-    });
+//     parser.on("cdata", (cdata) => {
+//       if (currentProduct && currentTag) textBuffer += cdata;
+//     });
 
-    parser.on("closetag", async (tagName) => {
-      if (!currentProduct) return;
+//     parser.on("closetag", async (tagName) => {
+//       if (!currentProduct) return;
 
-      if (tagName === "offer") {
-        currentProduct.quantity_in_stock = Number(
-          currentProduct.quantity_in_stock || 0,
-        );
-        currentProduct.price = Number(currentProduct.price || 0);
-        currentProduct.oldprice = Number(currentProduct.oldprice || 0);
+//       if (tagName === "offer") {
+//         currentProduct.quantity_in_stock = Number(
+//           currentProduct.quantity_in_stock || 0,
+//         );
+//         currentProduct.price = Number(currentProduct.price || 0);
+//         currentProduct.oldprice = Number(currentProduct.oldprice || 0);
 
-        if (!currentProduct.article) return;
-        if (currentProduct.quantity_in_stock < 1) return;
-        if (!currentProduct.url) return;
-        if (currentProduct.url && !currentProduct.url.includes("vulpes.com.ua"))
-          return;
-        if (currentProduct.pictures.length === 0) return;
+//         if (!currentProduct.article) return;
+//         if (currentProduct.quantity_in_stock < 1) return;
+//         if (!currentProduct.url) return;
+//         if (currentProduct.url && !currentProduct.url.includes("vulpes.com.ua"))
+//           return;
+//         if (currentProduct.pictures.length === 0) return;
 
-        const picturesString = currentProduct.pictures.slice(1).join(",");
-        let upperPrice;
-        let lowerPrice;
+//         const picturesString = currentProduct.pictures.slice(1).join(",");
+//         let upperPrice;
+//         let lowerPrice;
 
-        if (!currentProduct.oldprice) {
-          upperPrice = `${currentProduct.price} UAH`;
-          lowerPrice = "";
-        } else {
-          upperPrice = `${currentProduct.oldprice} UAH`;
-          lowerPrice = `${currentProduct.price} UAH`;
-        }
+//         if (!currentProduct.oldprice) {
+//           upperPrice = `${currentProduct.price} UAH`;
+//           lowerPrice = "";
+//         } else {
+//           upperPrice = `${currentProduct.oldprice} UAH`;
+//           lowerPrice = `${currentProduct.price} UAH`;
+//         }
 
-        const row = [
-          `${currentProduct.article}-9`,
-          currentProduct.name,
-          currentProduct.description || "",
-          "in_stock",
-          "",
-          "",
-          currentProduct.url,
-          "",
-          currentProduct.pictures[0] || "",
-          upperPrice,
-          lowerPrice,
-          "",
-          "no",
-          "",
-          "",
-          currentProduct.vendor || "",
-          "",
-          "",
-          picturesString,
-          "new",
-          "no",
-        ];
+//         const row = [
+//           `${currentProduct.article}-9`,
+//           currentProduct.name,
+//           currentProduct.description || "",
+//           "in_stock",
+//           "",
+//           "",
+//           currentProduct.url,
+//           "",
+//           currentProduct.pictures[0] || "",
+//           upperPrice,
+//           lowerPrice,
+//           "",
+//           "no",
+//           "",
+//           "",
+//           currentProduct.vendor || "",
+//           "",
+//           "",
+//           picturesString,
+//           "new",
+//           "no",
+//         ];
 
-        await TableRow.create({ row });
+//         await TableRow.create({ row });
 
-        currentProduct = null;
-      } else if (textBuffer) {
-        if (tagName === "picture") {
-          currentProduct.pictures.push(textBuffer);
-        } else if (tagName === "param" && currentParamName) {
-          currentProduct.params[currentParamName] = textBuffer;
-          currentParamName = null;
-        } else if (tagName === "description") {
-          currentProduct.description = textBuffer.trim();
-        } else {
-          currentProduct[tagName] = textBuffer.trim();
-        }
-        textBuffer = "";
-      }
-    });
+//         currentProduct = null;
+//       } else if (textBuffer) {
+//         if (tagName === "picture") {
+//           currentProduct.pictures.push(textBuffer);
+//         } else if (tagName === "param" && currentParamName) {
+//           currentProduct.params[currentParamName] = textBuffer;
+//           currentParamName = null;
+//         } else if (tagName === "description") {
+//           currentProduct.description = textBuffer.trim();
+//         } else {
+//           currentProduct[tagName] = textBuffer.trim();
+//         }
+//         textBuffer = "";
+//       }
+//     });
 
-    parser.on("end", async () => {
-      console.log(
-        `[${new Date().toISOString()}] Парсинг товаров в наличии завершён`,
-      );
-    });
+//     parser.on("end", async () => {
+//       console.log(
+//         `[${new Date().toISOString()}] Парсинг товаров в наличии завершён`,
+//       );
+//     });
 
-    parser.on("error", (err) => {
-      console.error("Ошибка парсинга:", err.message);
-      sendTelegramMessage(
-        `Во время обновления товаров в Google MC feed возникла ошибка парсинга: ${err.message}`,
-        chatId,
-      );
-    });
+//     parser.on("error", (err) => {
+//       console.error("Ошибка парсинга:", err.message);
+//       sendTelegramMessage(
+//         `Во время обновления товаров в Google MC feed возникла ошибка парсинга: ${err.message}`,
+//         chatId,
+//       );
+//     });
 
-    response.data.pipe(parser);
-  } catch (err) {
-    console.error(`Ошибка импорта: ${err.message}`);
-    sendTelegramMessage(
-      `Ошибка импорта товаров в Google MC feed: ${err.message}`,
-      chatId,
-    );
-  }
-}
+//     response.data.pipe(parser);
+//   } catch (err) {
+//     console.error(`Ошибка импорта: ${err.message}`);
+//     sendTelegramMessage(
+//       `Ошибка импорта товаров в Google MC feed: ${err.message}`,
+//       chatId,
+//     );
+//   }
+// }
 
 function getLastWeeksRanges() {
   const result = [];
@@ -772,21 +772,21 @@ cron.schedule(    //  weekly report to owner
   },
 );
 
-cron.schedule(    //  update rows in db to google feed "available"
-  "49 19 * * *",
-  () => {
-    importYMLtoGoogleFeed();
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Kiev",
-  },
-);
+// cron.schedule(    //  update rows in db to google feed "available"
+//   "49 19 * * *",
+//   () => {
+//     importYMLtoGoogleFeed();
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Kiev",
+//   },
+// );
 
 cron.schedule(    //  update google MC feed table
   "55 19 * * *",
   () => {
-    sendToSheets();
+    // sendToSheets();
     checkProductsUpdates();
     calcProductsRoas();
     createXml();
