@@ -250,6 +250,13 @@ async function horoshopUpdatePrice(req, res) {
               updated.price = recommendedPrice;
               updated.price_old = recommendedPrice;
             }
+
+            // ------------ DELETE THIS SHIT!!!!!!!! --------------------
+            if (article === '22574H' || article === '22574W') {      //--
+              updated.price = 8568;                                  //--
+              updated.price_old = 8568;                              //--
+            }                                                        //--
+            // ------------ DELETE THIS SHIT!!!!!!!! --------------------
           }
 
           const targetStock = Number(target.stock)
