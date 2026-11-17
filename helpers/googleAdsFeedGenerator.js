@@ -47,6 +47,9 @@ async function write(stream, chunk) {
 async function writeBatch(products, stream) {
   let xml = "";
   // let photoCount = 0;
+  const date = new Date();
+  date.setDate(date.getDate() + 18);
+  const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T00:00+0200`;
 
   for (const product of products) {
     const topImage = product.images.splice(0, 1);
@@ -65,7 +68,15 @@ async function writeBatch(products, stream) {
         // if (photoCount > 9) break;
       }
 
-      xml += `<g:availability>in stock</g:availability>\n`;
+      if (product?.presence?.id === 1) {
+        xml += `<g:availability>in stock</g:availability>\n`;
+      } else if (product?.presence?.id === 5) {
+        xml += `<g:availability>preorder</g:availability>\n`;
+        xml += `<g:availability_date>${formattedDate}</g:availability_date>\n`;
+      } else {
+        xml += `<g:availability>out_of_stock</g:availability>\n`;
+      }
+      
       if (product.price_old == 0 || product.price == 0) {
         xml += `<g:price>${product.price} UAH</g:price>\n`;
       } else {
