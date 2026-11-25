@@ -25,6 +25,10 @@ const itemSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  images: {
+    type: Array,
+    default: '',
+  },
 });
 
 module.exports = mongoose.model("MoteaItem", itemSchema);

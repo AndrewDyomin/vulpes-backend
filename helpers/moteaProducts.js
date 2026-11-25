@@ -9,6 +9,12 @@ const MAIN_DB_URI = process.env.DB_URI;
 const MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 
+// const dns = require('node:dns');
+
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
+
+const renewed = [];
+
 async function saveMoteaFeedToDb() {
   try {
     await mongoose.connect(MOTEA_FEED_URI);
@@ -39,6 +45,7 @@ async function saveMoteaFeedToDb() {
               brand: row.brand,
               gtin: row.gtin,
               availability: row.availability,
+              images: [row.image_link, ...row.additional_image_link.split(',')],
             };
 
             batch.push(item);
@@ -117,6 +124,11 @@ const fetchAvailability = async (array) => {
     const availability = availabilityMap.get(`${product.article}-0`) || availabilityMap.get(product.article) || "";
 
     const link = linkMap.get(`${product.article}-0`) || linkMap.get(product.article) ||  "";
+
+    if (product?.outdated === 'true' && availability === 'in stock') {
+      renewed.push(product.article);
+    }
+
     return {
       ...product,
       availabilityInMotea: availability,
@@ -139,7 +151,7 @@ async function updateProductsAvailability() {
 
   while (hasMore) {
     console.log(`${skip / 1000}). Обновляем статус наличия товаров в Мотеа`);
-    let batch = await Product.find({}, { article: 1 }).skip(skip).limit(BATCH_SIZE).lean();
+    let batch = await Product.find({}, { article: 1, outdated: 1 }).skip(skip).limit(BATCH_SIZE).lean();
 
     const updatedBatch = await fetchAvailability(batch);
 
@@ -170,10 +182,22 @@ async function updateProductsAvailability() {
   await mongoose.disconnect();
 }
 
+async function sendRenewedArticles() {
+  if (!renewed?.length) return;
+  let text = 'Найдены удаленные товары, которые следует восстановить:\n\n';
+  while (renewed.length) {
+    const arr = renewed.splice(0, 50);
+    text += arr.join(', ');
+    await sendTelegramMessage(text, chatId);
+    text = '';
+  }
+}
+
 async function queue() {
     try {
         await saveMoteaFeedToDb();
         await updateProductsAvailability();
+        await sendRenewedArticles();
         process.exit(0);
     } catch(err) {
         console.log(err)

@@ -15,5 +15,7 @@ router.post("/update-marketplace", marketplacesController.updateMarketplace);
 router.get("/generate-xml-for-marketplaces", marketplacesController.generateXmlForMarketplaces);
 router.post("/refresh-google-oauth-token", marketplacesController.refreshOauthToken);
 router.get("/prom-categories", marketplacesController.getPromCategories);
+router.post("/search-product-info", marketplacesController.searchProductInfo);
+router.post("/add-product-to-horoshop", marketplacesController.addProductToHoroshop);
 
 module.exports = router;

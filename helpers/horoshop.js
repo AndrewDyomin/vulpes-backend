@@ -146,6 +146,41 @@ async function getHoroshopItems(array) {
   }
 }
 
+async function getHoroshopCategories(parentId) {
+  try {
+    let token = await getToken();
+    const { data } = await axios.post("https://vulpes.com.ua/api/pages/export/",
+      {
+        token,
+      },
+    );
+    // ----------------- ОБРАБОТАТЬ ПРОБРОС ОШИБКИ -------------------- //
+    
+    return { categories: [ ...data?.response?.pages ], error: null };
+  } catch(err) {
+    console.log(err);
+    return { categories: [], error: err }
+  }
+}
+
+async function addHoroshopProduct(array) {
+  try {
+    let token = await getToken();
+    const { data } = await axios.post("https://vulpes.com.ua/api/catalog/import/",
+      {
+        token,
+        products: array,
+      },
+    );
+    // ----------------- ОБРАБОТАТЬ ПРОБРОС ОШИБКИ -------------------- //
+    
+    return { response: data?.response, error: null };
+  } catch(err) {
+    console.log(err);
+    return { error: err }
+  }
+}
+
 async function generateHoroshopProduct(ref, family) {
   const result = [];
   try {
@@ -600,4 +635,4 @@ async function checkProductsFromHoroshop() {
   console.log("Products check completed.")
 }
 
-module.exports = { checkProductsForHoroshop, checkProductsFromHoroshop, getHoroshopItems };
+module.exports = { checkProductsForHoroshop, checkProductsFromHoroshop, getHoroshopItems, getHoroshopCategories, addHoroshopProduct };

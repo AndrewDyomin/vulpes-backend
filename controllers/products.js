@@ -20,6 +20,7 @@ const { translateService } = require('./puig');
 const PuigArticles = require('../models/puigArticles');
 const puigProducts = require('../models/puigProducts');
 const { takeOffTheShelf } = require('./shelves');
+const getMoteaFeedItem = require("../helpers/getMoteaFeedItem");
 const chatId = process.env.ADMIN_CHAT_ID;
 const DB_MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const MAIN_DB_URI = process.env.DB_URI;
@@ -654,7 +655,8 @@ async function getProductTranslate (req, res) {
     // }
 
     if (name.RU === '' || name.UA === '') {
-      const moteaTarget = await MoteaProduct.findOne({ article: { $regex: body.article, $options: "i" } }).lean();
+      // const moteaTarget = await MoteaProduct.findOne({ article: { $regex: body.article, $options: "i" } }).lean();
+      const moteaTarget = await getMoteaFeedItem(body.article);
       if (moteaTarget) {
         const arr = await translateService(moteaTarget.name);
         name.RU = arr[0];

@@ -3,7 +3,7 @@ const XLSX = require('xlsx');
 const sax = require('sax');
 // const { Readable } = require('stream');
 const sendTelegramMessage = require("../helpers/sendTelegramMessage");
-const { getHoroshopItems } = require("../helpers/horoshop");
+const { getHoroshopItems, getHoroshopCategories, addHoroshopProduct } = require("../helpers/horoshop");
 const { generateFeedsForMarketplaces } = require("../helpers/feedGenerator");
 const Product = require("../models/item");
 const PuigArticles = require("../models/puigArticles")
@@ -14,6 +14,8 @@ const Categories = require("../models/categories");
 const { google } = require("googleapis");
 const fs = require("fs");
 const path = require("path");
+const getMoteaFeedItem = require("../helpers/getMoteaFeedItem");
+const { getMoteaProductInfo } = require("../helpers/getMoteaProductInfo");
 
 let updateFlag = false;
 
@@ -197,9 +199,13 @@ async function horoshopUpdatePrice(req, res) {
 
             if (difference >= 5 && product.brand?.value?.ua !== 'Puig' && product.brand?.value?.ua !== 'MRA') {
               updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.85);
+              // TO BLACK FRIDAY
+              // updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.75);
               updated.price_old = Math.round(target?.moteaPrice?.UAH * markup);
               if (target.vendorprice && target.vendorprice * 2 > updated.price) {
                 updated.price = Math.round(target.vendorprice * 2.35 * 0.85);
+                // TO BLACK FRIDAY
+                // updated.price = Math.round(target.vendorprice * 2.35 * 0.75);
                 updated.price_old = Math.round(target.vendorprice * 2.35);
                 autoIncreased.push({ article: product.article, price: target.moteaPrice.UAH, newPrice: updated.price })
               }
@@ -491,7 +497,7 @@ async function saveImages(product, refreshToken) {
 };
 
 async function horoshopGetOutdatedProducts(req, res) {
-  const daysCount = 21;
+  const daysCount = 41;
   const daysMs = 24 * 60 * 60 * 1000 * daysCount;
   const now = new Date();
   try {
@@ -865,16 +871,96 @@ async function getPromCategories(req, res) {
   }
 }
 
+async function searchProductInfo(req, res) {
+  const { article } = req.body;
+  try {
+    const { products, error } = await getHoroshopItems(article);
+    if (products?.length) {
+      res.status(200).send({ message: "This product is already exist" });
+      return;
+    }
+
+    const [moteaItem, item] = await Promise.all([
+      getMoteaFeedItem(article),
+      Product.findOne({ article }).lean()
+    ]);
+
+    if (moteaItem?.link) {
+      const pageData = await getMoteaProductInfo(moteaItem.link);
+      if (pageData) {
+        moteaItem.price = pageData.price;
+        moteaItem.description = pageData.description;
+        moteaItem.delivery = pageData.delivery
+      }
+    }
+
+    const horoshopPages = await getHoroshopCategories();
+
+    res.status(200).send({ moteaItem, item, categories: horoshopPages?.categories });
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: "Something went wrong" })
+  }
+}
+
+async function addProductToHoroshop(req, res) {
+  try {
+    const product = {
+      article: req.body.article,
+      parent_article: req.body.article,
+      title: {
+        ru: req.body.name.RU,
+        ua: req.body.name.UA,
+      },
+      description: {
+        ru: req.body.description.RU,
+        ua: req.body.description.UA,
+      },
+      gtin: req.body.gtin,
+      parent: {
+        id: req.body.categoryId,
+      },
+      display_in_showcase: true,
+      presence: "Доставка 10-18 днів",
+      price: req.body.price,
+      price_old: req.body.oldPrice,
+      currency: "UAH",
+      export_to_marketplace: "Google Feed for Merchant Center",
+      images: {
+        override: true,
+        links: req.body.images,
+      },
+      forceAliasUpdate: true,
+      brand: req.body.brand,
+      supplier: 'MOTEA',
+    }
+
+    const flush = await addHoroshopProduct([ product ]);
+
+    if (!flush?.error) {
+      res.status(200).send({ message: 'OK', log: flush.response.log });
+    } else {
+      res.status(200).send({ message: flush.error });
+    }
+
+  } catch(err) {
+    console.log(err);
+    res.status(500).send({ message: 'Something went wrong' })
+  }
+}
+
 module.exports = { 
-  horoshopCheckUpdatePrice, 
-  horoshopUpdatePrice, 
+  addMarketplace,
+  updateMarketplace,
+  refreshOauthToken,
+  getPromCategories,
+  searchProductInfo,
+  getAllMarketplaces,
+  horoshopUpdatePrice,
+  addProductToHoroshop, 
+  horoshopCheckUpdatePrice,
+  generateXmlForMarketplaces, 
   horoshopGetOutdatedProducts, 
   horoshopRefreshOutdatedProducts, 
   checkImagesFromOutdatedProducts,
-  addMarketplace,
-  getAllMarketplaces,
-  updateMarketplace,
-  refreshOauthToken,
-  generateXmlForMarketplaces,
-  getPromCategories,
 };
