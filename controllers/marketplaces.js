@@ -198,14 +198,14 @@ async function horoshopUpdatePrice(req, res) {
             const difference = Math.round((Math.abs(product?.price_old - (target?.moteaPrice?.UAH * markup)) / product?.price_old) * 100);
 
             if (difference >= 5 && product.brand?.value?.ua !== 'Puig' && product.brand?.value?.ua !== 'MRA') {
-              updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.85);
+              // updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.85);
               // TO BLACK FRIDAY
-              // updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.75);
+              updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.75);
               updated.price_old = Math.round(target?.moteaPrice?.UAH * markup);
               if (target.vendorprice && target.vendorprice * 2 > updated.price) {
-                updated.price = Math.round(target.vendorprice * 2.35 * 0.85);
+                // updated.price = Math.round(target.vendorprice * 2.35 * 0.85);
                 // TO BLACK FRIDAY
-                // updated.price = Math.round(target.vendorprice * 2.35 * 0.75);
+                updated.price = Math.round(target.vendorprice * 2.35 * 0.75);
                 updated.price_old = Math.round(target.vendorprice * 2.35);
                 autoIncreased.push({ article: product.article, price: target.moteaPrice.UAH, newPrice: updated.price })
               }
