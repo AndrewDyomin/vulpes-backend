@@ -379,9 +379,9 @@ async function checkProductsForHoroshop() {
       const processedCodes = new Set();
 
       for (const art of batch) {
-        if (redFlag.includes(art.stock) || redFlag.includes(art.stock_prevision)) {
-          continue;
-        }
+        // if (redFlag.includes(art.stock) || redFlag.includes(art.stock_prevision)) {
+        //   continue;
+        // }
 
         if (art.outdated === 1) {
           await Product.findOneAndUpdate({ id: art.product.id }, { warning: true });

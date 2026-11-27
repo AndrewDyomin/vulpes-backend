@@ -197,7 +197,7 @@ async function horoshopUpdatePrice(req, res) {
           if (target?.moteaPrice?.UAH && target.moteaPrice.UAH !== 0) {
             const difference = Math.round((Math.abs(product?.price_old - (target?.moteaPrice?.UAH * markup)) / product?.price_old) * 100);
 
-            if (difference >= 0 && product.brand?.value?.ua !== 'Puig' && product.brand?.value?.ua !== 'MRA') {
+            if (difference >= 5 && product.brand?.value?.ua !== 'Puig' && product.brand?.value?.ua !== 'MRA') {
               // updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.85);
               // TO BLACK FRIDAY
               updated.price = Math.round(target?.moteaPrice?.UAH * markup * 0.75);
@@ -231,7 +231,11 @@ async function horoshopUpdatePrice(req, res) {
                   updated.presence = 'Доставка 10-18 днів';
                   updated.export_to_marketplace = 'Google Feed for Merchant Center';
                   updated.display_in_showcase = true;
-              } else if (target.availabilityInMotea !== 'in stock' && product?.presence?.value?.ua !== 'Немає в наявності') {
+              } else if (target.availabilityInMotea === 'preorder' && product?.presence?.value?.ua !== 'Доставка - більше місяця') {
+                  updated.presence = 'Доставка - більше місяця';
+                  updated.export_to_marketplace = 'Google Feed for Merchant Center';
+                  updated.display_in_showcase = true;
+              } else if (target.availabilityInMotea !== 'in stock' && target.availabilityInMotea !== 'preorder' && product?.presence?.value?.ua !== 'Немає в наявності') {
                   updated.presence = 'Немає в наявності';
                   updated.export_to_marketplace = '';
                   updated.display_in_showcase = false;
@@ -256,13 +260,6 @@ async function horoshopUpdatePrice(req, res) {
               updated.price = recommendedPrice;
               updated.price_old = recommendedPrice;
             }
-
-            // ------------ DELETE THIS SHIT!!!!!!!! --------------------
-            if (article === '22574H' || article === '22574W') {      //--
-              updated.price = 8568;                                  //--
-              updated.price_old = 8568;                              //--
-            }                                                        //--
-            // ------------ DELETE THIS SHIT!!!!!!!! --------------------
           }
 
           const targetStock = Number(target.stock)

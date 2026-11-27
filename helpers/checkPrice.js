@@ -115,12 +115,21 @@ async function extractHtml(body) {
     [upper, price, lower] = last;
   }
 
+  let delivery = '';
+  container.find("#motea-cart-box-info-delivery").each((_, el) => {
+    const text = $(el).text().trim();
+    if (text) {
+      delivery += text;
+    };
+  })
+
   return {
     upper: upper ? parse(upper) : null,
     price: price ? parse(price) : null,
     lower: lower ? parse(lower) : null,
     currency: "EUR",
     raw: prices,
+    delivery,
   };
 }
 
@@ -216,9 +225,11 @@ async function checkPrice() {
             });
             continue;
           }
+          const delivery = data?.delivery || '';
 
           await Product.findByIdAndUpdate(item._id, {
             moteaPrice: { UAH: mPrice, date: now },
+            availabilityInMotea: delivery.includes('Ready to ship') ? 'in stock' : 'preorder',
           });
         } catch (err) {
           if (err?.response?.status === 429) {

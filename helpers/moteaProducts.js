@@ -10,7 +10,6 @@ const MOTEA_FEED_URI = process.env.DB_MOTEA_FEED_URI;
 const chatId = process.env.ADMIN_CHAT_ID;
 
 // const dns = require('node:dns');
-
 // dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const renewed = [];
@@ -120,8 +119,10 @@ const fetchAvailability = async (array) => {
     linkMap.set(d.article, d.link);
   }
 
-  const arrayCopy = array.map((product) => {
-    const availability = availabilityMap.get(`${product.article}-0`) || availabilityMap.get(product.article) || "";
+  const arrayCopy = [];
+
+  for (const product of array) {
+    let availability = availabilityMap.get(`${product.article}-0`) || availabilityMap.get(product.article) || "";
 
     const link = linkMap.get(`${product.article}-0`) || linkMap.get(product.article) ||  "";
 
@@ -129,12 +130,17 @@ const fetchAvailability = async (array) => {
       renewed.push(product.article);
     }
 
-    return {
-      ...product,
-      availabilityInMotea: availability,
-      linkInMotea: link,
-    };
-  });
+    const update = {
+      _id: product._id,
+      linkInMotea: link || null,
+    }
+
+    if (availability === 'out of stock') {
+      update.availability = availability;
+    }
+
+    arrayCopy.push(update);
+  };
 
   availabilityMap.clear();
   linkMap.clear();
@@ -155,14 +161,11 @@ async function updateProductsAvailability() {
 
     const updatedBatch = await fetchAvailability(batch);
 
-    const operations = updatedBatch.map((product) => ({
+    const operations = updatedBatch.map(({ _id, ...product }) => ({
       updateOne: {
-        filter: { _id: product._id },
+        filter: { _id },
         update: {
-          $set: {
-            availabilityInMotea: product.availabilityInMotea || null,
-            linkInMotea: product.linkInMotea || null,
-          },
+          $set: product,
         },
       },
     }));
